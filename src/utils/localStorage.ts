@@ -1,5 +1,6 @@
 const TOKEN_KEY = 'sisges_token';
 const EXPIRES_IN_KEY = 'sisges_expires_in';
+const USER_ID_KEY = 'sisges_user_id';
 const NAME_KEY = 'sisges_name';
 const EMAIL_KEY = 'sisges_email';
 const REGISTER_KEY = 'sisges_register';
@@ -7,6 +8,7 @@ const ROLE_KEY = 'sisges_role';
 
 export const storage = {
   setAuthData: (
+    id: string,
     token: string,
     expiresIn: number,
     name: string,
@@ -14,12 +16,17 @@ export const storage = {
     register: string,
     role: string
   ): void => {
+    localStorage.setItem(USER_ID_KEY, id);
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(EXPIRES_IN_KEY, expiresIn.toString());
     localStorage.setItem(NAME_KEY, name);
     localStorage.setItem(EMAIL_KEY, email);
     localStorage.setItem(REGISTER_KEY, register);
     localStorage.setItem(ROLE_KEY, role);
+  },
+
+  getUserId: (): string | null => {
+    return localStorage.getItem(USER_ID_KEY);
   },
 
   getToken: (): string | null => {
@@ -48,6 +55,7 @@ export const storage = {
   },
 
   clearAuthData: (): void => {
+    localStorage.removeItem(USER_ID_KEY);
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EXPIRES_IN_KEY);
     localStorage.removeItem(NAME_KEY);

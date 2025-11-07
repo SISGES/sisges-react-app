@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -16,6 +17,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '../../contexts/ToastContext';
 
 export const SignIn = () => {
+  const navigate = useNavigate();
   const { mode, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const [email, setEmail] = useState(() => {
@@ -70,6 +72,7 @@ export const SignIn = () => {
       showToast('Login realizado com sucesso!', 'success');
       localStorage.removeItem('sisges_form_email');
       localStorage.removeItem('sisges_form_password');
+      navigate('/home');
       
     } catch (err: any) {
       showToast(

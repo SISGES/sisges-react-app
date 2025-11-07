@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { Snackbar, Alert, Fade } from '@mui/material';
 import type { AlertColor } from '@mui/material';
 
+const TOAST_DURATION = 3000;
+
 interface ToastContextType {
   showToast: (message: string, severity?: AlertColor) => void;
 }
@@ -51,9 +53,9 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
       {children}
       <Snackbar
         open={open}
-        autoHideDuration={5000}
+        autoHideDuration={TOAST_DURATION}
         onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         TransitionComponent={Fade}
         TransitionProps={{
           timeout: 300,
@@ -66,4 +68,3 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
     </ToastContext.Provider>
   );
 };
-
