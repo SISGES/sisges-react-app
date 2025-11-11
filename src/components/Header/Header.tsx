@@ -1,13 +1,15 @@
-import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
-import { Logout as LogoutIcon } from '@mui/icons-material';
+import { AppBar, Toolbar, Typography, Box, Button, IconButton } from '@mui/material';
+import { Logout as LogoutIcon, Brightness4, Brightness7 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { storage } from '../../utils/localStorage';
 import { LogoutConfirmationModal } from '../LogoutConfirmationModal/LogoutConfirmationModal';
 import { UserUpdateModal } from '../UserUpdateModal/UserUpdateModal';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useState, useEffect } from 'react';
 
 export const Header = () => {
   const navigate = useNavigate();
+  const { mode, toggleTheme } = useTheme();
   const [openLogoutModal, setOpenLogoutModal] = useState(false);
   const [openUserUpdateModal, setOpenUserUpdateModal] = useState(false);
   const [name, setName] = useState(() => storage.getName() || '');
@@ -85,17 +87,31 @@ export const Header = () => {
             SISGES
           </Typography>
 
-          <Button
-            color="inherit"
-            onClick={handleLogoutClick}
-            startIcon={<LogoutIcon />}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 500,
-            }}
-          >
-            Sair
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton
+              color="inherit"
+              onClick={toggleTheme}
+              aria-label="Alternar tema"
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'action.hover',
+                },
+              }}
+            >
+              {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
+            </IconButton>
+            <Button
+              color="inherit"
+              onClick={handleLogoutClick}
+              startIcon={<LogoutIcon />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 500,
+              }}
+            >
+              Sair
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 

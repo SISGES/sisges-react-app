@@ -10,18 +10,22 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Login as LoginIcon, Brightness4, Brightness7 } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
 import { authService } from '../../services/authService';
 import type { LoginRequest } from '../../types/auth';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '../../contexts/ToastContext';
+
+const DOMAIN = '@sisges.com';
 
 export const SignIn = () => {
   const navigate = useNavigate();
-  const { mode, toggleTheme } = useTheme();
   const { showToast } = useToast();
+  
+  // Store only the username part (without @sisges.com)
   const [email, setEmail] = useState(() => {
-    return localStorage.getItem('sisges_form_email') || '';
+    const savedEmail = localStorage.getItem('sisges_form_email') || '';
+    // Remove @sisges.com if it exists in saved email
+    return savedEmail.replace(DOMAIN, '');
   });
   const [password, setPassword] = useState(() => {
     return localStorage.getItem('sisges_form_password') || '';
@@ -31,6 +35,7 @@ export const SignIn = () => {
   const usernameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Save only the username part to localStorage
     localStorage.setItem('sisges_form_email', email);
   }, [email]);
 
@@ -47,7 +52,9 @@ export const SignIn = () => {
   useEffect(() => {
     const handleInput = () => {
       if (usernameInputRef.current && usernameInputRef.current.value !== email) {
-        setEmail(usernameInputRef.current.value);
+        // Remove @sisges.com if user tries to type it
+        let value = usernameInputRef.current.value.replace(DOMAIN, '');
+        setEmail(value);
       }
     };
 
@@ -63,8 +70,10 @@ export const SignIn = () => {
     setLoading(true);
 
     try {
+      // Append @sisges.com to the username
+      const fullEmail = `${email.trim()}${DOMAIN}`;
       const credentials: LoginRequest = {
-        email: email.trim(),
+        email: fullEmail,
         password,
       };
 
@@ -104,19 +113,6 @@ export const SignIn = () => {
         position: 'relative',
       }}
     >
-      <IconButton
-        onClick={toggleTheme}
-        sx={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          color: 'text.primary',
-        }}
-        aria-label="Alternar tema"
-      >
-        {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
-      </IconButton>
-
       <Card
         sx={{
           maxWidth: 450,
@@ -156,14 +152,27 @@ export const SignIn = () => {
               id="email"
               name="email"
               label="E-mail"
-              type="email"
+              type="text"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                // Prevent user from typing @sisges.com
+                const value = e.target.value.replace(DOMAIN, '');
+                setEmail(value);
+              }}
               margin="normal"
               required
               autoComplete="username"
               autoFocus
               disabled={loading}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                      {DOMAIN}
+                    </Typography>
+                  </InputAdornment>
+                ),
+              }}
             />
 
             <TextField

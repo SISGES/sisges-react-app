@@ -3,6 +3,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SignIn } from "./components/SignIn/SignIn";
 import { HomePage } from "./components/HomePage/HomePage";
+import { Dashboard } from "./components/Dashboard/Dashboard";
 import { storage } from "./utils/localStorage";
 import "./App.css";
 
@@ -35,6 +36,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <HomePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
                 </PrivateRoute>
               }
             />
