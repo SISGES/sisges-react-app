@@ -11,8 +11,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/sisges
       - SPRING_DATASOURCE_USERNAME=sisges
       - SPRING_DATASOURCE_PASSWORD=sisges123
-    volumes:
-      - ../sisges-sboot-app:/app
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=sisges
     depends_on:
       - db
     restart: unless-stopped
@@ -48,9 +48,27 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     restart: unless-stopped
     networks:
       - sisges-network
+
+  init:
+    image: postgres:15-alpine
+    container_name: sisges-init-dev
+    volumes:
+      - ./init-users.sh:/init-users.sh
+    entrypoint: ["/bin/sh", "/init-users.sh"]
+    depends_on:
+      db:
+        condition: service_started
+      backend:
+        condition: service_started
+    environment:
+      - PGPASSWORD=sisges123
+    networks:
+      - sisges-network
+    restart: "always"
 
 volumes:
   postgres_data_dev:
