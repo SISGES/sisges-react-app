@@ -14,10 +14,11 @@ export const Sidebar = () => {
   ];
 
   const teacherMenuItems = [
-    { label: 'Turmas', path: '/turmas' },
+    { label: 'Turma', path: '/turmas' },
   ];
 
   const studentMenuItems = [
+    { label: 'Turma', path: '/turmas' },
     { label: 'Notas', path: '/notas' },
     { label: 'Faltas', path: '/faltas' },
   ];

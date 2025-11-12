@@ -153,7 +153,6 @@ export const UserUpdateModal = ({ open, onClose, onSuccess }: UserUpdateModalPro
       onSuccess?.();
       onClose();
     } catch (err: any) {
-      console.error('Update user error:', err);
       showToast(
         err.response?.data?.message || 'Erro ao atualizar dados. Tente novamente.',
         'error'

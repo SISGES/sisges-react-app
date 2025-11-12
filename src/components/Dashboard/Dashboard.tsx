@@ -8,6 +8,9 @@ export const Dashboard = () => {
         <Typography variant="h4" component="h1">
           Dashboard
         </Typography>
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          Bem-vindo ao painel administrativo
+        </Typography>
       </Box>
     </Layout>
   );

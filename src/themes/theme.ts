@@ -5,27 +5,45 @@ const darkThemeOptions: ThemeOptions = {
     palette: {
         mode: "dark",
         primary: {
-            main: "#2563EB",
+            main: "#3B82F6",
             light: "#60A5FA",
+            dark: "#2563EB",
+            contrastText: "#FFFFFF",
         },
         secondary: {
             main: "#10B981",
+            light: "#34D399",
+            dark: "#059669",
+            contrastText: "#FFFFFF",
         },
         error: {
             main: "#EF4444",
+            light: "#F87171",
+            dark: "#DC2626",
+            contrastText: "#FFFFFF",
         },
         warning: {
             main: "#F59E0B",
+            light: "#FBBF24",
+            dark: "#D97706",
+            contrastText: "#000000",
         },
         background: {
-            default: "#0F172A",
-            paper: "#1E293B",
+            default: "#000000",
+            paper: "#0A0A0A",
         },
         text: {
-            primary: "#F1F5F9",
-            secondary: "#CBD5E1",
+            primary: "#FFFFFF",
+            secondary: "#E5E5E5",
         },
-        divider: "#334155",
+        divider: "#1A1A1A",
+        action: {
+            active: "#FFFFFF",
+            hover: "#1A1A1A",
+            selected: "#1A1A1A",
+            disabled: "#404040",
+            disabledBackground: "#1A1A1A",
+        },
     },
     components: {
         MuiButton: {

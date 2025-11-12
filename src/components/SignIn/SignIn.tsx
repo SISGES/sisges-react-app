@@ -14,6 +14,7 @@ import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-materi
 import { authService } from '../../services/authService';
 import type { LoginRequest } from '../../types/auth';
 import { useToast } from '../../contexts/ToastContext';
+import UserRoleEnum from '../../enums/UserRoleEnum';
 
 const DOMAIN = '@sisges.com';
 
@@ -21,10 +22,8 @@ export const SignIn = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   
-  // Store only the username part (without @sisges.com)
   const [email, setEmail] = useState(() => {
     const savedEmail = localStorage.getItem('sisges_form_email') || '';
-    // Remove @sisges.com if it exists in saved email
     return savedEmail.replace(DOMAIN, '');
   });
   const [password, setPassword] = useState(() => {
@@ -35,7 +34,6 @@ export const SignIn = () => {
   const usernameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Save only the username part to localStorage
     localStorage.setItem('sisges_form_email', email);
   }, [email]);
 
@@ -52,7 +50,6 @@ export const SignIn = () => {
   useEffect(() => {
     const handleInput = () => {
       if (usernameInputRef.current && usernameInputRef.current.value !== email) {
-        // Remove @sisges.com if user tries to type it
         let value = usernameInputRef.current.value.replace(DOMAIN, '');
         setEmail(value);
       }
@@ -70,18 +67,22 @@ export const SignIn = () => {
     setLoading(true);
 
     try {
-      // Append @sisges.com to the username
       const fullEmail = `${email.trim()}${DOMAIN}`;
       const credentials: LoginRequest = {
         email: fullEmail,
         password,
       };
 
-      await authService.login(credentials);
+      const loginResponse = await authService.login(credentials);
       showToast('Login realizado com sucesso!', 'success');
       localStorage.removeItem('sisges_form_email');
       localStorage.removeItem('sisges_form_password');
-      navigate('/home');
+      
+      if (loginResponse.role === UserRoleEnum.DEV_ADMIN || loginResponse.role === UserRoleEnum.ADMIN) {
+        navigate('/dashboard');
+      } else {
+        navigate('/turmas');
+      }
       
     } catch (err: any) {
       showToast(
@@ -155,7 +156,6 @@ export const SignIn = () => {
               type="text"
               value={email}
               onChange={(e) => {
-                // Prevent user from typing @sisges.com
                 const value = e.target.value.replace(DOMAIN, '');
                 setEmail(value);
               }}

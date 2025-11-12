@@ -1,6 +1,8 @@
 import { api } from './api';
 import type { LoginRequest, LoginResponse, UpdateUserRequest, UpdateUserResponse } from '../types/auth';
 import { storage } from '../utils/localStorage';
+import { classService } from './classService';
+import UserRoleEnum from '../enums/UserRoleEnum';
 
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
@@ -9,6 +11,23 @@ export const authService = {
     const { id, name, email, register } = userResponse;
     
     storage.setAuthData(id.toString(), token, expiresIn, name, email, register, role);
+    
+    if (role === UserRoleEnum.STUDENT) {
+      try {
+        const studentData = await classService.getStudentByUserId(id.toString());
+        storage.setItem('sisges_student_id', studentData.id.toString());
+        storage.setItem('sisges_student_register', studentData.register);
+        if (studentData.currentClass) {
+          storage.setItem('sisges_student_class_id', studentData.currentClass.toString());
+          try {
+            const classData = await classService.findClassById(studentData.currentClass);
+            storage.setClassData(JSON.stringify(classData));
+          } catch (error) {
+          }
+        }
+      } catch (error) {
+      }
+    }
     
     return response.data;
   },
@@ -39,8 +58,6 @@ export const authService = {
       
       return userResponse;
     } catch (error: any) {
-      console.error('Error in updateUser:', error);
-      console.error('Error response:', error.response?.data);
       throw error;
     }
   },

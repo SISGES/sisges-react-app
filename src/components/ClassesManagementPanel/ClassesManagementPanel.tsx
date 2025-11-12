@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -22,13 +22,14 @@ import {
   Chip,
   Divider,
   Pagination,
+  Autocomplete,
+  ListItemText,
 } from '@mui/material';
-import { Add, Close, Visibility, PersonRemove, PersonAdd } from '@mui/icons-material';
+import { Add, Close, Visibility, PersonRemove, PersonAdd, Search } from '@mui/icons-material';
 import { Layout } from '../Layout/Layout';
 import { classService } from '../../services/classService';
 import { userService } from '../../services/userService';
 import type { SchoolClassResponse, CreateClassRequest, DetailedSchoolClassResponse, TeacherResponse, StudentResponse } from '../../types/class';
-import type { User } from '../../types/user';
 import { useToast } from '../../contexts/ToastContext';
 
 export const ClassesManagementPanel = () => {
@@ -45,12 +46,14 @@ export const ClassesManagementPanel = () => {
   const [openConfirmStudentDialog, setOpenConfirmStudentDialog] = useState(false);
   const [selectedClass, setSelectedClass] = useState<SchoolClassResponse | null>(null);
   const [classDetail, setClassDetail] = useState<DetailedSchoolClassResponse | null>(null);
-  const [availableTeachers, setAvailableTeachers] = useState<TeacherResponse[]>([]);
-  const [students, setStudents] = useState<User[]>([]);
-  const [availableStudents, setAvailableStudents] = useState<User[]>([]);
-  const [selectedTeacherId, setSelectedTeacherId] = useState<number | ''>('');
-  const [selectedStudentId, setSelectedStudentId] = useState<number | ''>('');
+  const [allTeachers, setAllTeachers] = useState<TeacherResponse[]>([]);
+  const [students, setStudents] = useState<StudentResponse[]>([]);
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherResponse | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentResponse | null>(null);
+  const [teacherSearchQuery, setTeacherSearchQuery] = useState('');
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [loadingTeachers, setLoadingTeachers] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentToLink, setStudentToLink] = useState<{ studentId: number; currentClass: SchoolClassResponse | null } | null>(null);
   const [createForm, setCreateForm] = useState<CreateClassRequest>({ name: '' });
   const { showToast } = useToast();
@@ -80,15 +83,16 @@ export const ClassesManagementPanel = () => {
     }
   };
 
-  const fetchAvailableTeachers = async (): Promise<TeacherResponse[]> => {
+  const fetchAvailableTeachers = async (searchQuery?: string): Promise<TeacherResponse[]> => {
     try {
       setLoadingTeachers(true);
       const response = await userService.searchTeachers({
         page: 0,
-        size: 100, // Aumentado para garantir que todos os professores sejam retornados
+        size: 100,
+        ...(searchQuery && { name: searchQuery }),
       });
       const teachers = response.content || [];
-      setAvailableTeachers(teachers);
+      setAllTeachers(teachers);
       return teachers;
     } catch (error: any) {
       showToast(
@@ -101,10 +105,62 @@ export const ClassesManagementPanel = () => {
     }
   };
 
+  const searchTeachers = async (query: string) => {
+    setTeacherSearchQuery(query);
+    if (query.trim()) {
+      try {
+        setLoadingTeachers(true);
+        const response = await userService.searchTeachers({
+          page: 0,
+          size: 100,
+          name: query,
+        });
+        setAllTeachers(response.content || []);
+      } catch (error: any) {
+        showToast(
+          error.response?.data?.message || 'Erro ao buscar professores',
+          'error'
+        );
+      } finally {
+        setLoadingTeachers(false);
+      }
+    } else {
+      await fetchAvailableTeachers();
+    }
+  };
+
+  const searchStudents = async (query: string) => {
+    setStudentSearchQuery(query);
+    if (query.trim()) {
+      try {
+        setLoadingStudents(true);
+        const response = await userService.searchStudents({
+          page: 0,
+          size: 100,
+          name: query,
+        });
+        setStudents(response.content || []);
+      } catch (error: any) {
+        showToast(
+          error.response?.data?.message || 'Erro ao buscar estudantes',
+          'error'
+        );
+      } finally {
+        setLoadingStudents(false);
+      }
+    } else {
+      await fetchStudents();
+    }
+  };
+
   const fetchStudents = async () => {
     try {
-      const data = await userService.getAllStudents();
-      setStudents(data);
+      const response = await userService.searchStudents({
+        page: 0,
+        size: 100,
+      });
+      const studentsData = response.content || [];
+      setStudents(studentsData);
     } catch (error: any) {
       showToast(
         error.response?.data?.message || 'Erro ao carregar estudantes',
@@ -160,14 +216,9 @@ export const ClassesManagementPanel = () => {
     if (detail) {
       setClassDetail(detail);
       setSelectedClass(classItem);
-      setSelectedTeacherId('');
-      const allTeachers = await fetchAvailableTeachers();
-      const linkedTeacherIds = new Set(detail.teachers.map(t => t.id));
-      const available = allTeachers.filter(t => !linkedTeacherIds.has(t.id));
-      console.log('All teachers:', allTeachers);
-      console.log('Linked teacher IDs:', Array.from(linkedTeacherIds));
-      console.log('Available teachers:', available);
-      setAvailableTeachers(available);
+      setSelectedTeacher(null);
+      setTeacherSearchQuery('');
+      await fetchAvailableTeachers();
       setOpenLinkTeacherDialog(true);
     }
   };
@@ -176,23 +227,23 @@ export const ClassesManagementPanel = () => {
     const detail = await fetchClassDetail(classItem.id);
     if (detail) {
       setClassDetail(detail);
-      const linkedStudentIds = new Set(detail.students.map(s => s.id));
-      const available = students.filter(s => !linkedStudentIds.has(s.id));
-      setAvailableStudents(available);
       setSelectedClass(classItem);
-      setSelectedStudentId('');
+      setSelectedStudent(null);
+      setStudentSearchQuery('');
+      await fetchStudents();
       setOpenLinkStudentDialog(true);
     }
   };
 
   const handleLinkTeacher = async () => {
-    if (!selectedClass || !selectedTeacherId) return;
+    if (!selectedClass || !selectedTeacher) return;
 
     try {
-      const updatedClass = await classService.linkTeacherToClass(selectedClass.id, selectedTeacherId as number);
+      const updatedClass = await classService.linkTeacherToClass(selectedClass.id, selectedTeacher.id);
       showToast('Professor vinculado com sucesso!', 'success');
       setOpenLinkTeacherDialog(false);
-      setSelectedTeacherId('');
+      setSelectedTeacher(null);
+      setTeacherSearchQuery('');
       const updatedDetail = await fetchClassDetail(selectedClass.id);
       if (updatedDetail) {
         setClassDetail(updatedDetail);
@@ -227,24 +278,42 @@ export const ClassesManagementPanel = () => {
   };
 
   const handleLinkStudentClick = async () => {
-    if (!selectedClass || !selectedStudentId) return;
+    if (!selectedClass || !selectedStudent) return;
 
     try {
-      const currentClass = await classService.getStudentCurrentClass(selectedStudentId as number);
+      let currentClassId: number | null | undefined = (selectedStudent as any).currentClassId || (selectedStudent as any).currentClass;
       
-      if (currentClass && currentClass.id !== selectedClass.id) {
-        setStudentToLink({
-          studentId: selectedStudentId as number,
-          currentClass: currentClass
-        });
-        setOpenLinkStudentDialog(false);
-        setOpenConfirmStudentDialog(true);
-      } else {
-        await linkStudentToClass(selectedStudentId as number);
+      if (!currentClassId && selectedStudent.id) {
+        try {
+          const studentDetail = await classService.getStudent(selectedStudent.id.toString());
+          currentClassId = (studentDetail as any).currentClassId || (studentDetail as any).currentClass || studentDetail.classEntity?.id;
+        } catch (error) {
+        }
       }
+      
+      if (currentClassId && currentClassId !== selectedClass.id) {
+        const currentClassDetail = await classService.getClassById(currentClassId);
+        
+        if (currentClassDetail) {
+          setStudentToLink({
+            studentId: selectedStudent.id,
+            currentClass: {
+              id: currentClassId,
+              name: currentClassDetail.name,
+              studentCount: currentClassDetail.students?.length || 0,
+              createdAt: currentClassDetail.createdAt,
+            }
+          });
+          setOpenLinkStudentDialog(false);
+          setOpenConfirmStudentDialog(true);
+          return;
+        }
+      }
+      
+      await linkStudentToClass(selectedStudent.id);
     } catch (error: any) {
       showToast(
-        error.response?.data?.message || 'Erro ao verificar turma do estudante',
+        error.response?.data?.message || 'Erro ao vincular estudante à turma',
         'error'
       );
     }
@@ -254,11 +323,12 @@ export const ClassesManagementPanel = () => {
     if (!selectedClass) return;
 
     try {
-      await classService.linkStudentToClass(selectedClass.id, studentId);
+      const updatedClass = await classService.linkStudentToClass(selectedClass.id, studentId);
       showToast('Estudante vinculado com sucesso!', 'success');
       setOpenLinkStudentDialog(false);
       setOpenConfirmStudentDialog(false);
-      setSelectedStudentId('');
+      setSelectedStudent(null);
+      setStudentSearchQuery('');
       setStudentToLink(null);
       const updatedDetail = await fetchClassDetail(selectedClass.id);
       if (updatedDetail) {
@@ -266,6 +336,7 @@ export const ClassesManagementPanel = () => {
       }
       fetchClasses();
       fetchStudents();
+      setSelectedClass(updatedClass);
     } catch (error: any) {
       showToast(
         error.response?.data?.message || 'Erro ao vincular estudante',
@@ -300,6 +371,19 @@ export const ClassesManagementPanel = () => {
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
+
+  const filteredAvailableTeachers = useMemo(() => {
+    if (!classDetail) return allTeachers;
+    const linkedTeacherIds = new Set(classDetail.teachers.map(t => t.id));
+    return allTeachers.filter(t => !linkedTeacherIds.has(t.id));
+  }, [allTeachers, classDetail]);
+
+  const filteredAvailableStudents = useMemo(() => {
+    if (!classDetail) return students;
+    const linkedStudentIds = new Set(classDetail.students.map(s => s.id));
+    return students.filter(s => !linkedStudentIds.has(s.id));
+  }, [students, classDetail]);
+
 
   return (
     <Layout>
@@ -570,27 +654,55 @@ export const ClassesManagementPanel = () => {
           </DialogTitle>
           <DialogContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-              <TextField
-                fullWidth
-                select
-                label="Professor"
-                value={selectedTeacherId}
-                onChange={(e) => setSelectedTeacherId(Number(e.target.value))}
-                SelectProps={{
-                  native: true,
+              <Autocomplete
+                options={filteredAvailableTeachers}
+                getOptionLabel={(option) => {
+                  if (typeof option === 'string' && option === '__CREATE__') return '';
+                  return `${option.name} - ${option.email}`;
                 }}
-              >
-                <option value="">Selecione um professor</option>
-                {loadingTeachers ? (
-                  <option value="">Carregando...</option>
-                ) : (
-                  availableTeachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.name} - {teacher.email}
-                    </option>
-                  ))
+                value={selectedTeacher}
+                onChange={(_, newValue) => {
+                  if (newValue && typeof newValue === 'object' && 'id' in newValue) {
+                    setSelectedTeacher(newValue);
+                    setTeacherSearchQuery(newValue.name);
+                  }
+                }}
+                onInputChange={(_, newInputValue, reason) => {
+                  if (reason === 'input') {
+                    setTeacherSearchQuery(newInputValue);
+                    searchTeachers(newInputValue);
+                  }
+                }}
+                loading={loadingTeachers}
+                inputValue={teacherSearchQuery}
+                filterOptions={(options) => options}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Buscar Professor"
+                    placeholder="Digite o nome do professor..."
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
+                      endAdornment: (
+                        <>
+                          {loadingTeachers ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
                 )}
-              </TextField>
+                renderOption={(props, option) => (
+                  <Box component="li" {...props} key={option.id}>
+                    <ListItemText
+                      primary={option.name}
+                      secondary={option.email}
+                    />
+                  </Box>
+                )}
+                noOptionsText="Nenhum professor disponível"
+              />
             </Box>
           </DialogContent>
           <DialogActions>
@@ -598,7 +710,7 @@ export const ClassesManagementPanel = () => {
             <Button
               onClick={handleLinkTeacher}
               variant="contained"
-              disabled={!selectedTeacherId}
+              disabled={!selectedTeacher}
             >
               Adicionar
             </Button>
@@ -617,23 +729,55 @@ export const ClassesManagementPanel = () => {
           </DialogTitle>
           <DialogContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-              <TextField
-                fullWidth
-                select
-                label="Estudante"
-                value={selectedStudentId}
-                onChange={(e) => setSelectedStudentId(Number(e.target.value))}
-                SelectProps={{
-                  native: true,
+              <Autocomplete
+                options={filteredAvailableStudents}
+                getOptionLabel={(option) => `${option.name} - ${option.email}`}
+                value={selectedStudent}
+                onChange={(_, newValue) => {
+                  setSelectedStudent(newValue);
+                  if (newValue) {
+                    setStudentSearchQuery(newValue.name);
+                  } else {
+                    setStudentSearchQuery('');
+                  }
                 }}
-              >
-                <option value="">Selecione um estudante</option>
-                {availableStudents.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.name} - {student.email}
-                  </option>
-                ))}
-              </TextField>
+                onInputChange={(_, newInputValue, reason) => {
+                  if (reason === 'input') {
+                    setStudentSearchQuery(newInputValue);
+                    searchStudents(newInputValue);
+                  }
+                }}
+                loading={loadingStudents}
+                inputValue={studentSearchQuery}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                filterOptions={(options) => options}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Buscar Estudante"
+                    placeholder="Digite o nome do estudante..."
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
+                      endAdornment: (
+                        <>
+                          {loadingStudents ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    <ListItemText
+                      primary={option.name}
+                      secondary={option.email}
+                    />
+                  </li>
+                )}
+                noOptionsText="Nenhum estudante disponível"
+              />
             </Box>
           </DialogContent>
           <DialogActions>
@@ -641,23 +785,31 @@ export const ClassesManagementPanel = () => {
             <Button
               onClick={handleLinkStudentClick}
               variant="contained"
-              disabled={!selectedStudentId}
+              disabled={!selectedStudent}
             >
               Adicionar
             </Button>
           </DialogActions>
         </Dialog>
 
-        <Dialog open={openConfirmStudentDialog} onClose={() => setOpenConfirmStudentDialog(false)}>
+        <Dialog 
+          open={openConfirmStudentDialog} 
+          onClose={() => setOpenConfirmStudentDialog(false)} 
+          maxWidth="sm" 
+          fullWidth
+        >
           <DialogTitle>
             Confirmar Mudança de Turma
           </DialogTitle>
           <DialogContent>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Este estudante já está vinculado à turma <strong>{studentToLink?.currentClass?.name}</strong>.
+            <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
+              Atenção: Este estudante já está vinculado à turma <strong>{studentToLink?.currentClass?.name}</strong>.
             </Typography>
-            <Typography variant="body1">
-              Ao continuar, o estudante será removido da turma atual e vinculado à nova turma <strong>{selectedClass?.name}</strong>.
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Ao continuar, o estudante será <strong>removido automaticamente</strong> da turma atual e vinculado à nova turma <strong>{selectedClass?.name}</strong>.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Esta ação não pode ser desfeita automaticamente. O estudante precisará ser vinculado manualmente à turma anterior caso seja necessário.
             </Typography>
           </DialogContent>
           <DialogActions>

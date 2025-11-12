@@ -1,0 +1,61 @@
+services:
+  backend:
+    build:
+      context: ../sisges-sboot-app
+      dockerfile: Dockerfile
+    container_name: sisges-backend-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/sisges
+      - SPRING_DATASOURCE_USERNAME=sisges
+      - SPRING_DATASOURCE_PASSWORD=sisges123
+    volumes:
+      - ../sisges-sboot-app:/app
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - sisges-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sisges-frontend-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - sisges-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: sisges-db-dev
+    environment:
+      - POSTGRES_DB=sisges
+      - POSTGRES_USER=sisges
+      - POSTGRES_PASSWORD=sisges123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - sisges-network
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  sisges-network:
+    driver: bridge
+

@@ -5,6 +5,10 @@ const NAME_KEY = 'sisges_name';
 const EMAIL_KEY = 'sisges_email';
 const REGISTER_KEY = 'sisges_register';
 const ROLE_KEY = 'sisges_role';
+const STUDENT_ID_KEY = 'sisges_student_id';
+const STUDENT_REGISTER_KEY = 'sisges_student_register';
+const STUDENT_CLASS_ID_KEY = 'sisges_student_class_id';
+const CLASS_DATA_KEY = 'sisges_class_data';
 
 export const storage = {
   setAuthData: (
@@ -54,6 +58,30 @@ export const storage = {
     return localStorage.getItem(ROLE_KEY);
   },
 
+  getStudentId: (): string | null => {
+    return localStorage.getItem(STUDENT_ID_KEY);
+  },
+
+  getStudentRegister: (): string | null => {
+    return localStorage.getItem(STUDENT_REGISTER_KEY);
+  },
+
+  getStudentClassId: (): string | null => {
+    return localStorage.getItem(STUDENT_CLASS_ID_KEY);
+  },
+
+  setClassData: (classData: string): void => {
+    localStorage.setItem(CLASS_DATA_KEY, classData);
+  },
+
+  getClassData: (): string | null => {
+    return localStorage.getItem(CLASS_DATA_KEY);
+  },
+
+  setItem: (key: string, value: string): void => {
+    localStorage.setItem(key, value);
+  },
+
   clearAuthData: (): void => {
     localStorage.removeItem(USER_ID_KEY);
     localStorage.removeItem(TOKEN_KEY);
@@ -62,6 +90,10 @@ export const storage = {
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem(REGISTER_KEY);
     localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem(STUDENT_ID_KEY);
+    localStorage.removeItem(STUDENT_REGISTER_KEY);
+    localStorage.removeItem(STUDENT_CLASS_ID_KEY);
+    localStorage.removeItem(CLASS_DATA_KEY);
   },
 };
 

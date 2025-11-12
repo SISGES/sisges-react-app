@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -57,6 +58,7 @@ const GENDER_OPTIONS = [
 ];
 
 export const UsersControlPanel = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -97,6 +99,23 @@ export const UsersControlPanel = () => {
   useEffect(() => {
     fetchUsers();
   }, [page, appliedFilters]);
+
+  useEffect(() => {
+    const createParam = searchParams.get('create');
+    const nameParam = searchParams.get('name');
+    const roleParam = searchParams.get('role');
+
+    if (createParam === 'true') {
+      const role = roleParam ? parseInt(roleParam, 10) : 0;
+      setCreateForm(prev => ({
+        ...prev,
+        name: nameParam || '',
+        userRole: role,
+      }));
+      setOpenCreateDialog(true);
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   const fetchUsers = async () => {
     try {

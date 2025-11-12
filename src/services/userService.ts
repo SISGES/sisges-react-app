@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { SearchUserRequest, RegisterUserRequest, PaginatedUserResponse, User } from '../types/user';
 import type { UserResponse, UpdateUserRequest, UpdateUserResponse } from '../types/auth';
-import type { SearchTeacherRequest, PaginatedTeacherResponse } from '../types/class';
+import type { SearchTeacherRequest, PaginatedTeacherResponse, SearchStudentRequest, PaginatedStudentResponse } from '../types/class';
 
 export const userService = {
   searchUsers: async (filters?: SearchUserRequest): Promise<PaginatedUserResponse> => {
@@ -44,7 +44,6 @@ export const userService = {
   },
 
   searchTeachers: async (filters?: SearchTeacherRequest): Promise<PaginatedTeacherResponse> => {
-    // Verifica se há filtros de busca (além de page/size)
     const hasSearchFilters = filters && (
       filters.fromDate || 
       filters.toDate || 
@@ -53,21 +52,16 @@ export const userService = {
       filters.email
     );
     
-    // Se não há filtros de busca, envia body vazio (como no Postman)
-    // O backend usará valores padrão de paginação
     if (!hasSearchFilters) {
       const response = await api.post<PaginatedTeacherResponse>('/teacher/search', {});
       return response.data;
     }
     
-    // Se há filtros de busca, constrói o body com todos os parâmetros
     const requestBody: SearchTeacherRequest = {};
     
-    // Adiciona page e size se fornecidos
     if (filters.page !== undefined) requestBody.page = filters.page;
     if (filters.size !== undefined) requestBody.size = filters.size;
     
-    // Adiciona outros filtros se fornecidos
     if (filters.fromDate) requestBody.fromDate = filters.fromDate;
     if (filters.toDate) requestBody.toDate = filters.toDate;
     if (filters.register) requestBody.register = filters.register;
@@ -75,6 +69,37 @@ export const userService = {
     if (filters.email) requestBody.email = filters.email;
     
     const response = await api.post<PaginatedTeacherResponse>('/teacher/search', requestBody);
+    return response.data;
+  },
+
+  searchStudents: async (filters?: SearchStudentRequest): Promise<PaginatedStudentResponse> => {
+    const hasSearchFilters = filters && (
+      filters.fromDate || 
+      filters.toDate || 
+      filters.register || 
+      filters.name || 
+      filters.responsibleName ||
+      filters.email
+    );
+    
+    if (!hasSearchFilters) {
+      const response = await api.post<PaginatedStudentResponse>('/student/search', {});
+      return response.data;
+    }
+    
+    const requestBody: SearchStudentRequest = {};
+    
+    if (filters.page !== undefined) requestBody.page = filters.page;
+    if (filters.size !== undefined) requestBody.size = filters.size;
+    
+    if (filters.fromDate) requestBody.fromDate = filters.fromDate;
+    if (filters.toDate) requestBody.toDate = filters.toDate;
+    if (filters.register) requestBody.register = filters.register;
+    if (filters.name) requestBody.name = filters.name;
+    if (filters.responsibleName) requestBody.responsibleName = filters.responsibleName;
+    if (filters.email) requestBody.email = filters.email;
+    
+    const response = await api.post<PaginatedStudentResponse>('/student/search', requestBody);
     return response.data;
   },
 };

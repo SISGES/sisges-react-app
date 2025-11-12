@@ -8,10 +8,27 @@ export interface SchoolClassResponse {
 
 export interface StudentResponse {
   id: number;
+  userId?: number;
   name: string;
   email: string;
-  register?: string;
+  register: string;
   classEntity?: SchoolClassResponse;
+  currentClassId?: number | null;
+}
+
+export interface StudentByUserIdResponse {
+  id: number;
+  userId: number;
+  currentClass: number | null;
+  register: string;
+  name: string;
+  email: string;
+}
+
+export interface SchoolClassSimpleResponse {
+  name: string;
+  teachersNameAndEmail: Array<Record<string, string>>;
+  studentsNameAndEmail: Array<Record<string, string>>;
 }
 
 export interface TeacherClassesResponse {
@@ -50,6 +67,17 @@ export interface SearchTeacherRequest {
   size?: number;
 }
 
+export interface SearchStudentRequest {
+  fromDate?: string;
+  toDate?: string;
+  register?: string;
+  name?: string;
+  responsibleName?: string;
+  email?: string;
+  page?: number;
+  size?: number;
+}
+
 export interface TeacherResponse {
   id: number;
   userId: number;
@@ -60,6 +88,16 @@ export interface TeacherResponse {
 
 export interface PaginatedTeacherResponse {
   content: TeacherResponse[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface PaginatedStudentResponse {
+  content: StudentResponse[];
   totalElements: number;
   totalPages: number;
   size: number;

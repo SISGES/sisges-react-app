@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { StudentResponse, SchoolClassResponse, TeacherClassesResponse, CreateClassRequest, ClassDetailResponse, SearchClassRequest, PaginatedClassResponse, DetailedSchoolClassResponse } from '../types/class';
+import type { StudentResponse, SchoolClassResponse, TeacherClassesResponse, CreateClassRequest, ClassDetailResponse, SearchClassRequest, PaginatedClassResponse, DetailedSchoolClassResponse, StudentByUserIdResponse, SchoolClassSimpleResponse } from '../types/class';
 
 export const classService = {
   getTeacherClassesByUserId: async (userId: string): Promise<SchoolClassResponse[]> => {
@@ -52,12 +52,13 @@ export const classService = {
     await api.post(`/class/${classId}/unbind/teacher/${teacherId}`);
   },
 
-  linkStudentToClass: async (classId: number, studentId: number): Promise<void> => {
-    await api.post(`/class/${classId}/student/${studentId}`);
+  linkStudentToClass: async (classId: number, studentId: number): Promise<SchoolClassResponse> => {
+    const response = await api.post<SchoolClassResponse>(`/class/${classId}/bind/student/${studentId}`);
+    return response.data;
   },
 
   unlinkStudentFromClass: async (classId: number, studentId: number): Promise<void> => {
-    await api.delete(`/class/${classId}/student/${studentId}`);
+    await api.post(`/class/${classId}/unbind/student/${studentId}`);
   },
 
   getStudentCurrentClass: async (studentId: number): Promise<SchoolClassResponse | null> => {
@@ -70,6 +71,16 @@ export const classService = {
       }
       throw error;
     }
+  },
+
+  getStudentByUserId: async (userId: string): Promise<StudentByUserIdResponse> => {
+    const response = await api.get<StudentByUserIdResponse>(`/student/user/${userId}`);
+    return response.data;
+  },
+
+  findClassById: async (classId: number): Promise<SchoolClassSimpleResponse> => {
+    const response = await api.get<SchoolClassSimpleResponse>(`/class/find/${classId}`);
+    return response.data;
   },
 };
 
