@@ -1,20 +1,41 @@
 import { Box, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { storage } from '../../utils/localStorage';
+import UserRoleEnum from '../../enums/UserRoleEnum';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const role = storage.getRole();
 
-  const menuItems = [
-    { label: 'Dashboard', path: '/dashboard' },
-    // Future menu items will be added here
-    { label: 'Turmas', path: '/turmas' },
-    { label: 'Presenças', path: '/presencas' },
-    { label: 'Notas', path: '/notas' },
-    { label: 'Planejamento', path: '/planejamento' },
-    { label: 'Mensagens', path: '/mensagens' },
-    { label: 'Configurações', path: '/configuracoes' },
+  const adminMenuItems = [
+    { label: 'Usuários', path: '/admin/users' },
+    { label: 'Turmas', path: '/admin/classes' },
   ];
+
+  const teacherMenuItems = [
+    { label: 'Turmas', path: '/turmas' },
+  ];
+
+  const studentMenuItems = [
+    { label: 'Notas', path: '/notas' },
+    { label: 'Faltas', path: '/faltas' },
+  ];
+
+  const getMenuItems = () => {
+    if (role === UserRoleEnum.DEV_ADMIN || role === UserRoleEnum.ADMIN) {
+      return adminMenuItems;
+    }
+    if (role === UserRoleEnum.TEACHER) {
+      return teacherMenuItems;
+    }
+    if (role === UserRoleEnum.STUDENT) {
+      return studentMenuItems;
+    }
+    return [];
+  };
+
+  const menuItems = getMenuItems();
 
   const handleNavigation = (path: string) => {
     navigate(path);

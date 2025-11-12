@@ -8,7 +8,7 @@ import UserRoleEnum from '../../enums/UserRoleEnum';
 import type { SchoolClassResponse } from '../../types/class';
 import { useToast } from '../../contexts/ToastContext';
 
-export const HomePage = () => {
+export const ClassesPage = () => {
   const [classes, setClasses] = useState<SchoolClassResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
@@ -22,13 +22,6 @@ export const HomePage = () => {
         const userId = storage.getUserId();
 
         if (!role || !userId) {
-          if (isMounted) {
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (role === UserRoleEnum.DEV_ADMIN || role === UserRoleEnum.ADMIN || role === UserRoleEnum.TEACHER) {
           if (isMounted) {
             setLoading(false);
           }
@@ -55,7 +48,7 @@ export const HomePage = () => {
         if (isMounted) {
           setClasses([]);
           const role = storage.getRole();
-          if (role && role !== UserRoleEnum.DEV_ADMIN && role !== UserRoleEnum.ADMIN && role !== UserRoleEnum.TEACHER) {
+          if (role) {
             showToast(
               error.response?.data?.message || 'Erro ao carregar dados das turmas',
               'error'
@@ -84,24 +77,12 @@ export const HomePage = () => {
     return `${day}/${month}/${year}`;
   };
 
-  const name = storage.getName();
-  const role = storage.getRole();
-
-  if (role === UserRoleEnum.DEV_ADMIN || role === UserRoleEnum.ADMIN || role === UserRoleEnum.TEACHER) {
-    return null;
-  }
-
   return (
     <Layout>
       <Box sx={{ p: 3 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700, mb: 1 }}>
-            Bem-vindo, {name || 'Usuário'}!
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Aqui estão suas turmas
-          </Typography>
-        </Box>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 3 }}>
+          Turmas
+        </Typography>
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
@@ -275,3 +256,4 @@ export const HomePage = () => {
     </Layout>
   );
 };
+

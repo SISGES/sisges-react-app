@@ -12,10 +12,15 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = storage.getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const isLoginEndpoint = config.url === '/auth/login';
+    
+    if (!isLoginEndpoint) {
+      const token = storage.getToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+    
     return config;
   },
   (error) => {
