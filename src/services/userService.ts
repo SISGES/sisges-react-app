@@ -13,6 +13,8 @@ import type {
   ClassDetailResponse,
   ClassSearchFilters,
   CreateClassRequest,
+  ResponsibleSearchResponse,
+  ResponsibleSearchFilters,
 } from '../types/auth'
 
 export type {
@@ -24,6 +26,7 @@ export type {
   StudentDetailResponse,
   ClassSearchResponse,
   ClassDetailResponse,
+  ResponsibleSearchResponse,
 }
 
 export type UserResponse = UserSearchResponse
@@ -74,5 +77,10 @@ export async function getClassById(id: number): Promise<ClassDetailResponse> {
 
 export async function createClass(data: CreateClassRequest): Promise<ClassDetailResponse> {
   const response = await api.post<ClassDetailResponse>('/classes', data)
+  return response
+}
+
+export async function searchResponsibles(filters?: ResponsibleSearchFilters): Promise<ResponsibleSearchResponse[]> {
+  const response = await api.post<ResponsibleSearchResponse[]>('/responsibles/search', filters)
   return response
 }

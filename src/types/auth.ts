@@ -216,3 +216,15 @@ export interface CreateClassRequest {
   teacherIds?: number[]
   disciplineIds?: number[]
 }
+
+export interface ResponsibleSearchResponse {
+  id: number
+  name: string
+  phone: string
+  email: string
+}
+
+export interface ResponsibleSearchFilters {
+  name?: string
+  email?: string
+}

@@ -290,6 +290,12 @@
   margin-top: -0.25rem;
 }
 
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
 .form-input.input-error,
 .form-select.input-error {
   border-color: var(--color-error);

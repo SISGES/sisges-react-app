@@ -1,9 +1,16 @@
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { register, getErrorMessage } from '../../services/authService'
 import { ApiError } from '../../services/api'
 import { useToast } from '../../contexts/ToastContext'
-import type { UserRole, RegisterUserRequest, ResponsibleData } from '../../types/auth'
+import { searchClasses, searchResponsibles } from '../../services/userService'
+import type {
+  UserRole,
+  RegisterUserRequest,
+  ResponsibleData,
+  ClassSearchResponse,
+  ResponsibleSearchResponse,
+} from '../../types/auth'
 import './RegisterUser.css'
 
 type ResponsibleMode = 'existing' | 'new'
@@ -34,10 +41,31 @@ export function RegisterUser() {
 
   const [addAnother, setAddAnother] = useState(false)
 
+  const [availableClasses, setAvailableClasses] = useState<ClassSearchResponse[]>([])
+  const [availableResponsibles, setAvailableResponsibles] = useState<ResponsibleSearchResponse[]>([])
+  const [loadingDropdowns, setLoadingDropdowns] = useState(false)
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
+
+  useEffect(() => {
+    if (role === 'STUDENT') {
+      setLoadingDropdowns(true)
+      Promise.all([
+        searchClasses().catch(() => []),
+        searchResponsibles().catch(() => []),
+      ])
+        .then(([classes, responsibles]) => {
+          setAvailableClasses(classes)
+          setAvailableResponsibles(responsibles)
+        })
+        .finally(() => {
+          setLoadingDropdowns(false)
+        })
+    }
+  }, [role])
 
   const resetForm = () => {
     setName('')
@@ -245,17 +273,24 @@ export function RegisterUser() {
 
                 <div className="form-group">
                   <label htmlFor="classId" className="form-label">
-                    ID da Turma (opcional)
+                    Turma (opcional)
                   </label>
-                  <input
+                  <select
                     id="classId"
-                    type="number"
                     value={classId}
                     onChange={(e) => setClassId(e.target.value)}
-                    className={`form-input${fieldErrors.classId ? ' input-error' : ''}`}
-                    placeholder="ID da turma"
-                    disabled={isLoading}
-                  />
+                    className={`form-select${fieldErrors.classId ? ' input-error' : ''}`}
+                    disabled={isLoading || loadingDropdowns}
+                  >
+                    <option value="">
+                      {loadingDropdowns ? 'Carregando turmas...' : 'Selecione uma turma'}
+                    </option>
+                    {availableClasses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.year})
+                      </option>
+                    ))}
+                  </select>
                   {fieldErrors.classId && <span className="field-error">{fieldErrors.classId}</span>}
                 </div>
 
@@ -284,17 +319,27 @@ export function RegisterUser() {
                   {responsibleMode === 'existing' ? (
                     <div className="form-group">
                       <label htmlFor="responsibleId" className="form-label">
-                        ID do Responsável
+                        Responsável
                       </label>
-                      <input
+                      <select
                         id="responsibleId"
-                        type="number"
                         value={responsibleId}
                         onChange={(e) => setResponsibleId(e.target.value)}
-                        className={`form-input${fieldErrors.responsibleId ? ' input-error' : ''}`}
-                        placeholder="ID do responsável existente"
-                        disabled={isLoading}
-                      />
+                        className={`form-select${fieldErrors.responsibleId ? ' input-error' : ''}`}
+                        disabled={isLoading || loadingDropdowns}
+                      >
+                        <option value="">
+                          {loadingDropdowns ? 'Carregando responsáveis...' : 'Selecione um responsável'}
+                        </option>
+                        {availableResponsibles.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name} - {r.email}
+                          </option>
+                        ))}
+                      </select>
+                      {availableResponsibles.length === 0 && !loadingDropdowns && (
+                        <span className="field-hint">Nenhum responsável cadastrado. Cadastre um novo responsável.</span>
+                      )}
                       {fieldErrors.responsibleId && (
                         <span className="field-error">{fieldErrors.responsibleId}</span>
                       )}

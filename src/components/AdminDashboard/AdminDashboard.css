@@ -124,6 +124,7 @@
 .user-table td {
   padding: 0.875rem 1.5rem;
   text-align: center;
+  vertical-align: middle;
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--color-border);
 }
@@ -137,7 +138,9 @@
 }
 
 .role-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.2rem 0.65rem;
   border-radius: 1rem;
   font-size: 0.78rem;
