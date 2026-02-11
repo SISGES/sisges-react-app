@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle'
+import { AdminDashboard } from '../../components/AdminDashboard/AdminDashboard'
 import { ColorPalette } from '../../components/ColorPalette/ColorPalette'
 import { ExampleComponents } from '../../components/ExampleComponents/ExampleComponents'
 import './Home.css'
@@ -40,6 +41,9 @@ export function Home() {
         </div>
       </header>
       <main>
+        {user?.role === 'ADMIN' && user.id && (
+          <AdminDashboard currentUserId={user.id} />
+        )}
         <ColorPalette />
         <ExampleComponents />
       </main>
