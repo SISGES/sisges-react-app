@@ -21,8 +21,6 @@ export function RegisterUser() {
   const [role, setRole] = useState<UserRole>('TEACHER')
 
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [registerField, setRegisterField] = useState('')
   const [password, setPassword] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [gender, setGender] = useState('')
@@ -39,8 +37,6 @@ export function RegisterUser() {
 
   const resetForm = () => {
     setName('')
-    setEmail('')
-    setRegisterField('')
     setPassword('')
     setBirthDate('')
     setGender('')
@@ -65,8 +61,6 @@ export function RegisterUser() {
     try {
       const requestData: RegisterUserRequest = {
         name,
-        email,
-        register: registerField,
         password,
         birthDate,
         gender,
@@ -167,7 +161,6 @@ export function RegisterUser() {
               </div>
             )}
 
-            {/* Common fields */}
             <div className="form-group">
               <label htmlFor="name" className="form-label">
                 Nome
@@ -184,44 +177,6 @@ export function RegisterUser() {
                 disabled={isLoading}
               />
               {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  E-mail
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`form-input${fieldErrors.email ? ' input-error' : ''}`}
-                  placeholder="usuario@email.com"
-                  required
-                  maxLength={255}
-                  disabled={isLoading}
-                />
-                {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="register" className="form-label">
-                  Registro/Matrícula
-                </label>
-                <input
-                  id="register"
-                  type="text"
-                  value={registerField}
-                  onChange={(e) => setRegisterField(e.target.value)}
-                  className={`form-input${fieldErrors.register ? ' input-error' : ''}`}
-                  placeholder="Número de registro"
-                  required
-                  maxLength={50}
-                  disabled={isLoading}
-                />
-                {fieldErrors.register && <span className="field-error">{fieldErrors.register}</span>}
-              </div>
             </div>
 
             <div className="form-row">

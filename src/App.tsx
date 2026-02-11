@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { Login } from './components/Login/Login'
 import { Home } from './pages/Home/Home'
 import { RegisterUser } from './pages/RegisterUser/RegisterUser'
+import { Classes } from './pages/Classes/Classes'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute/AdminRoute'
 import { useAuth } from './contexts/AuthContext'
@@ -32,6 +33,14 @@ function App() {
         element={
           <AdminRoute>
             <RegisterUser />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/classes"
+        element={
+          <AdminRoute>
+            <Classes />
           </AdminRoute>
         }
       />

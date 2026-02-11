@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { searchUsers } from '../../services/userService'
 import { ApiError } from '../../services/api'
-import type { UserResponse } from '../../types/auth'
+import type { UserSearchResponse } from '../../types/auth'
 import './AdminDashboard.css'
 
 interface AdminDashboardProps {
@@ -22,7 +22,7 @@ const ROLE_CSS: Record<string, string> = {
 }
 
 export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
-  const [users, setUsers] = useState<UserResponse[]>([])
+  const [users, setUsers] = useState<UserSearchResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -52,15 +52,17 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
     fetchUsers()
   }, [fetchUsers])
 
-  const formatDate = (dateStr: string): string => {
-    if (!dateStr) return '-'
-    const [year, month, day] = dateStr.split('-')
-    return `${day}/${month}/${year}`
-  }
-
   return (
     <div className="admin-dashboard">
-      <h2 className="dashboard-title">Painel de Controle</h2>
+      <div className="dashboard-header">
+        <h2 className="dashboard-title">Painel de Controle</h2>
+        <button
+          onClick={() => navigate('/admin/classes')}
+          className="btn-manage-classes"
+        >
+          Gerenciar Turmas
+        </button>
+      </div>
 
       <div className="dashboard-card">
         <div className="dashboard-card-header">
@@ -101,10 +103,7 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
                 <tr>
                   <th>Nome</th>
                   <th>E-mail</th>
-                  <th>Registro</th>
                   <th>Tipo</th>
-                  <th className="col-gender">Gênero</th>
-                  <th className="col-birthdate">Nascimento</th>
                 </tr>
               </thead>
               <tbody>
@@ -112,14 +111,11 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
                   <tr key={u.id}>
                     <td>{u.name}</td>
                     <td>{u.email}</td>
-                    <td>{u.register}</td>
                     <td>
                       <span className={`role-badge ${ROLE_CSS[u.role] || ''}`}>
                         {ROLE_LABELS[u.role] || u.role}
                       </span>
                     </td>
-                    <td className="col-gender">{u.gender}</td>
-                    <td className="col-birthdate">{formatDate(u.birthDate)}</td>
                   </tr>
                 ))}
               </tbody>

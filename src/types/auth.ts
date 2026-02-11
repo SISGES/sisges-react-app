@@ -29,8 +29,6 @@ export interface ResponsibleData {
 
 export interface RegisterUserRequest {
   name: string
-  email: string
-  register: string
   password: string
   birthDate: string
   gender: string
@@ -40,7 +38,14 @@ export interface RegisterUserRequest {
   responsibleData?: ResponsibleData | null
 }
 
-export interface UserResponse {
+export interface UserSearchResponse {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+}
+
+export interface UserDetailResponse {
   id: number
   name: string
   email: string
@@ -49,6 +54,8 @@ export interface UserResponse {
   birthDate: string
   gender: string
 }
+
+export type UserResponse = UserSearchResponse
 
 export type SisgesErrorCode =
   | 'AUTH_INVALID_CREDENTIALS'
@@ -105,3 +112,107 @@ export interface User {
 }
 
 export type LoginCredentials = LoginRequest
+
+export interface TeacherSearchResponse {
+  id: number
+  name: string
+  email: string
+}
+
+export interface TeacherSearchFilters {
+  name?: string
+  email?: string
+}
+
+export interface ClassSimple {
+  id: number
+  name: string
+  year: number
+}
+
+export interface TeacherDetailResponse {
+  id: number
+  name: string
+  email: string
+  register: string
+  birthDate: string
+  gender: string
+  classes: ClassSimple[]
+}
+
+export interface StudentSearchResponse {
+  id: number
+  name: string
+  email: string
+}
+
+export interface StudentSearchFilters {
+  name?: string
+  email?: string
+}
+
+export interface AttendanceClassMeeting {
+  disciplineName: string
+  meetingDate: string
+  createdAt: string
+}
+
+export interface StudentAttendance {
+  classMeeting: AttendanceClassMeeting
+  present: boolean
+}
+
+// Responsável simplificado
+export interface ResponsibleSimple {
+  name: string
+  phone: string
+  email: string
+}
+
+export interface StudentDetailResponse {
+  id: number
+  name: string
+  email: string
+  register: string
+  birthDate: string
+  gender: string
+  class?: ClassSimple | null
+  attendances: StudentAttendance[]
+  responsibles: ResponsibleSimple[]
+}
+
+
+export interface ClassSearchResponse {
+  id: number
+  name: string
+  year: number
+  studentCount: number
+  teacherCount: number
+}
+
+export interface ClassSearchFilters {
+  name?: string
+  year?: number
+}
+
+export interface UserSimple {
+  id: number
+  name: string
+  email: string
+}
+
+export interface ClassDetailResponse {
+  id: number
+  name: string
+  year: number
+  students: UserSimple[]
+  teachers: UserSimple[]
+}
+
+export interface CreateClassRequest {
+  name: string
+  year: number
+  studentIds?: number[]
+  teacherIds?: number[]
+  disciplineIds?: number[]
+}
