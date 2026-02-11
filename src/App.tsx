@@ -3,6 +3,7 @@ import { Login } from './components/Login/Login'
 import { Home } from './pages/Home/Home'
 import { RegisterUser } from './pages/RegisterUser/RegisterUser'
 import { Classes } from './pages/Classes/Classes'
+import { UserDetail } from './pages/UserDetail/UserDetail'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute/AdminRoute'
 import { useAuth } from './contexts/AuthContext'
@@ -41,6 +42,14 @@ function App() {
         element={
           <AdminRoute>
             <Classes />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/users/:id"
+        element={
+          <AdminRoute>
+            <UserDetail />
           </AdminRoute>
         }
       />

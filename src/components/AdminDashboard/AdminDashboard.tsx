@@ -32,7 +32,6 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
     setError(null)
     try {
       const data = await searchUsers()
-      // Exclui o usuário logado da lista
       const filtered = data.filter((u) => u.id !== currentUserId)
       setUsers(filtered)
     } catch (err) {
@@ -104,6 +103,7 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
                   <th>Nome</th>
                   <th>E-mail</th>
                   <th>Tipo</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,6 +115,19 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
                       <span className={`role-badge ${ROLE_CSS[u.role] || ''}`}>
                         {ROLE_LABELS[u.role] || u.role}
                       </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => navigate(`/admin/users/${u.id}`)}
+                        className="btn-details"
+                        title="Ver detalhes"
+                        aria-label="Ver detalhes"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))}

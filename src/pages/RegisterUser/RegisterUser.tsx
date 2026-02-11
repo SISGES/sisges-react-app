@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { register, getErrorMessage } from '../../services/authService'
 import { ApiError } from '../../services/api'
+import { useToast } from '../../contexts/ToastContext'
 import type { UserRole, RegisterUserRequest, ResponsibleData } from '../../types/auth'
 import './RegisterUser.css'
 
@@ -17,6 +18,7 @@ const INITIAL_RESPONSIBLE_DATA: ResponsibleData = {
 
 export function RegisterUser() {
   const navigate = useNavigate()
+  const { showToast } = useToast()
 
   const [role, setRole] = useState<UserRole>('TEACHER')
 
@@ -30,10 +32,12 @@ export function RegisterUser() {
   const [responsibleId, setResponsibleId] = useState('')
   const [responsibleData, setResponsibleData] = useState<ResponsibleData>(INITIAL_RESPONSIBLE_DATA)
 
+  const [addAnother, setAddAnother] = useState(false)
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [success, setSuccess] = useState<string | null>(null)
+
 
   const resetForm = () => {
     setName('')
@@ -54,7 +58,6 @@ export function RegisterUser() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
-    setSuccess(null)
     setFieldErrors({})
     setIsLoading(true)
 
@@ -86,8 +89,12 @@ export function RegisterUser() {
       }
 
       const response = await register(requestData)
-      setSuccess(`Usuário "${response.name}" cadastrado com sucesso como ${getRoleLabel(response.role)}.`)
+      showToast(`Usuário "${response.name}" cadastrado com sucesso como ${getRoleLabel(response.role)}.`, 'success')
       resetForm()
+
+      if (!addAnother) {
+        navigate('/')
+      }
     } catch (err) {
       if (err instanceof ApiError && err.code === 'VALIDATION_ERROR' && err.errors) {
         const errors: Record<string, string> = {}
@@ -152,12 +159,6 @@ export function RegisterUser() {
             {error && (
               <div className="alert-error" role="alert">
                 {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="alert-success" role="status">
-                {success}
               </div>
             )}
 
@@ -401,13 +402,25 @@ export function RegisterUser() {
               </div>
             )}
 
-            <button
-              type="submit"
-              className="btn-primary btn-submit"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Cadastrando...' : 'Cadastrar Usuário'}
-            </button>
+            <div className="form-actions">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={addAnother}
+                  onChange={(e) => setAddAnother(e.target.checked)}
+                  disabled={isLoading}
+                />
+                <span>Cadastrar e adicionar outro</span>
+              </label>
+
+              <button
+                type="submit"
+                className="btn-primary btn-submit"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Cadastrando...' : 'Cadastrar Usuário'}
+              </button>
+            </div>
           </form>
         </div>
       </div>
