@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getUsers } from '../../services/userService'
+import { useNavigate } from 'react-router-dom'
+import { searchUsers } from '../../services/userService'
+import { ApiError } from '../../services/api'
 import type { UserResponse } from '../../types/auth'
 import './AdminDashboard.css'
 
@@ -23,17 +25,24 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
   const [users, setUsers] = useState<UserResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await getUsers()
+      const data = await searchUsers()
       // Exclui o usuário logado da lista
       const filtered = data.filter((u) => u.id !== currentUserId)
       setUsers(filtered)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar usuários.')
+      if (err instanceof ApiError) {
+        setError(err.message)
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Erro ao carregar usuários.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -55,10 +64,18 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
 
       <div className="dashboard-card">
         <div className="dashboard-card-header">
-          <h3 className="dashboard-card-title">Usuários Cadastrados</h3>
-          {!isLoading && !error && (
-            <span className="user-count">{users.length} usuário{users.length !== 1 ? 's' : ''}</span>
-          )}
+          <div className="dashboard-card-header-left">
+            <h3 className="dashboard-card-title">Usuários Cadastrados</h3>
+            {!isLoading && !error && (
+              <span className="user-count">{users.length} usuário{users.length !== 1 ? 's' : ''}</span>
+            )}
+          </div>
+          <button
+            onClick={() => navigate('/admin/register')}
+            className="btn-add-user"
+          >
+            + Cadastrar Usuário
+          </button>
         </div>
 
         {isLoading ? (

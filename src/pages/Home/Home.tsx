@@ -2,8 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle'
 import { AdminDashboard } from '../../components/AdminDashboard/AdminDashboard'
-import { ColorPalette } from '../../components/ColorPalette/ColorPalette'
-import { ExampleComponents } from '../../components/ExampleComponents/ExampleComponents'
 import './Home.css'
 
 export function Home() {
@@ -26,14 +24,6 @@ export function Home() {
           </div>
           <div className="user-info">
             <span className="text-secondary">Olá, {user?.name || user?.email}</span>
-            {user?.role === 'ADMIN' && (
-              <button
-                onClick={() => navigate('/admin/register')}
-                className="btn-admin-action"
-              >
-                Cadastrar Usuário
-              </button>
-            )}
             <button onClick={handleLogout} className="btn-logout">
               Sair
             </button>
@@ -44,8 +34,6 @@ export function Home() {
         {user?.role === 'ADMIN' && user.id && (
           <AdminDashboard currentUserId={user.id} />
         )}
-        <ColorPalette />
-        <ExampleComponents />
       </main>
     </div>
   )

@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { register, isValidationError, getErrorMessage } from '../../services/authService'
+import { register, getErrorMessage } from '../../services/authService'
+import { ApiError } from '../../services/api'
 import type { UserRole, RegisterUserRequest, ResponsibleData } from '../../types/auth'
 import './RegisterUser.css'
 
@@ -17,10 +18,8 @@ const INITIAL_RESPONSIBLE_DATA: ResponsibleData = {
 export function RegisterUser() {
   const navigate = useNavigate()
 
-  // Role selection
   const [role, setRole] = useState<UserRole>('TEACHER')
 
-  // Common fields
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [registerField, setRegisterField] = useState('')
@@ -28,13 +27,11 @@ export function RegisterUser() {
   const [birthDate, setBirthDate] = useState('')
   const [gender, setGender] = useState('')
 
-  // Student-specific fields
   const [classId, setClassId] = useState('')
   const [responsibleMode, setResponsibleMode] = useState<ResponsibleMode>('new')
   const [responsibleId, setResponsibleId] = useState('')
   const [responsibleData, setResponsibleData] = useState<ResponsibleData>(INITIAL_RESPONSIBLE_DATA)
 
-  // UI state
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -76,7 +73,6 @@ export function RegisterUser() {
         role,
       }
 
-      // Add student-specific fields
       if (role === 'STUDENT') {
         if (classId) {
           requestData.classId = parseInt(classId, 10)
@@ -99,10 +95,9 @@ export function RegisterUser() {
       setSuccess(`Usuário "${response.name}" cadastrado com sucesso como ${getRoleLabel(response.role)}.`)
       resetForm()
     } catch (err) {
-      if (isValidationError(err)) {
-        // Map field-level errors
+      if (err instanceof ApiError && err.code === 'VALIDATION_ERROR' && err.errors) {
         const errors: Record<string, string> = {}
-        for (const fieldErr of (err as { errors: Array<{ field: string; message: string }> }).errors) {
+        for (const fieldErr of err.errors) {
           errors[fieldErr.field] = fieldErr.message
         }
         setFieldErrors(errors)

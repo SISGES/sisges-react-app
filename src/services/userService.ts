@@ -1,10 +1,18 @@
 import api from './api'
-import type { UserResponse } from '../types/auth'
+import type { UserResponse, UserSearchFilters } from '../types/auth'
 
-export type { UserResponse }
+export type { UserResponse, UserSearchFilters }
 
-// Busca todos os usuários cadastrados (endpoint protegido para ADMIN)
-export async function getUsers(): Promise<UserResponse[]> {
-  const response = await api.get<UserResponse[]>('/users')
+export async function searchUsers(filters?: UserSearchFilters): Promise<UserResponse[]> {
+  const response = await api.post<UserResponse[]>('/users/search', filters)
   return response
+}
+
+export async function getUserById(id: number): Promise<UserResponse> {
+  const response = await api.get<UserResponse>(`/users/${id}`)
+  return response
+}
+
+export async function getUsers(): Promise<UserResponse[]> {
+  return searchUsers()
 }

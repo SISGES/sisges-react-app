@@ -25,6 +25,15 @@
   align-items: center;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.dashboard-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .dashboard-card-title {
@@ -40,6 +49,24 @@
   padding: 0.25rem 0.75rem;
   border-radius: 1rem;
   border: 1px solid var(--color-border);
+}
+
+.btn-add-user {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-add-user:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 /* Table */

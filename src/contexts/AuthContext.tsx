@@ -6,7 +6,6 @@ import {
   isAuthenticated,
   validateToken,
   User,
-  LoginCredentials,
 } from '../services/authService'
 import type { LoginRequest } from '../types/auth'
 
@@ -24,7 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Verifica autenticação ao carregar
   useEffect(() => {
     async function checkAuth() {
       try {
@@ -53,16 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (credentials: LoginRequest) => {
     await authLogin(credentials)
-    // O usuário já foi salvo no localStorage pelo authService
     const currentUser = getCurrentUser()
     setUser(currentUser)
-    // O redirecionamento será feito no componente Login usando useNavigate
   }
 
   const logout = () => {
     authLogout()
     setUser(null)
-    // O redirecionamento será feito no componente que chama logout usando useNavigate
   }
 
   const value: AuthContextType = {

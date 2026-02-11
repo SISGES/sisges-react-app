@@ -1,12 +1,5 @@
-// ============================================
-// TIPOS DE AUTENTICAÇÃO - SISGES
-// Baseado em: FRONTEND_AUTH_TYPES.md
-// ============================================
-
-// ---- ROLES ----
 export type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT'
 
-// ---- LOGIN ----
 export interface LoginRequest {
   email: string
   password: string
@@ -26,7 +19,6 @@ export interface LoginResponse {
   user: LoginResponseUserInfo
 }
 
-// ---- CADASTRO (REGISTRO) ----
 export interface ResponsibleData {
   name: string
   phone: string
@@ -40,7 +32,7 @@ export interface RegisterUserRequest {
   email: string
   register: string
   password: string
-  birthDate: string // ISO date "YYYY-MM-DD"
+  birthDate: string
   gender: string
   role: UserRole
   responsibleId?: number | null
@@ -54,11 +46,33 @@ export interface UserResponse {
   email: string
   register: string
   role: UserRole
-  birthDate: string // ISO date "YYYY-MM-DD"
+  birthDate: string
   gender: string
 }
 
-// ---- ERROS DA API ----
+export type SisgesErrorCode =
+  | 'AUTH_INVALID_CREDENTIALS'
+  | 'AUTH_UNAUTHORIZED'
+  | 'AUTH_FORBIDDEN'
+  | 'VALIDATION_ERROR'
+  | 'BUSINESS_RULE_VIOLATION'
+  | 'RESOURCE_NOT_FOUND'
+  | 'DATA_CONFLICT'
+  | 'INTERNAL_ERROR'
+
+export interface FieldValidationError {
+  field: string
+  message: string
+}
+
+export interface SisgesErrorResponse {
+  status: number
+  code: SisgesErrorCode
+  message: string
+  timestamp: string
+  errors?: FieldValidationError[]
+}
+
 export interface ApiErrorMessage {
   message: string
 }
@@ -71,11 +85,17 @@ export interface ApiValidationError {
   }>
 }
 
-// Tipo union para erros da API
 export type ApiError = ApiErrorMessage | ApiValidationError
 
-// ---- TIPOS AUXILIARES PARA O FRONTEND ----
-// Tipo simplificado de usuário usado internamente no frontend
+export interface UserSearchFilters {
+  name?: string
+  email?: string
+  register?: string
+  gender?: string
+  initialDate?: string
+  finalDate?: string
+}
+
 export interface User {
   id: number
   name: string
@@ -84,5 +104,4 @@ export interface User {
   role: UserRole
 }
 
-// Tipo para credenciais de login (alias para LoginRequest)
 export type LoginCredentials = LoginRequest
