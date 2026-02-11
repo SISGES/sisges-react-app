@@ -304,7 +304,7 @@ export function RegisterUser() {
 
             <div className="form-group">
               <label htmlFor="name" className="form-label">
-                Nome
+                Nome <span className="required">*</span>
               </label>
               <input
                 id="name"
@@ -323,7 +323,7 @@ export function RegisterUser() {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="password" className="form-label">
-                  Senha
+                  Senha <span className="required">*</span>
                 </label>
                 <input
                   id="password"
@@ -341,7 +341,7 @@ export function RegisterUser() {
 
               <div className="form-group">
                 <label htmlFor="gender" className="form-label">
-                  Gênero
+                  Gênero <span className="required">*</span>
                 </label>
                 <select
                   id="gender"
@@ -364,7 +364,7 @@ export function RegisterUser() {
 
             <div className="form-group">
               <label htmlFor="birthDate" className="form-label">
-                Data de Nascimento
+                Data de Nascimento <span className="required">*</span>
               </label>
               <input
                 id="birthDate"
@@ -473,7 +473,7 @@ export function RegisterUser() {
                     <>
                       <div className="form-group">
                         <label htmlFor="respName" className="form-label">
-                          Nome do Responsável
+                          Nome do Responsável <span className="required">*</span>
                         </label>
                         <input
                           id="respName"
@@ -494,7 +494,7 @@ export function RegisterUser() {
                       <div className="form-row">
                         <div className="form-group">
                           <label htmlFor="respPhone" className="form-label">
-                            Telefone
+                            Telefone <span className="required">*</span>
                           </label>
                           <input
                             id="respPhone"
@@ -534,7 +534,7 @@ export function RegisterUser() {
                       <div className="form-row">
                         <div className="form-group">
                           <label htmlFor="respEmail" className="form-label">
-                            E-mail do Responsável
+                            E-mail do Responsável <span className="required">*</span>
                           </label>
                           <input
                             id="respEmail"
@@ -615,7 +615,7 @@ export function RegisterUser() {
 
               <div className="form-group">
                 <label htmlFor="newClassName" className="form-label">
-                  Nome da Turma
+                  Nome da Turma <span className="required">*</span>
                 </label>
                 <input
                   id="newClassName"
@@ -632,7 +632,7 @@ export function RegisterUser() {
 
               <div className="form-group">
                 <label htmlFor="newClassAcademicYear" className="form-label">
-                  Série/Ano Letivo
+                  Série/Ano Letivo <span className="required">*</span>
                 </label>
                 <select
                   id="newClassAcademicYear"

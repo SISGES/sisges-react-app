@@ -132,6 +132,11 @@
   color: var(--color-text-primary);
 }
 
+.required {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
 .form-input,
 .form-select {
   width: 100%;

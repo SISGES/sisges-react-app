@@ -199,7 +199,7 @@ export function Classes() {
 
               <div className="form-group">
                 <label htmlFor="className" className="form-label">
-                  Nome da Turma
+                  Nome da Turma <span className="required">*</span>
                 </label>
                 <input
                   id="className"
@@ -216,7 +216,7 @@ export function Classes() {
 
               <div className="form-group">
                 <label htmlFor="academicYear" className="form-label">
-                  Série/Ano Letivo
+                  Série/Ano Letivo <span className="required">*</span>
                 </label>
                 <select
                   id="academicYear"
