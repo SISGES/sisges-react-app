@@ -21,7 +21,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
-    // Redireciona para login, salvando a localização atual
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 

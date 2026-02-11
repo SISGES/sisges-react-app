@@ -27,7 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function checkAuth() {
       try {
         if (isAuthenticated()) {
-          // Valida o token com o backend
           const isValid = await validateToken()
           if (isValid) {
             const currentUser = getCurrentUser()

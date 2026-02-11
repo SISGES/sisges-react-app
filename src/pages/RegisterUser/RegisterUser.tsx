@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { register, getErrorMessage } from '../../services/authService'
 import { ApiError } from '../../services/api'
 import { useToast } from '../../contexts/ToastContext'
-import { searchClasses, searchResponsibles } from '../../services/userService'
+import { searchClasses, searchResponsibles, createClass } from '../../services/userService'
 import type {
   UserRole,
   RegisterUserRequest,
   ResponsibleData,
   ClassSearchResponse,
   ResponsibleSearchResponse,
+  CreateClassRequest,
 } from '../../types/auth'
 import './RegisterUser.css'
 
@@ -22,6 +23,21 @@ const INITIAL_RESPONSIBLE_DATA: ResponsibleData = {
   email: '',
   alternativeEmail: '',
 }
+
+const ACADEMIC_YEAR_OPTIONS = [
+  { value: '1º ano - Fundamental', label: '1º ano - Fundamental' },
+  { value: '2º ano - Fundamental', label: '2º ano - Fundamental' },
+  { value: '3º ano - Fundamental', label: '3º ano - Fundamental' },
+  { value: '4º ano - Fundamental', label: '4º ano - Fundamental' },
+  { value: '5º ano - Fundamental', label: '5º ano - Fundamental' },
+  { value: '6º ano', label: '6º ano' },
+  { value: '7º ano', label: '7º ano' },
+  { value: '8º ano', label: '8º ano' },
+  { value: '9º ano', label: '9º ano' },
+  { value: '1º ano - Médio', label: '1º ano - Médio' },
+  { value: '2º ano - Médio', label: '2º ano - Médio' },
+  { value: '3º ano - Médio', label: '3º ano - Médio' },
+]
 
 export function RegisterUser() {
   const navigate = useNavigate()
@@ -48,6 +64,12 @@ export function RegisterUser() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  const [showClassModal, setShowClassModal] = useState(false)
+  const [newClassName, setNewClassName] = useState('')
+  const [newClassAcademicYear, setNewClassAcademicYear] = useState('')
+  const [isCreatingClass, setIsCreatingClass] = useState(false)
+  const [classModalError, setClassModalError] = useState<string | null>(null)
 
 
   useEffect(() => {
@@ -79,8 +101,99 @@ export function RegisterUser() {
     setFieldErrors({})
   }
 
+  const refreshClasses = async () => {
+    try {
+      const classes = await searchClasses()
+      setAvailableClasses(classes)
+    } catch {
+    }
+  }
+
+  const handleOpenClassModal = () => {
+    setNewClassName('')
+    setNewClassAcademicYear('')
+    setClassModalError(null)
+    setShowClassModal(true)
+  }
+
+  const handleCloseClassModal = () => {
+    setShowClassModal(false)
+    setClassModalError(null)
+  }
+
+  const handleCreateClass = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setClassModalError(null)
+    setIsCreatingClass(true)
+
+    try {
+      const requestData: CreateClassRequest = {
+        name: newClassName,
+        academicYear: newClassAcademicYear,
+      }
+
+      const response = await createClass(requestData)
+      showToast(`Turma "${response.name}" criada com sucesso!`, 'success')
+      await refreshClasses()
+      setClassId(String(response.id))
+      handleCloseClassModal()
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setClassModalError(err.message)
+      } else {
+        setClassModalError('Erro ao criar turma.')
+      }
+    } finally {
+      setIsCreatingClass(false)
+    }
+  }
+
   const handleResponsibleChange = (field: keyof ResponsibleData, value: string) => {
     setResponsibleData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const formatPhone = (value: string): string => {
+    const numbers = value.replace(/\D/g, '')
+    let formatted = ''
+    if (numbers.length > 0) {
+      formatted = '(' + numbers.slice(0, 2)
+    }
+    if (numbers.length > 2) {
+      formatted += ') ' + numbers.slice(2, 7)
+    }
+    if (numbers.length > 7) {
+      formatted += '-' + numbers.slice(7, 11)
+    }
+    return formatted
+  }
+
+  const handlePhoneChange = (field: 'phone' | 'alternativePhone', value: string) => {
+    const formatted = formatPhone(value)
+    setResponsibleData((prev) => ({ ...prev, [field]: formatted }))
+  }
+
+  const handleBirthDateChange = (value: string) => {
+    const numbers = value.replace(/\D/g, '')
+    let formatted = ''
+    if (numbers.length > 0) {
+      formatted = numbers.slice(0, 2)
+    }
+    if (numbers.length > 2) {
+      formatted += '/' + numbers.slice(2, 4)
+    }
+    if (numbers.length > 4) {
+      formatted += '/' + numbers.slice(4, 8)
+    }
+    
+    setBirthDate(formatted)
+  }
+
+  const birthDateToISO = (brDate: string): string => {
+    const parts = brDate.split('/')
+    if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`
+    }
+    return brDate
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -93,7 +206,7 @@ export function RegisterUser() {
       const requestData: RegisterUserRequest = {
         name,
         password,
-        birthDate,
+        birthDate: birthDateToISO(birthDate),
         gender,
         role,
       }
@@ -165,7 +278,6 @@ export function RegisterUser() {
 
       <div className="register-content">
         <div className="register-card">
-          {/* Role selector */}
           <div className="role-selector">
             <span className="role-selector-label">Tipo de Usuário</span>
             <div className="role-options">
@@ -256,17 +368,19 @@ export function RegisterUser() {
               </label>
               <input
                 id="birthDate"
-                type="date"
+                type="text"
+                inputMode="numeric"
                 value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
+                onChange={(e) => handleBirthDateChange(e.target.value)}
                 className={`form-input${fieldErrors.birthDate ? ' input-error' : ''}`}
+                placeholder="DD/MM/AAAA"
+                maxLength={10}
                 required
                 disabled={isLoading}
               />
               {fieldErrors.birthDate && <span className="field-error">{fieldErrors.birthDate}</span>}
             </div>
 
-            {/* Student-specific fields */}
             {role === 'STUDENT' && (
               <div className="form-section">
                 <h3 className="form-section-title">Dados do Aluno</h3>
@@ -275,22 +389,33 @@ export function RegisterUser() {
                   <label htmlFor="classId" className="form-label">
                     Turma (opcional)
                   </label>
-                  <select
-                    id="classId"
-                    value={classId}
-                    onChange={(e) => setClassId(e.target.value)}
-                    className={`form-select${fieldErrors.classId ? ' input-error' : ''}`}
-                    disabled={isLoading || loadingDropdowns}
-                  >
-                    <option value="">
-                      {loadingDropdowns ? 'Carregando turmas...' : 'Selecione uma turma'}
-                    </option>
-                    {availableClasses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.year})
+                  <div className="input-with-action">
+                    <select
+                      id="classId"
+                      value={classId}
+                      onChange={(e) => setClassId(e.target.value)}
+                      className={`form-select${fieldErrors.classId ? ' input-error' : ''}`}
+                      disabled={isLoading || loadingDropdowns}
+                    >
+                      <option value="">
+                        {loadingDropdowns ? 'Carregando turmas...' : 'Selecione uma turma'}
                       </option>
-                    ))}
-                  </select>
+                      {availableClasses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.academicYear})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleOpenClassModal}
+                      className="btn-add-inline"
+                      title="Adicionar nova turma"
+                      disabled={isLoading}
+                    >
+                      +
+                    </button>
+                  </div>
                   {fieldErrors.classId && <span className="field-error">{fieldErrors.classId}</span>}
                 </div>
 
@@ -374,12 +499,13 @@ export function RegisterUser() {
                           <input
                             id="respPhone"
                             type="text"
+                            inputMode="numeric"
                             value={responsibleData.phone}
-                            onChange={(e) => handleResponsibleChange('phone', e.target.value)}
+                            onChange={(e) => handlePhoneChange('phone', e.target.value)}
                             className={`form-input${fieldErrors['responsibleData.phone'] ? ' input-error' : ''}`}
-                            placeholder="(00) 00000-0000"
+                            placeholder="(31) 97215-2822"
                             required
-                            maxLength={30}
+                            maxLength={15}
                             disabled={isLoading}
                           />
                           {fieldErrors['responsibleData.phone'] && (
@@ -394,11 +520,12 @@ export function RegisterUser() {
                           <input
                             id="respAltPhone"
                             type="text"
+                            inputMode="numeric"
                             value={responsibleData.alternativePhone || ''}
-                            onChange={(e) => handleResponsibleChange('alternativePhone', e.target.value)}
+                            onChange={(e) => handlePhoneChange('alternativePhone', e.target.value)}
                             className="form-input"
-                            placeholder="(00) 00000-0000"
-                            maxLength={30}
+                            placeholder="(31) 97215-2822"
+                            maxLength={15}
                             disabled={isLoading}
                           />
                         </div>
@@ -469,6 +596,82 @@ export function RegisterUser() {
           </form>
         </div>
       </div>
+
+      {showClassModal && (
+        <div className="modal-overlay" onClick={handleCloseClassModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Nova Turma</h2>
+              <button onClick={handleCloseClassModal} className="modal-close" type="button">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleCreateClass} className="modal-form">
+              {classModalError && (
+                <div className="alert-error" role="alert">
+                  {classModalError}
+                </div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="newClassName" className="form-label">
+                  Nome da Turma
+                </label>
+                <input
+                  id="newClassName"
+                  type="text"
+                  value={newClassName}
+                  onChange={(e) => setNewClassName(e.target.value)}
+                  className="form-input"
+                  placeholder="Ex: Turma A"
+                  required
+                  maxLength={100}
+                  disabled={isCreatingClass}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="newClassAcademicYear" className="form-label">
+                  Série/Ano Letivo
+                </label>
+                <select
+                  id="newClassAcademicYear"
+                  value={newClassAcademicYear}
+                  onChange={(e) => setNewClassAcademicYear(e.target.value)}
+                  className="form-select"
+                  required
+                  disabled={isCreatingClass}
+                >
+                  <option value="" disabled>Selecione a série</option>
+                  {ACADEMIC_YEAR_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={handleCloseClassModal}
+                  className="btn-secondary"
+                  disabled={isCreatingClass}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={isCreatingClass}
+                >
+                  {isCreatingClass ? 'Criando...' : 'Criar Turma'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

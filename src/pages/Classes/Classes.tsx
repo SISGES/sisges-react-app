@@ -5,21 +5,34 @@ import { ApiError } from '../../services/api'
 import type { ClassSearchResponse, CreateClassRequest } from '../../types/auth'
 import './Classes.css'
 
+const ACADEMIC_YEAR_OPTIONS = [
+  { value: '1º ano - Fundamental', label: '1º ano - Fundamental' },
+  { value: '2º ano - Fundamental', label: '2º ano - Fundamental' },
+  { value: '3º ano - Fundamental', label: '3º ano - Fundamental' },
+  { value: '4º ano - Fundamental', label: '4º ano - Fundamental' },
+  { value: '5º ano - Fundamental', label: '5º ano - Fundamental' },
+  { value: '6º ano', label: '6º ano' },
+  { value: '7º ano', label: '7º ano' },
+  { value: '8º ano', label: '8º ano' },
+  { value: '9º ano', label: '9º ano' },
+  { value: '1º ano - Médio', label: '1º ano - Médio' },
+  { value: '2º ano - Médio', label: '2º ano - Médio' },
+  { value: '3º ano - Médio', label: '3º ano - Médio' },
+]
+
 export function Classes() {
   const navigate = useNavigate()
   const [classes, setClasses] = useState<ClassSearchResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Modal state
   const [showModal, setShowModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
 
-  // Form state
   const [className, setClassName] = useState('')
-  const [classYear, setClassYear] = useState(new Date().getFullYear())
+  const [academicYear, setAcademicYear] = useState('')
 
   const fetchClasses = useCallback(async () => {
     setIsLoading(true)
@@ -46,7 +59,7 @@ export function Classes() {
 
   const resetForm = () => {
     setClassName('')
-    setClassYear(new Date().getFullYear())
+    setAcademicYear('')
     setSubmitError(null)
     setSubmitSuccess(null)
   }
@@ -70,17 +83,13 @@ export function Classes() {
     try {
       const requestData: CreateClassRequest = {
         name: className,
-        year: classYear,
-        studentIds: [],
-        teacherIds: [],
-        disciplineIds: [],
+        academicYear: academicYear,
       }
 
       const response = await createClass(requestData)
       setSubmitSuccess(`Turma "${response.name}" criada com sucesso!`)
       resetForm()
       fetchClasses()
-      // Close modal after success
       setTimeout(() => {
         handleCloseModal()
       }, 1500)
@@ -144,7 +153,7 @@ export function Classes() {
                 <thead>
                   <tr>
                     <th>Nome</th>
-                    <th>Ano</th>
+                    <th>Série</th>
                     <th>Alunos</th>
                     <th>Professores</th>
                   </tr>
@@ -153,7 +162,7 @@ export function Classes() {
                   {classes.map((c) => (
                     <tr key={c.id}>
                       <td>{c.name}</td>
-                      <td>{c.year}</td>
+                      <td>{c.academicYear}</td>
                       <td>{c.studentCount}</td>
                       <td>{c.teacherCount}</td>
                     </tr>
@@ -206,20 +215,24 @@ export function Classes() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="classYear" className="form-label">
-                  Ano
+                <label htmlFor="academicYear" className="form-label">
+                  Série/Ano Letivo
                 </label>
-                <input
-                  id="classYear"
-                  type="number"
-                  value={classYear}
-                  onChange={(e) => setClassYear(parseInt(e.target.value, 10))}
-                  className="form-input"
+                <select
+                  id="academicYear"
+                  value={academicYear}
+                  onChange={(e) => setAcademicYear(e.target.value)}
+                  className="form-select"
                   required
-                  min={2000}
-                  max={2100}
                   disabled={isSubmitting}
-                />
+                >
+                  <option value="" disabled>Selecione a série</option>
+                  {ACADEMIC_YEAR_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="modal-actions">

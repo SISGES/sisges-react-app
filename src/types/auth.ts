@@ -185,14 +185,14 @@ export interface StudentDetailResponse {
 export interface ClassSearchResponse {
   id: number
   name: string
-  year: number
+  academicYear: string
   studentCount: number
   teacherCount: number
 }
 
 export interface ClassSearchFilters {
   name?: string
-  year?: number
+  academicYear?: string
 }
 
 export interface UserSimple {
@@ -211,7 +211,7 @@ export interface ClassDetailResponse {
 
 export interface CreateClassRequest {
   name: string
-  year: number
+  academicYear: string
   studentIds?: number[]
   teacherIds?: number[]
   disciplineIds?: number[]

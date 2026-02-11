@@ -15,7 +15,6 @@ export function Home() {
 
   return (
     <div className="home-container">
-      <ThemeToggle />
       <header className="home-header">
         <div className="header-content">
           <div>
@@ -24,6 +23,7 @@ export function Home() {
           </div>
           <div className="user-info">
             <span className="text-secondary">Olá, {user?.name || user?.email}</span>
+            <ThemeToggle />
             <button
               onClick={handleLogout}
               className="btn-logout-icon"
