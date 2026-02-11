@@ -25,6 +25,14 @@ export function Home() {
           </div>
           <div className="user-info">
             <span className="text-secondary">Olá, {user?.name || user?.email}</span>
+            {user?.role === 'ADMIN' && (
+              <button
+                onClick={() => navigate('/admin/register')}
+                className="btn-admin-action"
+              >
+                Cadastrar Usuário
+              </button>
+            )}
             <button onClick={handleLogout} className="btn-logout">
               Sair
             </button>

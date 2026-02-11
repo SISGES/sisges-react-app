@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Login } from './components/Login/Login'
 import { Home } from './pages/Home/Home'
+import { RegisterUser } from './pages/RegisterUser/RegisterUser'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
+import { AdminRoute } from './components/AdminRoute/AdminRoute'
 import { useAuth } from './contexts/AuthContext'
 import './themes/theme.css'
 import './App.css'
@@ -23,6 +25,14 @@ function App() {
           <ProtectedRoute>
             <Home />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/register"
+        element={
+          <AdminRoute>
+            <RegisterUser />
+          </AdminRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
