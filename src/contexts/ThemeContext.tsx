@@ -1,71 +1,64 @@
-import { createContext, useContext, useState, useMemo } from 'react';
-import type { ReactNode } from 'react';
-import { ThemeProvider as MuiThemeProvider, CssBaseline, Fade, Box } from '@mui/material';
-import { darkTheme, lightTheme } from '../themes/theme';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { lightTheme, darkTheme, Theme } from '../themes/colors'
 
-type ThemeMode = 'light' | 'dark';
+type ThemeMode = 'light' | 'dark'
 
 interface ThemeContextType {
-  mode: ThemeMode;
-  toggleTheme: () => void;
+  theme: Theme
+  mode: ThemeMode
+  toggleTheme: () => void
+  setTheme: (mode: ThemeMode) => void
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme deve ser usado dentro de ThemeProvider');
-  }
-  return context;
-};
-
-interface ThemeProviderProps {
-  children: ReactNode;
-}
-
-export const ThemeProvider = ({ children }: ThemeProviderProps) => {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(() => {
-    const savedMode = localStorage.getItem('sisges_theme_mode');
-    return (savedMode === 'light' || savedMode === 'dark') ? savedMode : 'dark';
-  });
+    // Verifica preferência salva no localStorage ou preferência do sistema
+    const saved = localStorage.getItem('theme') as ThemeMode | null
+    if (saved) return saved
+    
+    // Verifica preferência do sistema
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark'
+    }
+    return 'light'
+  })
+
+  const theme = mode === 'dark' ? darkTheme : lightTheme
+
+  useEffect(() => {
+    // Aplica o tema ao documento
+    document.documentElement.setAttribute('data-theme', mode)
+    localStorage.setItem('theme', mode)
+    
+    // Aplica as variáveis CSS
+    const root = document.documentElement
+    Object.entries(theme).forEach(([key, value]) => {
+      const cssVar = `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`
+      root.style.setProperty(cssVar, value)
+    })
+  }, [mode, theme])
 
   const toggleTheme = () => {
-    setMode((prevMode) => {
-      const newMode = prevMode === 'light' ? 'dark' : 'light';
-      localStorage.setItem('sisges_theme_mode', newMode);
-      return newMode;
-    });
-  };
+    setMode(prev => prev === 'light' ? 'dark' : 'light')
+  }
 
-  const theme = useMemo(() => {
-    return mode === 'dark' ? darkTheme : lightTheme;
-  }, [mode]);
-
-  const value = useMemo(
-    () => ({
-      mode,
-      toggleTheme,
-    }),
-    [mode]
-  );
+  const setTheme = (newMode: ThemeMode) => {
+    setMode(newMode)
+  }
 
   return (
-    <ThemeContext.Provider value={value}>
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box
-          sx={{
-            minHeight: '100vh',
-            transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
-          }}
-        >
-          <Fade in timeout={400} key={mode}>
-            <Box>{children}</Box>
-          </Fade>
-        </Box>
-      </MuiThemeProvider>
+    <ThemeContext.Provider value={{ theme, mode, toggleTheme, setTheme }}>
+      {children}
     </ThemeContext.Provider>
-  );
-};
+  )
+}
 
+export function useTheme() {
+  const context = useContext(ThemeContext)
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
+}

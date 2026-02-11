@@ -1,0 +1,143 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Variáveis de cor - Light mode (padrão) */
+  --color-background: #FFFFFF;
+  --color-surface: #F1F5F9;
+  --color-border: #E2E8F0;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94A3B8;
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-accent: #22C55E;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-success: #16A34A;
+}
+
+[data-theme='dark'] {
+  /* Variáveis de cor - Dark mode */
+  --color-background: #020617;
+  --color-surface: #020617;
+  --color-border: #1E293B;
+  --color-text-primary: #E5E7EB;
+  --color-text-secondary: #CBD5F5;
+  --color-text-muted: #64748B;
+  --color-primary: #3B82F6;
+  --color-primary-hover: #2563EB;
+  --color-accent: #22C55E;
+  --color-error: #F87171;
+  --color-warning: #FBBF24;
+  --color-success: #4ADE80;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.app {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-primary);
+}
+
+h2, h3, h4, h5, h6 {
+  color: var(--color-text-primary);
+}
+
+p {
+  color: var(--color-text-secondary);
+}
+
+main {
+  text-align: center;
+}
+
+/* Utilitários de cor */
+.bg-surface {
+  background-color: var(--color-surface);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-accent {
+  background-color: var(--color-accent);
+}
+
+.bg-error {
+  background-color: var(--color-error);
+}
+
+.bg-warning {
+  background-color: var(--color-warning);
+}
+
+.bg-success {
+  background-color: var(--color-success);
+}
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.border {
+  border-color: var(--color-border);
+}
+
+/* Transições suaves para mudanças de tema */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
