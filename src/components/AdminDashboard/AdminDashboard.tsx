@@ -1,0 +1,141 @@
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { searchUsers } from '../../services/userService'
+import { ApiError } from '../../services/api'
+import type { UserSearchResponse } from '../../types/auth'
+import './AdminDashboard.css'
+
+interface AdminDashboardProps {
+  currentUserId: number
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Administrador',
+  TEACHER: 'Professor',
+  STUDENT: 'Aluno',
+}
+
+const ROLE_CSS: Record<string, string> = {
+  ADMIN: 'role-admin',
+  TEACHER: 'role-teacher',
+  STUDENT: 'role-student',
+}
+
+export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
+  const [users, setUsers] = useState<UserSearchResponse[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const data = await searchUsers()
+      const filtered = data.filter((u) => u.id !== currentUserId)
+      setUsers(filtered)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message)
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Erro ao carregar usuários.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [currentUserId])
+
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
+
+  return (
+    <div className="admin-dashboard">
+      <div className="dashboard-header">
+        <h2 className="dashboard-title">Painel de Controle</h2>
+        <button
+          onClick={() => navigate('/admin/classes')}
+          className="btn-manage-classes"
+        >
+          Gerenciar Turmas
+        </button>
+      </div>
+
+      <div className="dashboard-card">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-header-left">
+            <h3 className="dashboard-card-title">Usuários Cadastrados</h3>
+            {!isLoading && !error && (
+              <span className="user-count">{users.length} usuário{users.length !== 1 ? 's' : ''}</span>
+            )}
+          </div>
+          <button
+            onClick={() => navigate('/admin/register')}
+            className="btn-add-user"
+          >
+            + Cadastrar Usuário
+          </button>
+        </div>
+
+        {isLoading ? (
+          <div className="dashboard-loading">
+            <div className="loading-spinner-sm"></div>
+            <span>Carregando usuários...</span>
+          </div>
+        ) : error ? (
+          <div className="dashboard-error">
+            <p>{error}</p>
+            <button onClick={fetchUsers} className="btn-retry">
+              Tentar novamente
+            </button>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="dashboard-empty">
+            <p>Nenhum outro usuário cadastrado.</p>
+          </div>
+        ) : (
+          <div className="user-table-wrapper">
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Tipo</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>
+                      <span className={`role-badge ${ROLE_CSS[u.role] || ''}`}>
+                        {ROLE_LABELS[u.role] || u.role}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => navigate(`/admin/users/${u.id}`)}
+                        className="btn-details"
+                        title="Ver detalhes"
+                        aria-label="Ver detalhes"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

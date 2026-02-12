@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle'
-import { ColorPalette } from '../../components/ColorPalette/ColorPalette'
-import { ExampleComponents } from '../../components/ExampleComponents/ExampleComponents'
+import { AdminDashboard } from '../../components/AdminDashboard/AdminDashboard'
 import './Home.css'
 
 export function Home() {
@@ -16,7 +15,6 @@ export function Home() {
 
   return (
     <div className="home-container">
-      <ThemeToggle />
       <header className="home-header">
         <div className="header-content">
           <div>
@@ -25,15 +23,26 @@ export function Home() {
           </div>
           <div className="user-info">
             <span className="text-secondary">Olá, {user?.name || user?.email}</span>
-            <button onClick={handleLogout} className="btn-logout">
-              Sair
+            <ThemeToggle />
+            <button
+              onClick={handleLogout}
+              className="btn-logout-icon"
+              title="Sair"
+              aria-label="Sair"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
             </button>
           </div>
         </div>
       </header>
       <main>
-        <ColorPalette />
-        <ExampleComponents />
+        {user?.role === 'ADMIN' && user.id && (
+          <AdminDashboard currentUserId={user.id} />
+        )}
       </main>
     </div>
   )

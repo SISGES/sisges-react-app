@@ -1,21 +1,57 @@
-// Configuração base da API
+import type { SisgesErrorResponse } from '../types/auth'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 
-// Função para obter o token do localStorage
+export class ApiError extends Error {
+  status: number
+  code: string
+  timestamp: string
+  errors?: Array<{ field: string; message: string }>
+
+  constructor(errorResponse: SisgesErrorResponse) {
+    super(errorResponse.message)
+    this.name = 'ApiError'
+    this.status = errorResponse.status
+    this.code = errorResponse.code
+    this.timestamp = errorResponse.timestamp
+    this.errors = errorResponse.errors
+  }
+}
+
 function getToken(): string | null {
   return localStorage.getItem('token')
 }
 
-// Função para fazer requisições autenticadas
+function isAuthEndpoint(endpoint: string): boolean {
+  return endpoint.startsWith('/auth/')
+}
+
+async function handleErrorResponse(response: Response): Promise<never> {
+  const errorData = await response.json().catch(() => ({
+    status: response.status,
+    code: 'INTERNAL_ERROR',
+    message: 'Erro desconhecido',
+    timestamp: new Date().toISOString(),
+  })) as SisgesErrorResponse
+
+  throw new ApiError({
+    status: errorData.status || response.status,
+    code: errorData.code || 'INTERNAL_ERROR',
+    message: errorData.message || `Erro HTTP ${response.status}`,
+    timestamp: errorData.timestamp || new Date().toISOString(),
+    errors: errorData.errors,
+  })
+}
+
 async function fetchWithAuth(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> {
   const token = getToken()
-  
-  const headers: HeadersInit = {
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   }
 
   if (token) {
@@ -27,24 +63,20 @@ async function fetchWithAuth(
     headers,
   })
 
-  // Se receber 401, token pode estar expirado ou inválido
-  if (response.status === 401) {
-    // Remove token inválido
+  if (response.status === 401 && !isAuthEndpoint(endpoint)) {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    // Redireciona para login (será tratado pelo AuthContext)
     window.location.href = '/login'
   }
 
   return response
 }
 
-// Funções auxiliares para diferentes métodos HTTP
 export const api = {
   get: async <T>(endpoint: string): Promise<T> => {
     const response = await fetchWithAuth(endpoint, { method: 'GET' })
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      await handleErrorResponse(response)
     }
     return response.json()
   },
@@ -55,17 +87,7 @@ export const api = {
       body: data ? JSON.stringify(data) : undefined,
     })
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }))
-      // Preserva a estrutura do erro para permitir tratamento específico
-      const errorObj = error as { message?: string; errors?: Array<{ field: string; message: string }> }
-      // Cria um erro customizado que preserva a estrutura
-      const errorMessage = new Error(errorObj.message || `HTTP error! status: ${response.status}`) as Error & {
-        errors?: Array<{ field: string; message: string }>
-      }
-      if (errorObj.errors) {
-        errorMessage.errors = errorObj.errors
-      }
-      throw errorMessage
+      await handleErrorResponse(response)
     }
     return response.json()
   },
@@ -76,7 +98,7 @@ export const api = {
       body: data ? JSON.stringify(data) : undefined,
     })
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      await handleErrorResponse(response)
     }
     return response.json()
   },
@@ -84,7 +106,7 @@ export const api = {
   delete: async <T>(endpoint: string): Promise<T> => {
     const response = await fetchWithAuth(endpoint, { method: 'DELETE' })
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      await handleErrorResponse(response)
     }
     return response.json()
   },

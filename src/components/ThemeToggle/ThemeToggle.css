@@ -1,26 +1,21 @@
 .theme-toggle {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-surface);
+  background-color: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 50%;
+  border-radius: 0.5rem;
   cursor: pointer;
   color: var(--color-text-primary);
   transition: all 0.2s ease;
-  z-index: 1000;
 }
 
 .theme-toggle:hover {
   background-color: var(--color-primary);
   color: white;
   border-color: var(--color-primary);
-  transform: scale(1.05);
 }
 
 .theme-toggle:active {

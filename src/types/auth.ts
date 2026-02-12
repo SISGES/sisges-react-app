@@ -1,12 +1,5 @@
-// ============================================
-// TIPOS DE AUTENTICAÇÃO - SISGES
-// Baseado em: FRONTEND_AUTH_TYPES.md
-// ============================================
-
-// ---- ROLES ----
 export type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT'
 
-// ---- LOGIN ----
 export interface LoginRequest {
   email: string
   password: string
@@ -26,7 +19,6 @@ export interface LoginResponse {
   user: LoginResponseUserInfo
 }
 
-// ---- CADASTRO (REGISTRO) ----
 export interface ResponsibleData {
   name: string
   phone: string
@@ -37,10 +29,8 @@ export interface ResponsibleData {
 
 export interface RegisterUserRequest {
   name: string
-  email: string
-  register: string
   password: string
-  birthDate: string // ISO date "YYYY-MM-DD"
+  birthDate: string
   gender: string
   role: UserRole
   responsibleId?: number | null
@@ -48,17 +38,48 @@ export interface RegisterUserRequest {
   responsibleData?: ResponsibleData | null
 }
 
-export interface UserResponse {
+export interface UserSearchResponse {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+}
+
+export interface UserDetailResponse {
   id: number
   name: string
   email: string
   register: string
   role: UserRole
-  birthDate: string // ISO date "YYYY-MM-DD"
+  birthDate: string
   gender: string
 }
 
-// ---- ERROS DA API ----
+export type UserResponse = UserSearchResponse
+
+export type SisgesErrorCode =
+  | 'AUTH_INVALID_CREDENTIALS'
+  | 'AUTH_UNAUTHORIZED'
+  | 'AUTH_FORBIDDEN'
+  | 'VALIDATION_ERROR'
+  | 'BUSINESS_RULE_VIOLATION'
+  | 'RESOURCE_NOT_FOUND'
+  | 'DATA_CONFLICT'
+  | 'INTERNAL_ERROR'
+
+export interface FieldValidationError {
+  field: string
+  message: string
+}
+
+export interface SisgesErrorResponse {
+  status: number
+  code: SisgesErrorCode
+  message: string
+  timestamp: string
+  errors?: FieldValidationError[]
+}
+
 export interface ApiErrorMessage {
   message: string
 }
@@ -71,11 +92,17 @@ export interface ApiValidationError {
   }>
 }
 
-// Tipo union para erros da API
 export type ApiError = ApiErrorMessage | ApiValidationError
 
-// ---- TIPOS AUXILIARES PARA O FRONTEND ----
-// Tipo simplificado de usuário usado internamente no frontend
+export interface UserSearchFilters {
+  name?: string
+  email?: string
+  register?: string
+  gender?: string
+  initialDate?: string
+  finalDate?: string
+}
+
 export interface User {
   id: number
   name: string
@@ -84,5 +111,120 @@ export interface User {
   role: UserRole
 }
 
-// Tipo para credenciais de login (alias para LoginRequest)
 export type LoginCredentials = LoginRequest
+
+export interface TeacherSearchResponse {
+  id: number
+  name: string
+  email: string
+}
+
+export interface TeacherSearchFilters {
+  name?: string
+  email?: string
+}
+
+export interface ClassSimple {
+  id: number
+  name: string
+  year: number
+}
+
+export interface TeacherDetailResponse {
+  id: number
+  name: string
+  email: string
+  register: string
+  birthDate: string
+  gender: string
+  classes: ClassSimple[]
+}
+
+export interface StudentSearchResponse {
+  id: number
+  name: string
+  email: string
+}
+
+export interface StudentSearchFilters {
+  name?: string
+  email?: string
+}
+
+export interface AttendanceClassMeeting {
+  disciplineName: string
+  meetingDate: string
+  createdAt: string
+}
+
+export interface StudentAttendance {
+  classMeeting: AttendanceClassMeeting
+  present: boolean
+}
+
+// Responsável simplificado
+export interface ResponsibleSimple {
+  name: string
+  phone: string
+  email: string
+}
+
+export interface StudentDetailResponse {
+  id: number
+  name: string
+  email: string
+  register: string
+  birthDate: string
+  gender: string
+  class?: ClassSimple | null
+  attendances: StudentAttendance[]
+  responsibles: ResponsibleSimple[]
+}
+
+
+export interface ClassSearchResponse {
+  id: number
+  name: string
+  academicYear: string
+  studentCount: number
+  teacherCount: number
+}
+
+export interface ClassSearchFilters {
+  name?: string
+  academicYear?: string
+}
+
+export interface UserSimple {
+  id: number
+  name: string
+  email: string
+}
+
+export interface ClassDetailResponse {
+  id: number
+  name: string
+  year: number
+  students: UserSimple[]
+  teachers: UserSimple[]
+}
+
+export interface CreateClassRequest {
+  name: string
+  academicYear: string
+  studentIds?: number[]
+  teacherIds?: number[]
+  disciplineIds?: number[]
+}
+
+export interface ResponsibleSearchResponse {
+  id: number
+  name: string
+  phone: string
+  email: string
+}
+
+export interface ResponsibleSearchFilters {
+  name?: string
+  email?: string
+}
