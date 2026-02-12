@@ -8,7 +8,7 @@ import type {
   UserResponse,
 } from '../types/auth'
 
-export type { LoginCredentials, User, LoginResponse, RegisterUserRequest, UserResponse }
+export type { LoginCredentials, User, LoginResponse, RegisterUserRequest, UserResponse, LoginRequest }
 export { ApiError }
 
 function decodeJWT(token: string): { exp?: number; [key: string]: unknown } | null {

@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { ApiError } from '../../services/api'
+import { ApiError } from '../../services/authService'
 import './Login.css'
 
 export function Login() {

@@ -6,8 +6,8 @@ import {
   isAuthenticated,
   validateToken,
   User,
+  LoginRequest,
 } from '../services/authService'
-import type { LoginRequest } from '../types/auth'
 
 interface AuthContextType {
   user: User | null
