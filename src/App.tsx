@@ -3,6 +3,7 @@ import { Login } from './components/Login/Login'
 import { Home } from './pages/Home/Home'
 import { RegisterUser } from './pages/RegisterUser/RegisterUser'
 import { Classes } from './pages/Classes/Classes'
+import { EditClass } from './pages/EditClass/EditClass'
 import { UserDetail } from './pages/UserDetail/UserDetail'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute/AdminRoute'
@@ -42,6 +43,14 @@ function App() {
         element={
           <AdminRoute>
             <Classes />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/classes/:id/edit"
+        element={
+          <AdminRoute>
+            <EditClass />
           </AdminRoute>
         }
       />

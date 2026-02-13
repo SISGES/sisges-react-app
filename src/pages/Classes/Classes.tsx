@@ -156,6 +156,7 @@ export function Classes() {
                     <th>Série</th>
                     <th>Alunos</th>
                     <th>Professores</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -165,6 +166,14 @@ export function Classes() {
                       <td>{c.academicYear}</td>
                       <td>{c.studentCount}</td>
                       <td>{c.teacherCount}</td>
+                      <td>
+                        <button
+                          onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
+                          className="btn-view-class"
+                        >
+                          Visualizar
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

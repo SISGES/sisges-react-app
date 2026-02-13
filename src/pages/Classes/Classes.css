@@ -113,6 +113,24 @@
   border-color: var(--color-primary-hover);
 }
 
+.btn-view-class,
+.btn-edit-class {
+  padding: 0.4rem 0.75rem;
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-class:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
 /* Table */
 .class-table-wrapper {
   overflow-x: auto;
