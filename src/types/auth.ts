@@ -201,12 +201,29 @@ export interface UserSimple {
   email: string
 }
 
+export interface DisciplineSimple {
+  id: number
+  name: string
+}
+
 export interface ClassDetailResponse {
   id: number
   name: string
-  year: number
+  academicYear: string
   students: UserSimple[]
   teachers: UserSimple[]
+  disciplines?: DisciplineSimple[]
+}
+
+export interface DisciplineResponse {
+  id: number
+  name: string
+  description?: string
+}
+
+export interface CreateDisciplineRequest {
+  name: string
+  description?: string
 }
 
 export interface CreateClassRequest {

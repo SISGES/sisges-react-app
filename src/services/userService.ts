@@ -15,6 +15,8 @@ import type {
   CreateClassRequest,
   ResponsibleSearchResponse,
   ResponsibleSearchFilters,
+  DisciplineResponse,
+  CreateDisciplineRequest,
 } from '../types/auth'
 
 export type {
@@ -27,6 +29,7 @@ export type {
   ClassSearchResponse,
   ClassDetailResponse,
   ResponsibleSearchResponse,
+  DisciplineResponse,
 }
 
 export type UserResponse = UserSearchResponse
@@ -82,5 +85,45 @@ export async function createClass(data: CreateClassRequest): Promise<ClassDetail
 
 export async function searchResponsibles(filters?: ResponsibleSearchFilters): Promise<ResponsibleSearchResponse[]> {
   const response = await api.post<ResponsibleSearchResponse[]>('/responsibles/search', filters)
+  return response
+}
+
+export async function addTeacherToClass(classId: number, teacherId: number): Promise<ClassDetailResponse> {
+  const response = await api.post<ClassDetailResponse>(`/classes/${classId}/teacher/add/${teacherId}`)
+  return response
+}
+
+export async function addStudentToClass(classId: number, studentId: number): Promise<ClassDetailResponse> {
+  const response = await api.post<ClassDetailResponse>(`/classes/${classId}/student/add/${studentId}`)
+  return response
+}
+
+export async function removeTeacherFromClass(classId: number, teacherId: number): Promise<ClassDetailResponse> {
+  const response = await api.post<ClassDetailResponse>(`/classes/${classId}/teacher/remove/${teacherId}`)
+  return response
+}
+
+export async function removeStudentFromClass(classId: number, studentId: number): Promise<ClassDetailResponse> {
+  const response = await api.post<ClassDetailResponse>(`/classes/${classId}/student/remove/${studentId}`)
+  return response
+}
+
+export async function getDisciplines(): Promise<DisciplineResponse[]> {
+  const response = await api.get<DisciplineResponse[]>('/disciplines')
+  return response
+}
+
+export async function createDiscipline(data: CreateDisciplineRequest): Promise<DisciplineResponse> {
+  const response = await api.post<DisciplineResponse>('/disciplines', data)
+  return response
+}
+
+export async function addDisciplineToClass(classId: number, disciplineId: number): Promise<ClassDetailResponse> {
+  const response = await api.post<ClassDetailResponse>(`/classes/${classId}/discipline/add/${disciplineId}`)
+  return response
+}
+
+export async function removeDisciplineFromClass(classId: number, disciplineId: number): Promise<ClassDetailResponse> {
+  const response = await api.post<ClassDetailResponse>(`/classes/${classId}/discipline/remove/${disciplineId}`)
   return response
 }
