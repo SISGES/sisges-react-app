@@ -4,6 +4,8 @@ import { Home } from './pages/Home/Home'
 import { RegisterUser } from './pages/RegisterUser/RegisterUser'
 import { Classes } from './pages/Classes/Classes'
 import { EditClass } from './pages/EditClass/EditClass'
+import { Students } from './pages/Students/Students'
+import { Disciplines } from './pages/Disciplines/Disciplines'
 import { UserDetail } from './pages/UserDetail/UserDetail'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute/AdminRoute'
@@ -51,6 +53,22 @@ function App() {
         element={
           <AdminRoute>
             <EditClass />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/students"
+        element={
+          <AdminRoute>
+            <Students />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/disciplines"
+        element={
+          <AdminRoute>
+            <Disciplines />
           </AdminRoute>
         }
       />
