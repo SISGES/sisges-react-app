@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { searchClasses, createClass } from '../../services/userService'
+import { BackButton } from '../../components/BackButton/BackButton'
+import { searchClasses, createClass, deleteClass } from '../../services/userService'
 import { ApiError } from '../../services/api'
 import type { ClassSearchResponse, CreateClassRequest } from '../../types/auth'
 import './Classes.css'
@@ -33,6 +34,8 @@ export function Classes() {
 
   const [className, setClassName] = useState('')
   const [academicYear, setAcademicYear] = useState('')
+  const [deleteConfirmClass, setDeleteConfirmClass] = useState<ClassSearchResponse | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchClasses = useCallback(async () => {
     setIsLoading(true)
@@ -74,6 +77,34 @@ export function Classes() {
     resetForm()
   }
 
+  const handleDeleteClick = (c: ClassSearchResponse) => {
+    setDeleteConfirmClass(c)
+  }
+
+  const handleCloseDeleteModal = () => {
+    if (!isDeleting) setDeleteConfirmClass(null)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmClass) return
+    setIsDeleting(true)
+    try {
+      await deleteClass(deleteConfirmClass.id)
+      setDeleteConfirmClass(null)
+      fetchClasses()
+    } catch (err) {
+      if (err instanceof ApiError) {
+        alert(err.message)
+      } else if (err instanceof Error) {
+        alert(err.message)
+      } else {
+        alert('Erro ao excluir turma.')
+      }
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSubmitError(null)
@@ -110,9 +141,7 @@ export function Classes() {
     <div className="classes-container">
       <header className="classes-header">
         <div className="classes-header-content">
-          <button onClick={() => navigate('/')} className="btn-back">
-            &#8592; Voltar
-          </button>
+          <BackButton to="/" />
           <h1>Gestão de Turmas</h1>
         </div>
       </header>
@@ -166,12 +195,20 @@ export function Classes() {
                       <td>{c.academicYear}</td>
                       <td>{c.studentCount}</td>
                       <td>{c.teacherCount}</td>
-                      <td>
+                      <td className="class-actions-cell">
                         <button
                           onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
                           className="btn-view-class"
                         >
                           Visualizar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(c)}
+                          className="btn-delete-class"
+                          title="Excluir turma"
+                          aria-label={`Excluir turma ${c.name}`}
+                        >
+                          Excluir
                         </button>
                       </td>
                     </tr>
@@ -182,6 +219,48 @@ export function Classes() {
           )}
         </div>
       </div>
+
+      {/* Modal de confirmação para excluir turma */}
+      {deleteConfirmClass && (
+        <div className="confirm-modal-overlay" onClick={handleCloseDeleteModal}>
+          <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-modal-header">
+              <h3>Excluir turma</h3>
+              <button
+                onClick={handleCloseDeleteModal}
+                className="confirm-modal-close"
+                disabled={isDeleting}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="confirm-modal-body">
+              <p>
+                Tem certeza que deseja excluir a turma <strong>{deleteConfirmClass.name}</strong>?
+                Esta ação não pode ser desfeita.
+              </p>
+            </div>
+            <div className="confirm-modal-actions">
+              <button
+                type="button"
+                onClick={handleCloseDeleteModal}
+                className="btn-secondary"
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="btn-danger"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal for creating new class */}
       {showModal && (

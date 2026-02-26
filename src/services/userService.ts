@@ -83,6 +83,10 @@ export async function createClass(data: CreateClassRequest): Promise<ClassDetail
   return response
 }
 
+export async function deleteClass(id: number): Promise<void> {
+  await api.delete(`/classes/delete/${id}`)
+}
+
 export async function searchResponsibles(filters?: ResponsibleSearchFilters): Promise<ResponsibleSearchResponse[]> {
   const response = await api.post<ResponsibleSearchResponse[]>('/responsibles/search', filters)
   return response

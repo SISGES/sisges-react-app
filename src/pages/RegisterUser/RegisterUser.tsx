@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BackButton } from '../../components/BackButton/BackButton'
 import { register, getErrorMessage } from '../../services/authService'
 import { ApiError } from '../../services/api'
 import { useToast } from '../../contexts/ToastContext'
@@ -269,9 +270,7 @@ export function RegisterUser() {
     <div className="register-container">
       <header className="register-header">
         <div className="register-header-content">
-          <button onClick={() => navigate('/')} className="btn-back">
-            &#8592; Voltar
-          </button>
+          <BackButton to="/" />
           <h1>Cadastrar Usuário</h1>
         </div>
       </header>

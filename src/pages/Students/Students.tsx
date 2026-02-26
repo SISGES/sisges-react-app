@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BackButton } from '../../components/BackButton/BackButton'
 import { searchUsers } from '../../services/userService'
 import { ApiError } from '../../services/api'
 import type { UserSearchResponse } from '../../types/auth'
@@ -39,9 +40,7 @@ export function Students() {
     <div className="students-container">
       <header className="students-header">
         <div className="students-header-content">
-          <button onClick={() => navigate('/')} className="btn-back">
-            &#8592; Voltar
-          </button>
+          <BackButton to="/" />
           <h1>Alunos</h1>
         </div>
       </header>

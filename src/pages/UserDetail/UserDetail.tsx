@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { BackButton } from '../../components/BackButton/BackButton'
 import { getUserById } from '../../services/userService'
 import { ApiError } from '../../services/api'
 import type { UserDetailResponse } from '../../types/auth'
@@ -53,9 +54,7 @@ export function UserDetail() {
     <div className="user-detail-container">
       <header className="user-detail-header">
         <div className="user-detail-header-content">
-          <button onClick={() => navigate('/')} className="btn-back">
-            &#8592; Voltar
-          </button>
+          <BackButton to="/" />
           <h1>Detalhes do Usuário</h1>
         </div>
       </header>

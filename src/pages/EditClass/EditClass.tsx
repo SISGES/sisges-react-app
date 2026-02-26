@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { BackButton } from '../../components/BackButton/BackButton'
 import {
   getClassById,
   searchStudents,
@@ -26,7 +27,6 @@ import './EditClass.css'
 
 export function EditClass() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const classId = id ? parseInt(id, 10) : null
 
   const [schoolClass, setSchoolClass] = useState<ClassDetailResponse | null>(null)
@@ -250,9 +250,7 @@ export function EditClass() {
     <div className="edit-class-container">
       <header className="edit-class-header">
         <div className="edit-class-header-content">
-          <button onClick={() => navigate('/admin/classes')} className="btn-back">
-            &#8592; Voltar
-          </button>
+          <BackButton to="/admin/classes" />
           <h1>Editar Turma</h1>
         </div>
       </header>

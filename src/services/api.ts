@@ -108,7 +108,9 @@ export const api = {
     if (!response.ok) {
       await handleErrorResponse(response)
     }
-    return response.json()
+    const text = await response.text()
+    if (!text.trim()) return undefined as T
+    return JSON.parse(text) as T
   },
 }
 

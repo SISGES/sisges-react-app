@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { BackButton } from '../../components/BackButton/BackButton'
 import { getDisciplines, createDiscipline } from '../../services/userService'
 import { ApiError } from '../../services/api'
 import type { DisciplineResponse } from '../../types/auth'
 import './Disciplines.css'
 
 export function Disciplines() {
-  const navigate = useNavigate()
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -83,9 +82,7 @@ export function Disciplines() {
     <div className="disciplines-container">
       <header className="disciplines-header">
         <div className="disciplines-header-content">
-          <button onClick={() => navigate('/')} className="btn-back">
-            &#8592; Voltar
-          </button>
+          <BackButton to="/" />
           <h1>Disciplinas</h1>
         </div>
       </header>
