@@ -17,6 +17,13 @@ import type {
   ResponsibleSearchFilters,
   DisciplineResponse,
   CreateDisciplineRequest,
+  UpdateDisciplineRequest,
+  AulaSearchFilters,
+  AulaSearchResponse,
+  AulaDetailResponse,
+  CreateAulaRequest,
+  UpdateAulaRequest,
+  SubmitFrequencyRequest,
 } from '../types/auth'
 
 export type {
@@ -55,6 +62,12 @@ export async function searchTeachers(filters?: TeacherSearchFilters): Promise<Te
 
 export async function getTeacherById(id: number): Promise<TeacherDetailResponse> {
   const response = await api.get<TeacherDetailResponse>(`/teachers/${id}`)
+  return response
+}
+
+/** Retorna o perfil do professor logado. Use para professores acessando seus próprios dados. */
+export async function getTeacherMe(): Promise<TeacherDetailResponse> {
+  const response = await api.get<TeacherDetailResponse>('/teachers/me')
   return response
 }
 
@@ -122,6 +135,16 @@ export async function createDiscipline(data: CreateDisciplineRequest): Promise<D
   return response
 }
 
+export async function updateDiscipline(id: number, data: UpdateDisciplineRequest): Promise<DisciplineResponse> {
+  const response = await api.put<DisciplineResponse>(`/disciplines/update/${id}`, data)
+  return response
+}
+
+export async function getDisciplineById(id: number): Promise<DisciplineResponse> {
+  const response = await api.get<DisciplineResponse>(`/disciplines/${id}`)
+  return response
+}
+
 export async function addDisciplineToClass(classId: number, disciplineId: number): Promise<ClassDetailResponse> {
   const response = await api.post<ClassDetailResponse>(`/classes/${classId}/discipline/add/${disciplineId}`)
   return response
@@ -130,4 +153,77 @@ export async function addDisciplineToClass(classId: number, disciplineId: number
 export async function removeDisciplineFromClass(classId: number, disciplineId: number): Promise<ClassDetailResponse> {
   const response = await api.post<ClassDetailResponse>(`/classes/${classId}/discipline/remove/${disciplineId}`)
   return response
+}
+
+/* Aula (class meeting) endpoints - /api/class */
+export async function searchAulas(filters?: AulaSearchFilters): Promise<AulaSearchResponse[]> {
+  const body: {
+    date?: string
+    disciplineId?: number
+    classId?: number
+    teacherId?: number
+  } = {}
+  if (filters) {
+    if (filters.date) body.date = filters.date
+    if (filters.disciplineId != null) body.disciplineId = filters.disciplineId
+    if (filters.schoolClassId != null) body.classId = filters.schoolClassId
+    if (filters.teacherId != null) body.teacherId = filters.teacherId
+  }
+  const response = await api.post<AulaSearchResponse[]>('/class/search', body)
+  return response
+}
+
+interface ClassMeetingApiResponse {
+  id: number
+  date?: string
+  startTime?: string
+  endTime?: string
+  classInfo?: {
+    id: number
+    name: string
+    academicYear: string
+    students?: { id: number; name: string; email: string; present?: boolean | null }[]
+  }
+  teacher?: { id: number; name: string; email: string }
+}
+
+export async function getAulaById(id: number): Promise<AulaDetailResponse> {
+  const data = await api.get<ClassMeetingApiResponse>(`/class/${id}`)
+  const classInfo = data.classInfo
+  const students = (classInfo?.students ?? []).map((s) => ({
+    id: s.id,
+    name: s.name,
+    email: s.email,
+    present: s.present,
+  }))
+  return {
+    id: data.id,
+    name: classInfo?.name ?? '',
+    academicYear: classInfo?.academicYear ?? '',
+    students,
+    professor: data.teacher ?? { id: 0, name: '-', email: '' },
+    date: data.date,
+    startTime: data.startTime,
+    endTime: data.endTime,
+    disciplineId: undefined,
+    schoolClassId: classInfo?.id,
+  }
+}
+
+export async function createAula(data: CreateAulaRequest): Promise<AulaDetailResponse> {
+  const response = await api.post<AulaDetailResponse>('/class', data)
+  return response
+}
+
+export async function updateAula(id: number, data: UpdateAulaRequest): Promise<AulaDetailResponse> {
+  const response = await api.put<AulaDetailResponse>(`/class/update/${id}`, data)
+  return response
+}
+
+export async function deleteAula(id: number): Promise<void> {
+  await api.delete(`/class/delete/${id}`)
+}
+
+export async function submitAulaFrequency(aulaId: number, data: SubmitFrequencyRequest): Promise<void> {
+  await api.post(`/class/${aulaId}/frequency`, data)
 }

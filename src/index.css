@@ -21,6 +21,7 @@
   --color-error: #EF4444;
   --color-warning: #F59E0B;
   --color-success: #16A34A;
+  --color-close-icon: #0F172A;
 }
 
 [data-theme='dark'] {
@@ -37,6 +38,39 @@
   --color-error: #F87171;
   --color-warning: #FBBF24;
   --color-success: #4ADE80;
+  --color-close-icon: #E5E7EB;
+}
+
+/* Ícone X de fechar - sem fundo, cor oposta ao tema */
+.modal-close,
+.confirm-modal-close,
+.toast-close {
+  background: none !important;
+  background-color: transparent !important;
+  border: none;
+  color: var(--color-close-icon);
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover,
+.confirm-modal-close:hover {
+  background: none !important;
+  background-color: transparent !important;
+  color: var(--color-close-icon);
+  opacity: 0.85;
+}
+
+.toast-close {
+  color: inherit;
+  opacity: 0.9;
+}
+
+.toast-close:hover {
+  opacity: 1;
 }
 
 * {

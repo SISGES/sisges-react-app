@@ -1,20 +1,24 @@
 import { useState, useEffect, useCallback } from 'react'
+import { IoClose } from 'react-icons/io5'
 import { BackButton } from '../../components/BackButton/BackButton'
-import { getDisciplines, createDiscipline } from '../../services/userService'
+import { getDisciplines, createDiscipline, updateDiscipline, searchTeachers } from '../../services/userService'
 import { ApiError } from '../../services/api'
-import type { DisciplineResponse } from '../../types/auth'
+import type { DisciplineResponse, TeacherSearchResponse } from '../../types/auth'
 import './Disciplines.css'
 
 export function Disciplines() {
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([])
+  const [teachers, setTeachers] = useState<TeacherSearchResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [editingDiscipline, setEditingDiscipline] = useState<DisciplineResponse | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState<number[]>([])
 
   const fetchDisciplines = useCallback(async () => {
     setIsLoading(true)
@@ -35,13 +39,25 @@ export function Disciplines() {
     }
   }, [])
 
+  const fetchTeachers = useCallback(async () => {
+    try {
+      const data = await searchTeachers()
+      setTeachers(data)
+    } catch {
+      // Ignore
+    }
+  }, [])
+
   useEffect(() => {
     fetchDisciplines()
-  }, [fetchDisciplines])
+    fetchTeachers()
+  }, [fetchDisciplines, fetchTeachers])
 
   const resetForm = () => {
     setName('')
     setDescription('')
+    setSelectedTeacherIds([])
+    setEditingDiscipline(null)
     setSubmitError(null)
     setSubmitSuccess(null)
   }
@@ -51,17 +67,44 @@ export function Disciplines() {
     resetForm()
   }
 
+  const handleEdit = (d: DisciplineResponse) => {
+    setEditingDiscipline(d)
+    setName(d.name)
+    setDescription(d.description || '')
+    setSelectedTeacherIds(d.teachers?.map((t) => t.id) ?? [])
+    setShowModal(true)
+  }
+
+  const toggleTeacher = (teacherId: number) => {
+    setSelectedTeacherIds((prev) =>
+      prev.includes(teacherId) ? prev.filter((id) => id !== teacherId) : [...prev, teacherId]
+    )
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSubmitError(null)
     setSubmitSuccess(null)
     setIsSubmitting(true)
     try {
-      await createDiscipline({
-        name: name.trim(),
-        description: description.trim() || undefined,
-      })
-      setSubmitSuccess('Disciplina criada com sucesso!')
+      if (editingDiscipline) {
+        await updateDiscipline(editingDiscipline.id, {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          teachers: teachers.map((t) => ({
+            teacherId: t.id,
+            vinculado: selectedTeacherIds.includes(t.id),
+          })),
+        })
+        setSubmitSuccess('Disciplina atualizada com sucesso!')
+      } else {
+        await createDiscipline({
+          name: name.trim(),
+          description: description.trim() || undefined,
+          teacherIds: selectedTeacherIds.length > 0 ? selectedTeacherIds : undefined,
+        })
+        setSubmitSuccess('Disciplina criada com sucesso!')
+      }
       resetForm()
       fetchDisciplines()
       setTimeout(handleCloseModal, 1200)
@@ -71,7 +114,7 @@ export function Disciplines() {
       } else if (err instanceof Error) {
         setSubmitError(err.message)
       } else {
-        setSubmitError('Erro ao criar disciplina.')
+        setSubmitError(editingDiscipline ? 'Erro ao atualizar disciplina.' : 'Erro ao criar disciplina.')
       }
     } finally {
       setIsSubmitting(false)
@@ -124,6 +167,8 @@ export function Disciplines() {
                   <tr>
                     <th>Nome</th>
                     <th>Descrição</th>
+                    <th>Professores</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -131,6 +176,12 @@ export function Disciplines() {
                     <tr key={d.id}>
                       <td>{d.name}</td>
                       <td className="discipline-desc">{d.description || '-'}</td>
+                      <td>{d.teachers?.map((t) => t.name).join(', ') || '-'}</td>
+                      <td>
+                        <button onClick={() => handleEdit(d)} className="btn-edit-discipline">
+                          Editar
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -144,9 +195,9 @@ export function Disciplines() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Nova Disciplina</h2>
-              <button onClick={handleCloseModal} className="modal-close">
-                &times;
+              <h2>{editingDiscipline ? 'Editar Disciplina' : 'Nova Disciplina'}</h2>
+              <button onClick={handleCloseModal} className="modal-close" aria-label="Fechar">
+                <IoClose size={22} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
@@ -191,12 +242,31 @@ export function Disciplines() {
                   disabled={isSubmitting}
                 />
               </div>
+              <div className="form-group">
+                <label className="form-label">Professores vinculados</label>
+                <div className="discipline-teachers-select">
+                  {teachers.map((t) => (
+                    <label key={t.id} className="discipline-teacher-option">
+                      <input
+                        type="checkbox"
+                        checked={selectedTeacherIds.includes(t.id)}
+                        onChange={() => toggleTeacher(t.id)}
+                        disabled={isSubmitting}
+                      />
+                      <span>{t.name}</span>
+                    </label>
+                  ))}
+                  {teachers.length === 0 && (
+                    <span className="text-muted-small">Nenhum professor cadastrado.</span>
+                  )}
+                </div>
+              </div>
               <div className="modal-actions">
                 <button type="button" onClick={handleCloseModal} className="btn-secondary" disabled={isSubmitting}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? 'Criando...' : 'Criar'}
+                  {isSubmitting ? (editingDiscipline ? 'Salvando...' : 'Criando...') : editingDiscipline ? 'Salvar' : 'Criar'}
                 </button>
               </div>
             </form>

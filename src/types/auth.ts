@@ -218,11 +218,80 @@ export interface DisciplineResponse {
   id: number
   name: string
   description?: string
+  teachers?: { id: number; name: string; email: string }[]
 }
 
 export interface CreateDisciplineRequest {
   name: string
   description?: string
+  teacherIds?: number[]
+}
+
+export interface DisciplineTeacherUpdate {
+  teacherId: number
+  vinculado: boolean
+}
+
+export interface UpdateDisciplineRequest {
+  name?: string
+  description?: string
+  teachers?: DisciplineTeacherUpdate[]
+}
+
+/* Aula (class meeting) - distinct from turma (school class) */
+export interface AulaSearchFilters {
+  date?: string
+  disciplineId?: number
+  schoolClassId?: number
+  teacherId?: number
+}
+
+export interface AulaSearchResponse {
+  id: number
+  date: string
+  startTime: string
+  endTime: string
+  disciplineName: string
+  schoolClassName: string
+  teacherName: string
+}
+
+export interface AulaDetailStudent extends StudentSearchResponse {
+  /** true = presente, false = faltou, undefined/null = não lançada */
+  present?: boolean | null
+}
+
+export interface AulaDetailResponse {
+  id: number
+  name: string
+  academicYear: string
+  students: AulaDetailStudent[]
+  professor: { id: number; name: string; email: string }
+  date?: string
+  startTime?: string
+  endTime?: string
+  disciplineId?: number
+  schoolClassId?: number
+}
+
+export interface CreateAulaRequest {
+  date: string
+  disciplineId: number
+  startTime: string
+  endTime: string
+  classId: number
+  teacherId?: number
+}
+
+export interface UpdateAulaRequest extends CreateAulaRequest {}
+
+export interface FrequencyEntry {
+  studentId: number
+  status: 'P' | 'F'
+}
+
+export interface SubmitFrequencyRequest {
+  entries: FrequencyEntry[]
 }
 
 export interface CreateClassRequest {

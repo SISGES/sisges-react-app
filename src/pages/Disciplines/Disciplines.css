@@ -336,3 +336,50 @@
   border-radius: 0.5rem;
   font-size: 0.9rem;
 }
+
+.discipline-teachers-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}
+
+.discipline-teacher-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.discipline-teacher-option input {
+  accent-color: var(--color-primary);
+}
+
+.text-muted-small {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.btn-edit-discipline {
+  padding: 0.4rem 0.75rem;
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-discipline:hover {
+  background-color: var(--color-primary);
+  color: white;
+}

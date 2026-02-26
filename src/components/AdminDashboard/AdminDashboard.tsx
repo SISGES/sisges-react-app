@@ -129,6 +129,14 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
           <span className="hub-card-count">{disciplinesCount}</span>
           <span className="hub-card-action">Ver disciplinas →</span>
         </Link>
+
+        <Link
+          to="/aulas"
+          className="hub-card hub-card-shortcut"
+        >
+          <h3 className="hub-card-title">Aulas</h3>
+          <span className="hub-card-action">Gerenciar aulas →</span>
+        </Link>
       </div>
     </div>
   )

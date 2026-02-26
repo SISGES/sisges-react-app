@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FiEye } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchUsers } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -94,10 +95,7 @@ export function Students() {
                           title="Ver detalhes"
                           aria-label="Ver detalhes"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
+                          <FiEye size={18} />
                         </button>
                       </td>
                     </tr>

@@ -1,11 +1,14 @@
+import type { ReactNode } from 'react'
+import { FiCheck, FiAlertTriangle, FiInfo } from 'react-icons/fi'
+import { IoClose } from 'react-icons/io5'
 import { useToast, Toast as ToastType } from '../../contexts/ToastContext'
 import './Toast.css'
 
-const TOAST_ICONS: Record<ToastType['type'], string> = {
-  success: '✓',
-  error: '✕',
-  warning: '⚠',
-  info: 'ℹ',
+const TOAST_ICONS: Record<ToastType['type'], ReactNode> = {
+  success: <FiCheck />,
+  error: <IoClose />,
+  warning: <FiAlertTriangle />,
+  info: <FiInfo />,
 }
 
 export function ToastContainer() {
@@ -28,7 +31,7 @@ export function ToastContainer() {
             className="toast-close"
             aria-label="Fechar"
           >
-            ×
+            <IoClose size={18} />
           </button>
         </div>
       ))}

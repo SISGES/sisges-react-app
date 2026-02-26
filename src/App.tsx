@@ -6,9 +6,14 @@ import { Classes } from './pages/Classes/Classes'
 import { EditClass } from './pages/EditClass/EditClass'
 import { Students } from './pages/Students/Students'
 import { Disciplines } from './pages/Disciplines/Disciplines'
+import { Aulas } from './pages/Aulas/Aulas'
+import { AulaDetail } from './pages/AulaDetail/AulaDetail'
+import { CreateAula } from './pages/CreateAula/CreateAula'
+import { EditAula } from './pages/EditAula/EditAula'
 import { UserDetail } from './pages/UserDetail/UserDetail'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute/AdminRoute'
+import { TeacherRoute } from './components/TeacherRoute/TeacherRoute'
 import { useAuth } from './contexts/AuthContext'
 import './themes/theme.css'
 import './App.css'
@@ -78,6 +83,46 @@ function App() {
           <AdminRoute>
             <UserDetail />
           </AdminRoute>
+        }
+      />
+      <Route
+        path="/aulas"
+        element={
+          <TeacherRoute>
+            <Aulas />
+          </TeacherRoute>
+        }
+      />
+      <Route
+        path="/aulas/new"
+        element={
+          <TeacherRoute>
+            <CreateAula />
+          </TeacherRoute>
+        }
+      />
+      <Route
+        path="/aulas/:id"
+        element={
+          <TeacherRoute>
+            <AulaDetail />
+          </TeacherRoute>
+        }
+      />
+      <Route
+        path="/aulas/:id/edit"
+        element={
+          <TeacherRoute>
+            <EditAula />
+          </TeacherRoute>
+        }
+      />
+      <Route
+        path="/users/:id"
+        element={
+          <TeacherRoute>
+            <UserDetail />
+          </TeacherRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
+import { IoClose } from 'react-icons/io5'
 import { BackButton } from '../../components/BackButton/BackButton'
 import {
   getClassById,
@@ -458,8 +459,8 @@ export function EditClass() {
           <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="confirm-modal-header">
               <h3>Confirmar desvinculação</h3>
-              <button onClick={closeConfirmModal} className="confirm-modal-close">
-                &times;
+              <button onClick={closeConfirmModal} className="confirm-modal-close" aria-label="Fechar">
+                <IoClose size={22} />
               </button>
             </div>
             <div className="confirm-modal-body">
@@ -493,8 +494,8 @@ export function EditClass() {
           <div className="confirm-modal-content create-discipline-modal" onClick={(e) => e.stopPropagation()}>
             <div className="confirm-modal-header">
               <h3>Nova Disciplina</h3>
-              <button onClick={() => setShowCreateDisciplineModal(false)} className="confirm-modal-close">
-                &times;
+              <button onClick={() => setShowCreateDisciplineModal(false)} className="confirm-modal-close" aria-label="Fechar">
+                <IoClose size={22} />
               </button>
             </div>
             <div className="confirm-modal-body">

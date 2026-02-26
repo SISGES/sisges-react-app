@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { FiLogOut } from 'react-icons/fi'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle'
 import { AdminDashboard } from '../../components/AdminDashboard/AdminDashboard'
@@ -30,11 +31,7 @@ export function Home() {
               title="Sair"
               aria-label="Sair"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
+              <FiLogOut size={20} />
             </button>
           </div>
         </div>
@@ -42,6 +39,14 @@ export function Home() {
       <main>
         {user?.role === 'ADMIN' && user.id && (
           <AdminDashboard currentUserId={user.id} />
+        )}
+        {user?.role === 'TEACHER' && (
+          <div className="home-teacher-section">
+            <div className="teacher-hub-card" onClick={() => navigate('/aulas')}>
+              <h3>Aulas</h3>
+              <span className="teacher-hub-action">Gerenciar aulas →</span>
+            </div>
+          </div>
         )}
       </main>
     </div>

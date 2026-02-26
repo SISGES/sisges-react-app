@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { FiArrowLeft } from 'react-icons/fi'
 import './BackButton.css'
 
 interface BackButtonProps {
@@ -8,7 +9,7 @@ interface BackButtonProps {
 export function BackButton({ to }: BackButtonProps) {
   return (
     <Link to={to} className="back-button" aria-label="Voltar">
-      &#8592;
+      <FiArrowLeft size={20} />
     </Link>
   )
 }

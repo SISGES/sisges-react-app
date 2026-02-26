@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { IoClose } from 'react-icons/io5'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { register, getErrorMessage } from '../../services/authService'
 import { ApiError } from '../../services/api'
@@ -601,8 +602,8 @@ export function RegisterUser() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Nova Turma</h2>
-              <button onClick={handleCloseClassModal} className="modal-close" type="button">
-                &times;
+              <button onClick={handleCloseClassModal} className="modal-close" type="button" aria-label="Fechar">
+                <IoClose size={22} />
               </button>
             </div>
             <form onSubmit={handleCreateClass} className="modal-form">

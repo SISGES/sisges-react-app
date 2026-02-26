@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { IoClose } from 'react-icons/io5'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchClasses, createClass, deleteClass } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -230,8 +231,9 @@ export function Classes() {
                 onClick={handleCloseDeleteModal}
                 className="confirm-modal-close"
                 disabled={isDeleting}
+                aria-label="Fechar"
               >
-                &times;
+                <IoClose size={22} />
               </button>
             </div>
             <div className="confirm-modal-body">
@@ -268,8 +270,8 @@ export function Classes() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Nova Turma</h2>
-              <button onClick={handleCloseModal} className="modal-close">
-                &times;
+              <button onClick={handleCloseModal} className="modal-close" aria-label="Fechar">
+                <IoClose size={22} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">

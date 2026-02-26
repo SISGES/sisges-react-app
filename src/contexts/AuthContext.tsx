@@ -4,7 +4,6 @@ import {
   logout as authLogout,
   getCurrentUser,
   isAuthenticated,
-  validateToken,
   User,
   LoginRequest,
 } from '../services/authService'
@@ -24,28 +23,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        if (isAuthenticated()) {
-          const isValid = await validateToken()
-          if (isValid) {
-            const currentUser = getCurrentUser()
-            setUser(currentUser)
-          } else {
-            setUser(null)
-          }
-        } else {
-          setUser(null)
-        }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error)
+    try {
+      if (isAuthenticated()) {
+        const currentUser = getCurrentUser()
+        setUser(currentUser)
+      } else {
         setUser(null)
-      } finally {
-        setIsLoading(false)
       }
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error)
+      setUser(null)
+    } finally {
+      setIsLoading(false)
     }
-
-    checkAuth()
   }, [])
 
   const login = async (credentials: LoginRequest) => {
