@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { ApiError } from '../../services/authService'
 import type { LoginRequest } from '../../types/auth'
 import './Login.css'
 
@@ -20,15 +21,25 @@ export function Login() {
 
     try {
       await login({ email, password })
-      // Redireciona para a página que o usuário tentou acessar ou para home
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
       navigate(from, { replace: true })
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Erro ao fazer login. Verifique suas credenciais.'
-      )
+      if (err instanceof ApiError) {
+        switch (err.code) {
+          case 'AUTH_INVALID_CREDENTIALS':
+            setError(err.message)
+            break
+          case 'VALIDATION_ERROR':
+            setError(err.errors?.map(e => e.message).join(', ') || err.message)
+            break
+          default:
+            setError(err.message)
+        }
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Erro ao fazer login. Verifique suas credenciais.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -59,7 +70,7 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="form-input"
-              placeholder="seu@email.com"
+              placeholder="Insira seu email"
               required
               autoComplete="email"
               disabled={isLoading}

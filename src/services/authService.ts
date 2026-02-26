@@ -1,21 +1,16 @@
-import api from './api'
+import api, { ApiError } from './api'
 import type {
   LoginRequest,
   LoginResponse,
-  LoginResponseUserInfo,
   User,
   LoginCredentials,
   RegisterUserRequest,
   UserResponse,
-  ApiError,
-  ApiErrorMessage,
-  ApiValidationError,
 } from '../types/auth'
 
-// Re-exportar tipos para compatibilidade
-export type { LoginCredentials, User, LoginResponse, RegisterUserRequest, UserResponse }
+export type { LoginCredentials, User, LoginResponse, RegisterUserRequest, UserResponse, LoginRequest }
+export { ApiError }
 
-// Função para decodificar o JWT (apenas para obter dados básicos, não valida assinatura)
 function decodeJWT(token: string): { exp?: number; [key: string]: unknown } | null {
   try {
     const base64Url = token.split('.')[1]
@@ -33,24 +28,29 @@ function decodeJWT(token: string): { exp?: number; [key: string]: unknown } | nu
   }
 }
 
-// Verifica se o token está expirado
 function isTokenExpired(token: string): boolean {
   const decoded = decodeJWT(token)
   if (!decoded || !decoded.exp) {
     return true
   }
-  // exp está em segundos, Date.now() está em milissegundos
   return decoded.exp * 1000 < Date.now()
 }
 
-// Função de login
 export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   const response = await api.post<LoginResponse>('/auth/login', credentials)
-  
-  // Salva token e usuário no localStorage
+
+  const maybeError = response as unknown as { code?: string; status?: number; message?: string; timestamp?: string }
+  if (maybeError.code && !response.accessToken) {
+    throw new ApiError({
+      status: maybeError.status || 401,
+      code: maybeError.code as import('../types/auth').SisgesErrorCode,
+      message: maybeError.message || 'Erro ao fazer login',
+      timestamp: maybeError.timestamp || new Date().toISOString(),
+    })
+  }
+
   if (response.accessToken) {
     localStorage.setItem('token', response.accessToken)
-    // Normaliza o usuário para o formato interno do frontend
     const user: User = {
       id: response.user.id,
       name: response.user.name,
@@ -60,24 +60,20 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
     }
     localStorage.setItem('user', JSON.stringify(user))
   }
-  
+
   return response
 }
-
-// Função de logout
 export function logout(): void {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
 }
 
-// Obtém o usuário atual do localStorage
 export function getCurrentUser(): User | null {
   const userStr = localStorage.getItem('user')
   if (!userStr) return null
   
   try {
     const parsed = JSON.parse(userStr)
-    // Garante que o usuário tem a estrutura correta
     return {
       id: parsed.id,
       name: parsed.name,
@@ -90,12 +86,10 @@ export function getCurrentUser(): User | null {
   }
 }
 
-// Verifica se o usuário está autenticado
 export function isAuthenticated(): boolean {
   const token = localStorage.getItem('token')
   if (!token) return false
   
-  // Verifica se o token está expirado
   if (isTokenExpired(token)) {
     logout()
     return false
@@ -104,12 +98,10 @@ export function isAuthenticated(): boolean {
   return true
 }
 
-// Obtém o token atual
 export function getToken(): string | null {
   return localStorage.getItem('token')
 }
 
-// Valida o token (pode ser usado para verificar com o backend)
 export async function validateToken(): Promise<boolean> {
   const token = getToken()
   if (!token || isTokenExpired(token)) {
@@ -117,7 +109,6 @@ export async function validateToken(): Promise<boolean> {
   }
 
   try {
-    // Faz uma requisição para validar o token com o backend
     await api.get('/auth/validate')
     return true
   } catch {
@@ -126,29 +117,22 @@ export async function validateToken(): Promise<boolean> {
   }
 }
 
-// Função de registro (cadastro de usuário)
 export async function register(data: RegisterUserRequest): Promise<UserResponse> {
   const response = await api.post<UserResponse>('/auth/register', data)
   return response
 }
 
-// Função auxiliar para verificar se um erro é de validação
-export function isValidationError(error: unknown): error is ApiValidationError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'errors' in error &&
-    Array.isArray((error as ApiValidationError).errors)
-  )
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError
 }
 
-// Função auxiliar para extrair mensagem de erro
+export function isValidationError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === 'VALIDATION_ERROR'
+}
+
 export function getErrorMessage(error: unknown): string {
-  if (isValidationError(error)) {
-    return error.errors.map((e) => `${e.field}: ${e.message}`).join(', ')
-  }
-  if (error && typeof error === 'object' && 'message' in error) {
-    return (error as ApiErrorMessage).message
+  if (error instanceof ApiError) {
+    return error.message
   }
   if (error instanceof Error) {
     return error.message
