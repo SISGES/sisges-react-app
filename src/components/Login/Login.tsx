@@ -2,7 +2,6 @@ import { useState, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { ApiError } from '../../services/authService'
-import type { LoginRequest } from '../../types/auth'
 import './Login.css'
 
 export function Login() {
