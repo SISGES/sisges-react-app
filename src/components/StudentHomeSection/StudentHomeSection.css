@@ -1,0 +1,88 @@
+.student-home-section {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.student-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.student-home-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.student-home-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--color-text-primary);
+}
+
+.student-home-empty {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.student-home-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.student-home-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}
+
+.student-home-list li strong {
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.student-home-meta,
+.student-home-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.student-home-link {
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  margin-top: 0.25rem;
+}
+
+.student-home-link:hover {
+  text-decoration: underline;
+}
+
+.student-home-loading,
+.student-home-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.student-home-error {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.student-home-error p {
+  margin: 0;
+  color: var(--color-text-muted);
+}

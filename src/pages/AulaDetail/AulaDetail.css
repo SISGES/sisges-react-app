@@ -117,6 +117,127 @@
   margin: 0 0 0.75rem 0;
 }
 
+.aula-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.aula-section-header h3 {
+  margin: 0;
+}
+
+.btn-add-activity {
+  padding: 0.4rem 0.8rem;
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-add-activity:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.aula-empty-text {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.aula-activities-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.aula-activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}
+
+.aula-activity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.aula-activity-info strong {
+  color: var(--color-text-primary);
+}
+
+.aula-activity-desc {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.aula-activity-file {
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  margin-top: 0.25rem;
+}
+
+.aula-activity-file:hover {
+  text-decoration: underline;
+}
+
+.btn-delete-activity {
+  padding: 0.35rem 0.7rem;
+  background-color: transparent;
+  border: 1px solid var(--color-error);
+  border-radius: 0.4rem;
+  color: var(--color-error);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.btn-delete-activity:hover {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.modal-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.modal-form .form-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: var(--color-text-primary);
+}
+
+.modal-form .form-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.modal-form .form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-form input[type="file"] {
+  font-size: 0.9rem;
+}
+
 .aula-professor {
   display: flex;
   align-items: center;
@@ -166,6 +287,57 @@
 
 .aula-student-status--nao-lancada {
   color: var(--color-text-muted);
+}
+
+.aula-attendance-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.aula-attendance-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.aula-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-error);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.aula-toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.aula-attendance-toggle input:checked + .aula-toggle-slider {
+  background-color: var(--color-success);
+}
+
+.aula-attendance-toggle input:checked + .aula-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.aula-attendance-toggle input:disabled + .aula-toggle-slider {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .aula-student-name {

@@ -3,6 +3,8 @@ import { FiLogOut } from 'react-icons/fi'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle'
 import { AdminDashboard } from '../../components/AdminDashboard/AdminDashboard'
+import { AnnouncementFeed } from '../../components/AnnouncementFeed/AnnouncementFeed'
+import { StudentHomeSection } from '../../components/StudentHomeSection/StudentHomeSection'
 import './Home.css'
 
 export function Home() {
@@ -37,6 +39,7 @@ export function Home() {
         </div>
       </header>
       <main>
+        <AnnouncementFeed />
         {user?.role === 'ADMIN' && user.id && (
           <AdminDashboard currentUserId={user.id} />
         )}
@@ -46,7 +49,14 @@ export function Home() {
               <h3>Aulas</h3>
               <span className="teacher-hub-action">Gerenciar aulas →</span>
             </div>
+            <div className="teacher-hub-card" onClick={() => navigate('/materiais')}>
+              <h3>Materiais de Estudo</h3>
+              <span className="teacher-hub-action">Inserir materiais →</span>
+            </div>
           </div>
+        )}
+        {user?.role === 'STUDENT' && (
+          <StudentHomeSection />
         )}
       </main>
     </div>

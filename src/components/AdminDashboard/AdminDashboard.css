@@ -25,6 +25,24 @@
   flex-wrap: wrap;
 }
 
+.btn-manage-announcements {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-manage-announcements:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .btn-manage-classes {
   padding: 0.5rem 1rem;
   background-color: var(--color-accent);

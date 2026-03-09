@@ -56,6 +56,9 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
         <div className="dashboard-header">
           <h2 className="dashboard-title">Painel de Controle</h2>
           <div className="dashboard-header-actions">
+            <button onClick={() => navigate('/admin/announcements')} className="btn-manage-announcements">
+              Avisos
+            </button>
             <button onClick={() => navigate('/admin/classes')} className="btn-manage-classes">
               Gerenciar Turmas
             </button>
@@ -93,6 +96,9 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
       <div className="dashboard-header">
         <h2 className="dashboard-title">Painel de Controle</h2>
         <div className="dashboard-header-actions">
+          <button onClick={() => navigate('/admin/announcements')} className="btn-manage-announcements">
+            Avisos
+          </button>
           <button onClick={() => navigate('/admin/classes')} className="btn-manage-classes">
             Gerenciar Turmas
           </button>
@@ -128,6 +134,14 @@ export function AdminDashboard({ currentUserId }: AdminDashboardProps) {
           <h3 className="hub-card-title">Disciplinas</h3>
           <span className="hub-card-count">{disciplinesCount}</span>
           <span className="hub-card-action">Ver disciplinas →</span>
+        </Link>
+
+        <Link
+          to="/admin/announcements"
+          className="hub-card hub-card-shortcut"
+        >
+          <h3 className="hub-card-title">Avisos</h3>
+          <span className="hub-card-action">Gerenciar avisos →</span>
         </Link>
 
         <Link

@@ -6,6 +6,8 @@ import { Classes } from './pages/Classes/Classes'
 import { EditClass } from './pages/EditClass/EditClass'
 import { Students } from './pages/Students/Students'
 import { Disciplines } from './pages/Disciplines/Disciplines'
+import { Announcements } from './pages/Announcements/Announcements'
+import { Materials } from './pages/Materials/Materials'
 import { Aulas } from './pages/Aulas/Aulas'
 import { AulaDetail } from './pages/AulaDetail/AulaDetail'
 import { CreateAula } from './pages/CreateAula/CreateAula'
@@ -78,6 +80,14 @@ function App() {
         }
       />
       <Route
+        path="/admin/announcements"
+        element={
+          <AdminRoute>
+            <Announcements />
+          </AdminRoute>
+        }
+      />
+      <Route
         path="/admin/users/:id"
         element={
           <AdminRoute>
@@ -90,6 +100,14 @@ function App() {
         element={
           <TeacherRoute>
             <Aulas />
+          </TeacherRoute>
+        }
+      />
+      <Route
+        path="/materiais"
+        element={
+          <TeacherRoute>
+            <Materials />
           </TeacherRoute>
         }
       />

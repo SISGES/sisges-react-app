@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { FiEye } from 'react-icons/fi'
 import { IoClose } from 'react-icons/io5'
@@ -8,6 +8,13 @@ import {
   deleteAula,
   submitAulaFrequency,
 } from '../../services/userService'
+import {
+  getActivitiesByMeeting,
+  createActivity,
+  deleteActivity,
+} from '../../services/activityService'
+import { uploadFile } from '../../services/uploadService'
+import type { EvaluativeActivity } from '../../services/activityService'
 import { ApiError } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
 import type { AulaDetailResponse } from '../../types/auth'
@@ -24,14 +31,28 @@ export function AulaDetail() {
   const [error, setError] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [attendance, setAttendance] = useState<Record<string, 'P' | 'F'>>({})
-  const [savedAttendance, setSavedAttendance] = useState<Record<number, 'P' | 'F'>>({})
-  const [showFrequencyModal, setShowFrequencyModal] = useState(false)
-  const [isSubmittingFreq, setIsSubmittingFreq] = useState(false)
-  const [freqError, setFreqError] = useState<string | null>(null)
+  const [attendance, setAttendance] = useState<Record<number, 'P' | 'F'>>({})
+  const [isSubmittingFreq, setIsSubmittingFreq] = useState<number | null>(null)
+  const [activities, setActivities] = useState<EvaluativeActivity[]>([])
+  const [showActivityModal, setShowActivityModal] = useState(false)
+  const [activityTitle, setActivityTitle] = useState('')
+  const [activityDesc, setActivityDesc] = useState('')
+  const [activityFile, setActivityFile] = useState<File | null>(null)
+  const [isSubmittingActivity, setIsSubmittingActivity] = useState(false)
+  const [activityError, setActivityError] = useState<string | null>(null)
 
   const isAdmin = user?.role === 'ADMIN'
   const canEdit = user?.role === 'TEACHER' || user?.role === 'ADMIN'
+
+  const fetchActivities = useCallback(async () => {
+    if (!aulaId) return
+    try {
+      const list = await getActivitiesByMeeting(aulaId)
+      setActivities(list)
+    } catch {
+      setActivities([])
+    }
+  }, [aulaId])
 
   useEffect(() => {
     if (!aulaId || isNaN(aulaId)) return
@@ -43,17 +64,13 @@ export function AulaDetail() {
         const data = await getAulaById(aulaId!)
         if (!cancelled) {
           setAula(data)
-          const initial: Record<string, 'P' | 'F'> = {}
-          const saved: Record<number, 'P' | 'F'> = {}
+          fetchActivities()
+          const initial: Record<number, 'P' | 'F'> = {}
           ;(data.students ?? []).forEach((s) => {
             const status = s.present === true ? 'P' : s.present === false ? 'F' : 'P'
-            initial[s.name] = status
-            if (s.present !== undefined && s.present !== null) {
-              saved[s.id] = status
-            }
+            initial[s.id] = status
           })
           setAttendance(initial)
-          setSavedAttendance(saved)
         }
       } catch (err) {
         if (!cancelled) {
@@ -73,7 +90,7 @@ export function AulaDetail() {
     return () => {
       cancelled = true
     }
-  }, [aulaId])
+  }, [aulaId, fetchActivities])
 
   const handleDelete = async () => {
     if (!aulaId || !isAdmin) return
@@ -95,38 +112,66 @@ export function AulaDetail() {
     }
   }
 
-  const handleSubmitFrequency = async () => {
+  const handleToggleAttendance = async (studentId: number, newStatus: 'P' | 'F') => {
     if (!aulaId || !aula) return
-    setIsSubmittingFreq(true)
-    setFreqError(null)
+    setIsSubmittingFreq(studentId)
+    const prevStatus = attendance[studentId] ?? 'P'
+    setAttendance((prev) => ({ ...prev, [studentId]: newStatus }))
     try {
-      const entries = (aula.students ?? []).map((s) => ({
-        studentId: s.id,
-        status: (attendance[s.name] ?? 'P') as 'P' | 'F',
-      }))
-      await submitAulaFrequency(aulaId, { entries })
-      const newSaved: Record<number, 'P' | 'F'> = {}
-      entries.forEach((e) => {
-        newSaved[e.studentId] = e.status
+      await submitAulaFrequency(aulaId, {
+        entries: [{ studentId, status: newStatus }],
       })
-      setSavedAttendance(newSaved)
-      setShowFrequencyModal(false)
     } catch (err) {
-      if (err instanceof ApiError) {
-        setFreqError(err.message)
-      } else if (err instanceof Error) {
-        setFreqError(err.message)
-      } else {
-        setFreqError('Erro ao lançar frequência.')
-      }
+      setAttendance((prev) => ({ ...prev, [studentId]: prevStatus }))
+      alert(err instanceof ApiError ? err.message : 'Erro ao atualizar frequência.')
     } finally {
-      setIsSubmittingFreq(false)
+      setIsSubmittingFreq(null)
     }
   }
 
-  const setStudentAttendance = (studentName: string, status: 'P' | 'F') => {
-    setAttendance((prev) => ({ ...prev, [studentName]: status }))
+  const handleSubmitActivity = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!aulaId || !activityTitle.trim()) return
+    setIsSubmittingActivity(true)
+    setActivityError(null)
+    try {
+      let filePath: string | undefined
+      if (activityFile) {
+        const { path } = await uploadFile(activityFile, 'activities')
+        filePath = path
+      }
+      await createActivity({
+        classMeetingId: aulaId,
+        title: activityTitle.trim(),
+        description: activityDesc.trim() || undefined,
+        filePath,
+      })
+      setActivityTitle('')
+      setActivityDesc('')
+      setActivityFile(null)
+      setShowActivityModal(false)
+      fetchActivities()
+    } catch (err) {
+      setActivityError(err instanceof Error ? err.message : 'Erro ao criar atividade.')
+    } finally {
+      setIsSubmittingActivity(false)
+    }
   }
+
+  const handleDeleteActivity = async (id: number) => {
+    if (!window.confirm('Excluir esta atividade?')) return
+    try {
+      await deleteActivity(id)
+      fetchActivities()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao excluir.')
+    }
+  }
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+  const UPLOAD_BASE = API_BASE.replace('/api', '')
+  const getFileUrl = (path: string | null) =>
+    path ? (path.startsWith('http') ? path : `${UPLOAD_BASE}${path}`) : null
 
   if (!aulaId || isNaN(aulaId)) {
     return (
@@ -175,11 +220,6 @@ export function AulaDetail() {
                 Editar
               </button>
             )}
-            {canEdit && (
-              <button onClick={() => setShowFrequencyModal(true)} className="btn-frequency">
-                Lançar Frequência
-              </button>
-            )}
             {isAdmin && (
               <button
                 onClick={() => setDeleteConfirm(true)}
@@ -215,20 +255,70 @@ export function AulaDetail() {
             </div>
           </div>
 
+          {canEdit && (
+            <div className="aula-section">
+              <div className="aula-section-header">
+                <h3>Atividades Avaliativas</h3>
+                <button onClick={() => setShowActivityModal(true)} className="btn-add-activity">
+                  + Nova Atividade
+                </button>
+              </div>
+              {activities.length === 0 ? (
+                <p className="aula-empty-text">Nenhuma atividade cadastrada.</p>
+              ) : (
+                <ul className="aula-activities-list">
+                  {activities.map((a) => (
+                    <li key={a.id} className="aula-activity-item">
+                      <div className="aula-activity-info">
+                        <strong>{a.title}</strong>
+                        {a.description && <span className="aula-activity-desc">{a.description}</span>}
+                        {a.filePath && (
+                          <a
+                            href={getFileUrl(a.filePath) ?? '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="aula-activity-file"
+                          >
+                            Baixar documento
+                          </a>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteActivity(a.id)}
+                        className="btn-delete-activity"
+                      >
+                        Excluir
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           <div className="aula-section">
             <h3>Alunos</h3>
             <div className="aula-students-card">
               <ul className="aula-students-list">
                 {(aula.students ?? []).map((s) => {
-                  const status = s.present !== undefined && s.present !== null
-                    ? (s.present ? 'PRESENTE' : 'FALTOU')
-                    : savedAttendance[s.id]
-                      ? (savedAttendance[s.id] === 'P' ? 'PRESENTE' : 'FALTOU')
-                      : 'Não lançada'
+                  const currentStatus = attendance[s.id] ?? (s.present === true ? 'P' : s.present === false ? 'F' : 'P')
+                  const statusLabel = currentStatus === 'P' ? 'PRESENTE' : 'FALTOU'
+                  const isUpdating = isSubmittingFreq === s.id
                   return (
                     <li key={s.id} className="aula-student-item">
-                      <span className={`aula-student-status aula-student-status--${status === 'PRESENTE' ? 'presente' : status === 'FALTOU' ? 'faltou' : 'nao-lancada'}`}>
-                        {status}
+                      {canEdit && (
+                        <label className="aula-attendance-toggle" title={statusLabel}>
+                          <input
+                            type="checkbox"
+                            checked={currentStatus === 'P'}
+                            onChange={() => handleToggleAttendance(s.id, currentStatus === 'P' ? 'F' : 'P')}
+                            disabled={isUpdating}
+                          />
+                          <span className="aula-toggle-slider" />
+                        </label>
+                      )}
+                      <span className={`aula-student-status aula-student-status--${currentStatus === 'P' ? 'presente' : 'faltou'}`}>
+                        {statusLabel}
                       </span>
                       <span className="aula-student-name">{s.name}</span>
                       {isAdmin && (
@@ -274,56 +364,64 @@ export function AulaDetail() {
         </div>
       )}
 
-      {showFrequencyModal && (
-        <div className="modal-overlay" onClick={() => !isSubmittingFreq && setShowFrequencyModal(false)}>
-          <div className="modal-content frequency-modal" onClick={(e) => e.stopPropagation()}>
+      {showActivityModal && (
+        <div className="modal-overlay" onClick={() => !isSubmittingActivity && setShowActivityModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Lançar Frequência</h2>
-              <button onClick={() => setShowFrequencyModal(false)} disabled={isSubmittingFreq} className="modal-close" aria-label="Fechar">
+              <h2>Nova Atividade Avaliativa</h2>
+              <button onClick={() => setShowActivityModal(false)} disabled={isSubmittingActivity} className="modal-close" aria-label="Fechar">
                 <IoClose size={22} />
               </button>
             </div>
-            <div className="modal-body">
-              {freqError && <div className="alert-error">{freqError}</div>}
-              <div className="frequency-list">
-                {(aula.students ?? []).map((s) => (
-                  <div key={s.id} className="frequency-row">
-                    <span>{s.name}</span>
-                    <div className="frequency-options">
-                      <label>
-                        <input
-                          type="radio"
-                          name={`freq-${s.id}`}
-                          checked={attendance[s.name] === 'P'}
-                          onChange={() => setStudentAttendance(s.name, 'P')}
-                        />
-                        Presente
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`freq-${s.id}`}
-                          checked={attendance[s.name] === 'F'}
-                          onChange={() => setStudentAttendance(s.name, 'F')}
-                        />
-                        Faltoso
-                      </label>
-                    </div>
-                  </div>
-                ))}
+            <form onSubmit={handleSubmitActivity} className="modal-form">
+              {activityError && <div className="alert-error">{activityError}</div>}
+              <div className="form-group">
+                <label htmlFor="activityTitle" className="form-label">Título *</label>
+                <input
+                  id="activityTitle"
+                  type="text"
+                  value={activityTitle}
+                  onChange={(e) => setActivityTitle(e.target.value)}
+                  className="form-input"
+                  required
+                  maxLength={255}
+                  disabled={isSubmittingActivity}
+                />
               </div>
-            </div>
-            <div className="modal-actions">
-              <button onClick={() => setShowFrequencyModal(false)} className="btn-secondary" disabled={isSubmittingFreq}>
-                Cancelar
-              </button>
-              <button onClick={handleSubmitFrequency} className="btn-primary" disabled={isSubmittingFreq}>
-                {isSubmittingFreq ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
+              <div className="form-group">
+                <label htmlFor="activityDesc" className="form-label">Descrição</label>
+                <textarea
+                  id="activityDesc"
+                  value={activityDesc}
+                  onChange={(e) => setActivityDesc(e.target.value)}
+                  className="form-input form-textarea"
+                  rows={3}
+                  disabled={isSubmittingActivity}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="activityFile" className="form-label">Documento (PDF, TXT, DOCX)</label>
+                <input
+                  id="activityFile"
+                  type="file"
+                  accept=".pdf,.txt,.docx,.doc"
+                  onChange={(e) => setActivityFile(e.target.files?.[0] ?? null)}
+                  disabled={isSubmittingActivity}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowActivityModal(false)} className="btn-secondary" disabled={isSubmittingActivity}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary" disabled={isSubmittingActivity}>
+                  {isSubmittingActivity ? 'Criando...' : 'Criar'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+
     </div>
   )
 }
