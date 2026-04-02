@@ -16,6 +16,7 @@ import { UserDetail } from './pages/UserDetail/UserDetail'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute/AdminRoute'
 import { TeacherRoute } from './components/TeacherRoute/TeacherRoute'
+import { AppShell } from './components/AppShell/AppShell'
 import { useAuth } from './contexts/AuthContext'
 import './themes/theme.css'
 import './App.css'
@@ -32,118 +33,119 @@ function App() {
         }
       />
       <Route
-        path="/"
         element={
           <ProtectedRoute>
-            <Home />
+            <AppShell />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/admin/register"
-        element={
-          <AdminRoute>
-            <RegisterUser />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/classes"
-        element={
-          <AdminRoute>
-            <Classes />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/classes/:id/edit"
-        element={
-          <AdminRoute>
-            <EditClass />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/students"
-        element={
-          <AdminRoute>
-            <Students />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/disciplines"
-        element={
-          <AdminRoute>
-            <Disciplines />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/announcements"
-        element={
-          <AdminRoute>
-            <Announcements />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/users/:id"
-        element={
-          <AdminRoute>
-            <UserDetail />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/aulas"
-        element={
-          <TeacherRoute>
-            <Aulas />
-          </TeacherRoute>
-        }
-      />
-      <Route
-        path="/materiais"
-        element={
-          <TeacherRoute>
-            <Materials />
-          </TeacherRoute>
-        }
-      />
-      <Route
-        path="/aulas/new"
-        element={
-          <TeacherRoute>
-            <CreateAula />
-          </TeacherRoute>
-        }
-      />
-      <Route
-        path="/aulas/:id"
-        element={
-          <TeacherRoute>
-            <AulaDetail />
-          </TeacherRoute>
-        }
-      />
-      <Route
-        path="/aulas/:id/edit"
-        element={
-          <TeacherRoute>
-            <EditAula />
-          </TeacherRoute>
-        }
-      />
-      <Route
-        path="/users/:id"
-        element={
-          <TeacherRoute>
-            <UserDetail />
-          </TeacherRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      >
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/admin/register"
+          element={
+            <AdminRoute>
+              <RegisterUser />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/classes"
+          element={
+            <AdminRoute>
+              <Classes />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/classes/:id/edit"
+          element={
+            <AdminRoute>
+              <EditClass />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/students"
+          element={
+            <AdminRoute>
+              <Students />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/disciplines"
+          element={
+            <AdminRoute>
+              <Disciplines />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/announcements"
+          element={
+            <AdminRoute>
+              <Announcements />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users/:id"
+          element={
+            <AdminRoute>
+              <UserDetail />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/aulas"
+          element={
+            <TeacherRoute>
+              <Aulas />
+            </TeacherRoute>
+          }
+        />
+        <Route
+          path="/materiais"
+          element={
+            <TeacherRoute>
+              <Materials />
+            </TeacherRoute>
+          }
+        />
+        <Route
+          path="/aulas/new"
+          element={
+            <TeacherRoute>
+              <CreateAula />
+            </TeacherRoute>
+          }
+        />
+        <Route
+          path="/aulas/:id"
+          element={
+            <TeacherRoute>
+              <AulaDetail />
+            </TeacherRoute>
+          }
+        />
+        <Route
+          path="/aulas/:id/edit"
+          element={
+            <TeacherRoute>
+              <EditAula />
+            </TeacherRoute>
+          }
+        />
+        <Route
+          path="/users/:id"
+          element={
+            <TeacherRoute>
+              <UserDetail />
+            </TeacherRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
     </Routes>
   )
 }

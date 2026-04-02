@@ -14,6 +14,8 @@ import './AnnouncementFeed.css'
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 const UPLOAD_BASE = API_BASE.replace('/api', '')
 
+const FEED_POLL_MS = 15000
+
 function getImageUrl(imagePath: string | null): string | null {
   if (!imagePath) return null
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
@@ -22,7 +24,22 @@ function getImageUrl(imagePath: string | null): string | null {
   return `${UPLOAD_BASE}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`
 }
 
-function AnnouncementCard({ a, onLike, onRefresh }: {
+function formatRelativeTime(iso: string): string {
+  const d = new Date(iso)
+  const now = Date.now()
+  const diff = Math.floor((now - d.getTime()) / 1000)
+  if (diff < 60) return 'agora'
+  if (diff < 3600) return `há ${Math.floor(diff / 60)} min`
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)} h`
+  if (diff < 604800) return `há ${Math.floor(diff / 86400)} d`
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
+
+function AnnouncementCard({
+  a,
+  onLike,
+  onRefresh,
+}: {
   a: Announcement
   onLike: (id: number) => void
   onRefresh: () => void
@@ -72,73 +89,71 @@ function AnnouncementCard({ a, onLike, onRefresh }: {
   }
 
   return (
-    <article className="announcement-card">
-      <h3 className="announcement-card-title">{a.title}</h3>
+    <article className="ig-card">
+      <header className="ig-card-header">
+        <div className="ig-card-header-text">
+          <span className="ig-card-title">{a.title}</span>
+          <time className="ig-card-time" dateTime={a.createdAt}>
+            {formatRelativeTime(a.createdAt)}
+          </time>
+        </div>
+      </header>
       {a.type === 'IMAGE' && a.imagePath && (
-        <div className="announcement-card-image">
-          <img src={getImageUrl(a.imagePath) ?? ''} alt={a.title} />
+        <div className="ig-card-media">
+          <img src={getImageUrl(a.imagePath) ?? ''} alt="" />
         </div>
       )}
       {a.content && (
-        <div className="announcement-card-content">{a.content}</div>
+        <div className="ig-card-caption">{a.content}</div>
       )}
-      <footer className="announcement-card-footer">
-        <div className="announcement-card-actions">
-          <button
-            type="button"
-            onClick={() => user && onLike(a.id)}
-            className={`announcement-btn-like ${a.likedByCurrentUser ? 'liked' : ''}`}
-            disabled={!user}
-            title={a.likedByCurrentUser ? 'Descurtir' : 'Curtir'}
-          >
-            <FiHeart size={18} fill={a.likedByCurrentUser ? 'currentColor' : 'none'} />
-            <span>{a.likeCount > 0 ? a.likeCount : 'Curtir'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowComments((v) => !v)}
-            className="announcement-btn-comment"
-            title="Comentários"
-          >
-            <FiMessageCircle size={18} />
-            <span>{a.commentCount > 0 ? a.commentCount : 'Comentar'}</span>
-          </button>
-        </div>
-        <span className="announcement-card-date">
-          {new Date(a.createdAt).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })}
-        </span>
-      </footer>
+      <div className="ig-card-actions">
+        <button
+          type="button"
+          onClick={() => user && onLike(a.id)}
+          className={`ig-action-btn ${a.likedByCurrentUser ? 'liked' : ''}`}
+          disabled={!user}
+          title={a.likedByCurrentUser ? 'Descurtir' : 'Curtir'}
+        >
+          <FiHeart size={22} fill={a.likedByCurrentUser ? 'currentColor' : 'none'} />
+          <span className="ig-action-count">{a.likeCount}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowComments((v) => !v)}
+          className="ig-action-btn"
+          title="Comentários"
+        >
+          <FiMessageCircle size={22} />
+          <span className="ig-action-count">{a.commentCount}</span>
+        </button>
+      </div>
       {showComments && (
-        <div className="announcement-comments">
+        <div className="ig-comments">
           {user && (
-            <form onSubmit={handleAddComment} className="announcement-comment-form">
+            <form onSubmit={handleAddComment} className="ig-comment-form">
               <input
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Escreva um comentário..."
-                className="announcement-comment-input"
+                placeholder="Adicione um comentário..."
+                className="ig-comment-input"
                 disabled={isSubmitting}
               />
-              <button type="submit" className="announcement-comment-submit" disabled={isSubmitting || !newComment.trim()}>
-                Enviar
+              <button type="submit" className="ig-comment-send" disabled={isSubmitting || !newComment.trim()}>
+                Publicar
               </button>
             </form>
           )}
-          <ul className="announcement-comments-list">
+          <ul className="ig-comment-list">
             {comments.map((c) => (
-              <li key={c.id} className="announcement-comment-item">
-                <strong>{c.user.name}</strong>
-                <span>{c.content}</span>
+              <li key={c.id} className="ig-comment-row">
+                <span className="ig-comment-author">{c.user.name}</span>
+                <span className="ig-comment-body">{c.content}</span>
                 {user?.id === c.user.id && (
                   <button
                     type="button"
                     onClick={() => handleDeleteComment(c.id)}
-                    className="announcement-comment-delete"
+                    className="ig-comment-delete"
                   >
                     Excluir
                   </button>
@@ -157,30 +172,53 @@ export function AnnouncementFeed() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchFeed = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+  const fetchFeed = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent === true
+    if (!silent) {
+      setIsLoading(true)
+      setError(null)
+    }
     try {
       const data = await getAnnouncementFeed()
       setAnnouncements(data)
+      if (!silent) {
+        setError(null)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar avisos.')
+      if (!silent) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar avisos.')
+      }
     } finally {
-      setIsLoading(false)
+      if (!silent) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
-  const handleLike = useCallback(async (id: number) => {
-    try {
-      await toggleAnnouncementLike(id)
-      fetchFeed()
-    } catch {
-      void 0
-    }
-  }, [fetchFeed])
+  const handleLike = useCallback(
+    async (id: number) => {
+      try {
+        await toggleAnnouncementLike(id)
+        fetchFeed({ silent: true })
+      } catch {
+        void 0
+      }
+    },
+    [fetchFeed]
+  )
 
   useEffect(() => {
     fetchFeed()
+  }, [fetchFeed])
+
+  useEffect(() => {
+    const tick = () => {
+      if (document.visibilityState === 'visible') {
+        fetchFeed({ silent: true })
+      }
+    }
+    const id = window.setInterval(tick, FEED_POLL_MS)
+    return () => window.clearInterval(id)
   }, [fetchFeed])
 
   if (isLoading) {
@@ -199,7 +237,7 @@ export function AnnouncementFeed() {
       <div className="announcement-feed">
         <div className="announcement-feed-error">
           <p>{error}</p>
-          <button onClick={fetchFeed} className="btn-retry">
+          <button onClick={() => fetchFeed()} className="btn-retry">
             Tentar novamente
           </button>
         </div>
@@ -219,15 +257,10 @@ export function AnnouncementFeed() {
 
   return (
     <section className="announcement-feed">
-      <h2 className="announcement-feed-title">Avisos</h2>
-      <div className="announcement-feed-list">
+      <h2 className="announcement-feed-heading">Avisos</h2>
+      <div className="announcement-feed-column">
         {announcements.map((a) => (
-          <AnnouncementCard
-            key={a.id}
-            a={a}
-            onLike={handleLike}
-            onRefresh={fetchFeed}
-          />
+          <AnnouncementCard key={a.id} a={a} onLike={handleLike} onRefresh={() => fetchFeed({ silent: true })} />
         ))}
       </div>
     </section>
