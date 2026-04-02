@@ -8,10 +8,10 @@ export function getNavItemsForRole(role: string | undefined): NavItem[] {
   if (!role) return []
   if (role === 'ADMIN') {
     return [
+      { label: 'AVISOS', to: '/', end: true },
       { label: 'ALUNOS', to: '/admin/students' },
       { label: 'CLASSES', to: '/admin/classes' },
       { label: 'DISCIPLINAS', to: '/admin/disciplines' },
-      { label: 'AVISOS', to: '/', end: true },
       { label: 'AULAS', to: '/aulas' },
     ]
   }

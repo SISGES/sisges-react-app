@@ -292,6 +292,8 @@ export function AnnouncementFeed() {
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null)
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
+  const canPostAnnouncements =
+    user?.role === 'ADMIN' || user?.role === 'TEACHER'
 
   const openCreate = () => {
     setEditingAnnouncement(null)
@@ -415,7 +417,7 @@ export function AnnouncementFeed() {
           editingAnnouncement={editingAnnouncement}
         />
         <div className="announcement-feed">
-          {isAdmin && (
+          {canPostAnnouncements && (
             <div className="announcement-feed-toolbar">
               <button
                 type="button"
@@ -443,7 +445,7 @@ export function AnnouncementFeed() {
         editingAnnouncement={editingAnnouncement}
       />
       <section className="announcement-feed">
-        {isAdmin && (
+        {canPostAnnouncements && (
           <div className="announcement-feed-toolbar">
             <button
               type="button"
