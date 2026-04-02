@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { FiHeart, FiMessageCircle } from 'react-icons/fi'
+import { FiEdit2, FiHeart, FiMessageCircle, FiTrash2 } from 'react-icons/fi'
 import {
   getAnnouncementFeed,
   toggleAnnouncementLike,
@@ -138,20 +138,24 @@ function AnnouncementCard({
         </div>
       </header>
       {isAdmin && (
-        <div className="ig-card-admin-bar">
+        <div className="ig-card-admin-bar app-icon-btn-row">
           <button
             type="button"
-            className="ig-card-admin-btn ig-card-admin-btn-edit"
+            className="app-icon-btn app-icon-btn--edit"
             onClick={() => onEditAnnouncement(a)}
+            title="Editar aviso"
+            aria-label="Editar aviso"
           >
-            Editar
+            <FiEdit2 size={18} strokeWidth={2.25} />
           </button>
           <button
             type="button"
-            className="ig-card-admin-btn ig-card-admin-btn-delete"
+            className="app-icon-btn app-icon-btn--delete"
             onClick={() => onDeleteAnnouncement(a.id)}
+            title="Excluir aviso"
+            aria-label="Excluir aviso"
           >
-            Excluir
+            <FiTrash2 size={18} strokeWidth={2.25} />
           </button>
         </div>
       )}
@@ -255,20 +259,24 @@ function AnnouncementCard({
                   <>
                     <p className="ig-comment-body">{c.content}</p>
                     {user?.id === c.user.id && (
-                      <div className="ig-comment-actions">
+                      <div className="ig-comment-actions app-icon-btn-row">
                         <button
                           type="button"
                           onClick={() => startEditing(c)}
-                          className="ig-comment-action-btn"
+                          className="app-icon-btn app-icon-btn--sm app-icon-btn--edit"
+                          title="Editar comentário"
+                          aria-label="Editar comentário"
                         >
-                          Editar
+                          <FiEdit2 size={16} strokeWidth={2.25} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteComment(c.id)}
-                          className="ig-comment-action-btn ig-comment-action-delete"
+                          className="app-icon-btn app-icon-btn--sm app-icon-btn--delete"
+                          title="Excluir comentário"
+                          aria-label="Excluir comentário"
                         >
-                          Excluir
+                          <FiTrash2 size={16} strokeWidth={2.25} />
                         </button>
                       </div>
                     )}

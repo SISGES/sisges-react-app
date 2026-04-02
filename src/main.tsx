@@ -8,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import { ToastContainer } from './components/Toast/Toast'
 import './index.css'
 import './styles/appPageLayout.css'
+import './styles/appIconButtons.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

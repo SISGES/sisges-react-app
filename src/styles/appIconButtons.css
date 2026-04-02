@@ -1,0 +1,72 @@
+.app-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  flex-shrink: 0;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.app-icon-btn:hover:not(:disabled) {
+  background-color: var(--color-background);
+}
+
+.app-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.app-icon-btn--info:hover:not(:disabled),
+.app-icon-btn--edit:hover:not(:disabled),
+.app-icon-btn--add:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.app-icon-btn--delete:hover:not(:disabled),
+.app-icon-btn--unlink:hover:not(:disabled) {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.app-icon-btn--sm {
+  width: 2rem;
+  height: 2rem;
+}
+
+.app-icon-btn-row {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+td.app-icon-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.app-icon-btn--text {
+  width: auto;
+  height: auto;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.85rem;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.app-icon-btn-loading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}

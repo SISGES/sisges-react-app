@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiEye } from 'react-icons/fi'
+import { FiInfo } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchUsers } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -88,14 +88,15 @@ export function Students() {
                     <tr key={s.id}>
                       <td>{s.name}</td>
                       <td>{s.email}</td>
-                      <td>
+                      <td className="student-actions-cell">
                         <button
+                          type="button"
                           onClick={() => navigate(`/admin/users/${s.id}`)}
-                          className="btn-details"
+                          className="app-icon-btn app-icon-btn--info"
                           title="Ver detalhes"
-                          aria-label="Ver detalhes"
+                          aria-label={`Ver detalhes de ${s.name}`}
                         >
-                          <FiEye size={18} />
+                          <FiInfo size={18} strokeWidth={2.25} />
                         </button>
                       </td>
                     </tr>

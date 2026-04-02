@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { IoClose } from 'react-icons/io5'
+import { FiEdit2, FiPlus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { getDisciplines, createDiscipline, updateDiscipline, searchTeachers } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -135,8 +136,15 @@ export function Disciplines() {
           <div className="disciplines-card-header">
             <h3 className="disciplines-card-title">Disciplinas Cadastradas</h3>
             {!isLoading && !error && (
-              <button onClick={() => setShowModal(true)} className="btn-add-discipline">
-                + Nova Disciplina
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+                title="Nova disciplina"
+                aria-label="Nova disciplina"
+              >
+                <FiPlus size={18} strokeWidth={2.25} />
+                <span>Nova disciplina</span>
               </button>
             )}
           </div>
@@ -156,8 +164,15 @@ export function Disciplines() {
           ) : disciplines.length === 0 ? (
             <div className="disciplines-empty">
               <p>Nenhuma disciplina cadastrada.</p>
-              <button onClick={() => setShowModal(true)} className="btn-add-discipline-inline">
-                Criar primeira disciplina
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+                title="Criar primeira disciplina"
+                aria-label="Criar primeira disciplina"
+              >
+                <FiPlus size={18} strokeWidth={2.25} />
+                <span>Criar primeira disciplina</span>
               </button>
             </div>
           ) : (
@@ -177,9 +192,15 @@ export function Disciplines() {
                       <td>{d.name}</td>
                       <td className="discipline-desc">{d.description || '-'}</td>
                       <td>{d.teachers?.map((t) => t.name).join(', ') || '-'}</td>
-                      <td>
-                        <button onClick={() => handleEdit(d)} className="btn-edit-discipline">
-                          Editar
+                      <td className="discipline-actions-cell">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(d)}
+                          className="app-icon-btn app-icon-btn--edit"
+                          title="Editar disciplina"
+                          aria-label={`Editar disciplina ${d.name}`}
+                        >
+                          <FiEdit2 size={18} strokeWidth={2.25} />
                         </button>
                       </td>
                     </tr>

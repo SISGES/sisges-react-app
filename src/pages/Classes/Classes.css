@@ -77,60 +77,12 @@
   border: 1px solid var(--color-border);
 }
 
-.btn-add-class {
-  padding: 0.5rem 1rem;
-  background-color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  border-radius: 0.5rem;
-  color: white;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-add-class:hover {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
 .class-actions-cell {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  text-align: right;
+}
+
+.class-actions-cell.app-icon-btn-row {
   justify-content: flex-end;
-  gap: 0.5rem;
-  flex-wrap: nowrap;
-}
-
-.class-action-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  flex-shrink: 0;
-  background-color: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-
-.class-action-icon-info:hover,
-.class-action-icon-edit:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background-color: var(--color-background);
-}
-
-.class-action-icon-delete:hover {
-  border-color: var(--color-error);
-  color: var(--color-error);
-  background-color: var(--color-background);
 }
 
 .class-table-wrapper {

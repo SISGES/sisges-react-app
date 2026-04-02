@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { IoClose } from 'react-icons/io5'
+import { FiPlus, FiTrash2 } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { getMaterials, createMaterial, deleteMaterial } from '../../services/materialService'
 import { searchClasses, getDisciplines } from '../../services/userService'
@@ -157,8 +158,15 @@ export function Materials() {
             </select>
           </div>
           {selectedClassId && (
-            <button onClick={() => setShowModal(true)} className="btn-add-material">
-              + Novo Material
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+              title="Novo material"
+              aria-label="Novo material"
+            >
+              <FiPlus size={18} strokeWidth={2.25} />
+              <span>Novo material</span>
             </button>
           )}
         </div>
@@ -182,8 +190,15 @@ export function Materials() {
         ) : materials.length === 0 ? (
           <div className="materials-empty">
             <p>Nenhum material cadastrado para esta turma.</p>
-            <button onClick={() => setShowModal(true)} className="btn-add-material-inline">
-              Criar primeiro material
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+              title="Criar primeiro material"
+              aria-label="Criar primeiro material"
+            >
+              <FiPlus size={18} strokeWidth={2.25} />
+              <span>Criar primeiro material</span>
             </button>
           </div>
         ) : (
@@ -207,8 +222,14 @@ export function Materials() {
                     </a>
                   )}
                 </div>
-                <button onClick={() => handleDelete(m.id)} className="btn-delete-material">
-                  Excluir
+                <button
+                  type="button"
+                  onClick={() => handleDelete(m.id)}
+                  className="app-icon-btn app-icon-btn--delete"
+                  title="Excluir material"
+                  aria-label={`Excluir material ${m.title}`}
+                >
+                  <FiTrash2 size={18} strokeWidth={2.25} />
                 </button>
               </div>
             ))}

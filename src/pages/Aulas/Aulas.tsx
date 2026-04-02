@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FiInfo, FiPlus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchAulas, searchClasses, getDisciplines, searchTeachers } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -94,8 +95,15 @@ export function Aulas() {
             <h3 className="aulas-card-title">Lista de Aulas</h3>
             <div className="aulas-card-actions">
               {isTeacher && (
-                <button onClick={() => navigate('/aulas/new')} className="btn-add-aula">
-                  + Nova Aula
+                <button
+                  type="button"
+                  onClick={() => navigate('/aulas/new')}
+                  className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+                  title="Nova aula"
+                  aria-label="Nova aula"
+                >
+                  <FiPlus size={18} strokeWidth={2.25} />
+                  <span>Nova aula</span>
                 </button>
               )}
             </div>
@@ -187,8 +195,15 @@ export function Aulas() {
             <div className="aulas-empty">
               <p>Nenhuma aula encontrada.</p>
               {isTeacher && (
-                <button onClick={() => navigate('/aulas/new')} className="btn-add-aula-inline">
-                  Criar primeira aula
+                <button
+                  type="button"
+                  onClick={() => navigate('/aulas/new')}
+                  className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+                  title="Criar primeira aula"
+                  aria-label="Criar primeira aula"
+                >
+                  <FiPlus size={18} strokeWidth={2.25} />
+                  <span>Criar primeira aula</span>
                 </button>
               )}
             </div>
@@ -213,12 +228,15 @@ export function Aulas() {
                       <td>{a.disciplineName}</td>
                       <td>{a.schoolClassName}</td>
                       <td>{a.teacherName}</td>
-                      <td>
+                      <td className="aula-actions-cell">
                         <button
+                          type="button"
                           onClick={() => navigate(`/aulas/${a.id}`)}
-                          className="btn-view-aula"
+                          className="app-icon-btn app-icon-btn--info"
+                          title="Detalhes da aula"
+                          aria-label="Detalhes da aula"
                         >
-                          Detalhes
+                          <FiInfo size={18} strokeWidth={2.25} />
                         </button>
                       </td>
                     </tr>

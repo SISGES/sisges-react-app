@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { FiEye } from 'react-icons/fi'
+import { FiEdit2, FiInfo, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { IoClose } from 'react-icons/io5'
 import { BackButton } from '../../components/BackButton/BackButton'
 import {
@@ -214,19 +214,28 @@ export function AulaDetail() {
         <div className="aula-detail-header-content">
           <BackButton to="/aulas" />
           <h1>Detalhes da Aula</h1>
-          <div className="aula-detail-actions">
+          <div className="aula-detail-actions app-icon-btn-row">
             {canEdit && (
-              <button onClick={() => navigate(`/aulas/${aulaId}/edit`)} className="btn-edit-aula">
-                Editar
+              <button
+                type="button"
+                onClick={() => navigate(`/aulas/${aulaId}/edit`)}
+                className="app-icon-btn app-icon-btn--edit"
+                title="Editar aula"
+                aria-label="Editar aula"
+              >
+                <FiEdit2 size={18} strokeWidth={2.25} />
               </button>
             )}
             {isAdmin && (
               <button
+                type="button"
                 onClick={() => setDeleteConfirm(true)}
-                className="btn-delete-aula"
+                className="app-icon-btn app-icon-btn--delete"
                 disabled={isDeleting}
+                title="Excluir aula"
+                aria-label="Excluir aula"
               >
-                Excluir
+                <FiTrash2 size={18} strokeWidth={2.25} />
               </button>
             )}
           </div>
@@ -244,12 +253,13 @@ export function AulaDetail() {
               <span>{aula.professor.name}</span>
               {isAdmin && (
                 <button
+                  type="button"
                   onClick={() => navigate(`/users/${aula.professor.id}`)}
-                  className="btn-view-detail"
+                  className="app-icon-btn app-icon-btn--info"
                   aria-label="Ver detalhes do professor"
                   title="Ver detalhes"
                 >
-                  <FiEye className="icon-eye" size={20} aria-hidden />
+                  <FiInfo size={18} strokeWidth={2.25} aria-hidden />
                 </button>
               )}
             </div>
@@ -259,8 +269,15 @@ export function AulaDetail() {
             <div className="aula-section">
               <div className="aula-section-header">
                 <h3>Atividades Avaliativas</h3>
-                <button onClick={() => setShowActivityModal(true)} className="btn-add-activity">
-                  + Nova Atividade
+                <button
+                  type="button"
+                  onClick={() => setShowActivityModal(true)}
+                  className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+                  title="Nova atividade"
+                  aria-label="Nova atividade"
+                >
+                  <FiPlus size={18} strokeWidth={2.25} />
+                  <span>Nova atividade</span>
                 </button>
               </div>
               {activities.length === 0 ? (
@@ -284,10 +301,13 @@ export function AulaDetail() {
                         )}
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleDeleteActivity(a.id)}
-                        className="btn-delete-activity"
+                        className="app-icon-btn app-icon-btn--delete"
+                        title="Excluir atividade"
+                        aria-label="Excluir atividade"
                       >
-                        Excluir
+                        <FiTrash2 size={18} strokeWidth={2.25} />
                       </button>
                     </li>
                   ))}
@@ -323,12 +343,13 @@ export function AulaDetail() {
                       <span className="aula-student-name">{s.name}</span>
                       {isAdmin && (
                         <button
+                          type="button"
                           onClick={() => navigate(`/users/${s.id}`)}
-                          className="btn-view-detail"
+                          className="app-icon-btn app-icon-btn--info"
                           aria-label={`Ver detalhes de ${s.name}`}
                           title="Ver detalhes"
                         >
-                          <FiEye className="icon-eye" size={20} aria-hidden />
+                          <FiInfo size={18} strokeWidth={2.25} aria-hidden />
                         </button>
                       )}
                     </li>

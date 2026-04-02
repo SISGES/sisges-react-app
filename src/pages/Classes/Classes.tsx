@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoClose } from 'react-icons/io5'
-import { FiEdit2, FiInfo, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiInfo, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchClasses, createClass, deleteClass } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -157,8 +157,15 @@ export function Classes() {
                 <span className="class-count">{classes.length} turma{classes.length !== 1 ? 's' : ''}</span>
               )}
             </div>
-            <button onClick={handleOpenModal} className="btn-add-class">
-              + Nova Turma
+            <button
+              type="button"
+              onClick={handleOpenModal}
+              className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+              title="Nova turma"
+              aria-label="Nova turma"
+            >
+              <FiPlus size={18} strokeWidth={2.25} />
+              <span>Nova turma</span>
             </button>
           </div>
 
@@ -197,11 +204,11 @@ export function Classes() {
                       <td>{c.academicYear}</td>
                       <td>{c.studentCount}</td>
                       <td>{c.teacherCount}</td>
-                      <td className="class-actions-cell">
+                      <td className="class-actions-cell app-icon-btn-row">
                         <button
                           type="button"
                           onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
-                          className="class-action-icon-btn class-action-icon-info"
+                          className="app-icon-btn app-icon-btn--info"
                           title="Detalhes da turma"
                           aria-label={`Detalhes da turma ${c.name}`}
                         >
@@ -210,7 +217,7 @@ export function Classes() {
                         <button
                           type="button"
                           onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
-                          className="class-action-icon-btn class-action-icon-edit"
+                          className="app-icon-btn app-icon-btn--edit"
                           title="Editar turma"
                           aria-label={`Editar turma ${c.name}`}
                         >
@@ -219,7 +226,7 @@ export function Classes() {
                         <button
                           type="button"
                           onClick={() => handleDeleteClick(c)}
-                          className="class-action-icon-btn class-action-icon-delete"
+                          className="app-icon-btn app-icon-btn--delete"
                           title="Excluir turma"
                           aria-label={`Excluir turma ${c.name}`}
                         >

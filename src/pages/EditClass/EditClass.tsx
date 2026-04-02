@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { IoClose } from 'react-icons/io5'
+import { FiPlus, FiUserMinus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import {
   getClassById,
@@ -292,12 +293,18 @@ export function EditClass() {
                             {s.name} <span className="text-muted">({s.email})</span>
                           </span>
                           <button
+                            type="button"
                             onClick={() => handleRemoveStudent(s)}
-                            className="btn-unlink"
+                            className="app-icon-btn app-icon-btn--unlink"
                             disabled={!!actionLoading}
                             title="Desvincular da turma"
+                            aria-label={`Desvincular ${s.name} da turma`}
                           >
-                            {actionLoading === `remove-student-${s.id}` ? '...' : 'Desvincular'}
+                            {actionLoading === `remove-student-${s.id}` ? (
+                              <span className="app-icon-btn-loading">...</span>
+                            ) : (
+                              <FiUserMinus size={18} strokeWidth={2.25} aria-hidden />
+                            )}
                           </button>
                         </li>
                       ))}
@@ -321,11 +328,18 @@ export function EditClass() {
                         ))}
                       </select>
                       <button
+                        type="button"
                         onClick={handleAddStudent}
-                        className="btn-link"
+                        className="app-icon-btn app-icon-btn--add"
                         disabled={!selectedStudentId || !!actionLoading}
+                        title="Vincular aluno"
+                        aria-label="Vincular aluno selecionado"
                       >
-                        {actionLoading === 'add-student' ? '...' : 'Vincular'}
+                        {actionLoading === 'add-student' ? (
+                          <span className="app-icon-btn-loading">...</span>
+                        ) : (
+                          <FiPlus size={18} strokeWidth={2.25} aria-hidden />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -347,12 +361,18 @@ export function EditClass() {
                             {t.name} <span className="text-muted">({t.email})</span>
                           </span>
                           <button
+                            type="button"
                             onClick={() => handleRemoveTeacher(t)}
-                            className="btn-unlink"
+                            className="app-icon-btn app-icon-btn--unlink"
                             disabled={!!actionLoading}
                             title="Desvincular da turma"
+                            aria-label={`Desvincular ${t.name} da turma`}
                           >
-                            {actionLoading === `remove-teacher-${t.id}` ? '...' : 'Desvincular'}
+                            {actionLoading === `remove-teacher-${t.id}` ? (
+                              <span className="app-icon-btn-loading">...</span>
+                            ) : (
+                              <FiUserMinus size={18} strokeWidth={2.25} aria-hidden />
+                            )}
                           </button>
                         </li>
                       ))}
@@ -376,11 +396,18 @@ export function EditClass() {
                         ))}
                       </select>
                       <button
+                        type="button"
                         onClick={handleAddTeacher}
-                        className="btn-link"
+                        className="app-icon-btn app-icon-btn--add"
                         disabled={!selectedTeacherId || !!actionLoading}
+                        title="Vincular professor"
+                        aria-label="Vincular professor selecionado"
                       >
-                        {actionLoading === 'add-teacher' ? '...' : 'Vincular'}
+                        {actionLoading === 'add-teacher' ? (
+                          <span className="app-icon-btn-loading">...</span>
+                        ) : (
+                          <FiPlus size={18} strokeWidth={2.25} aria-hidden />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -391,11 +418,15 @@ export function EditClass() {
                 <div className="edit-class-card-header">
                   <h3>Disciplinas ({disciplinesInClass.length})</h3>
                   <button
+                    type="button"
                     onClick={() => setShowCreateDisciplineModal(true)}
-                    className="btn-link btn-create-discipline"
+                    className="app-icon-btn app-icon-btn--add app-icon-btn--text btn-create-discipline"
                     disabled={!!actionLoading}
+                    title="Nova disciplina"
+                    aria-label="Criar nova disciplina"
                   >
-                    + Nova Disciplina
+                    <FiPlus size={18} strokeWidth={2.25} />
+                    <span>Nova disciplina</span>
                   </button>
                 </div>
                 <div className="edit-class-card-body">
@@ -407,12 +438,18 @@ export function EditClass() {
                         <li key={d.id} className="edit-class-list-item">
                           <span>{d.name}</span>
                           <button
+                            type="button"
                             onClick={() => handleRemoveDiscipline(d)}
-                            className="btn-unlink"
+                            className="app-icon-btn app-icon-btn--unlink"
                             disabled={!!actionLoading}
                             title="Remover da turma"
+                            aria-label={`Remover ${d.name} da turma`}
                           >
-                            {actionLoading === `remove-discipline-${d.id}` ? '...' : 'Remover'}
+                            {actionLoading === `remove-discipline-${d.id}` ? (
+                              <span className="app-icon-btn-loading">...</span>
+                            ) : (
+                              <FiUserMinus size={18} strokeWidth={2.25} aria-hidden />
+                            )}
                           </button>
                         </li>
                       ))}
@@ -436,11 +473,18 @@ export function EditClass() {
                         ))}
                       </select>
                       <button
+                        type="button"
                         onClick={handleAddDiscipline}
-                        className="btn-link"
+                        className="app-icon-btn app-icon-btn--add"
                         disabled={!selectedDisciplineId || !!actionLoading}
+                        title="Vincular disciplina"
+                        aria-label="Vincular disciplina selecionada"
                       >
-                        {actionLoading === 'add-discipline' ? '...' : 'Vincular'}
+                        {actionLoading === 'add-discipline' ? (
+                          <span className="app-icon-btn-loading">...</span>
+                        ) : (
+                          <FiPlus size={18} strokeWidth={2.25} aria-hidden />
+                        )}
                       </button>
                     </div>
                   </div>

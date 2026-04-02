@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoClose } from 'react-icons/io5'
+import { FiPlus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { register, getErrorMessage } from '../../services/authService'
 import { ApiError } from '../../services/api'
@@ -410,11 +411,12 @@ export function RegisterUser() {
                     <button
                       type="button"
                       onClick={handleOpenClassModal}
-                      className="btn-add-inline"
+                      className="app-icon-btn app-icon-btn--add"
                       title="Adicionar nova turma"
+                      aria-label="Adicionar nova turma"
                       disabled={isLoading}
                     >
-                      +
+                      <FiPlus size={18} strokeWidth={2.25} />
                     </button>
                   </div>
                   {fieldErrors.classId && <span className="field-error">{fieldErrors.classId}</span>}
