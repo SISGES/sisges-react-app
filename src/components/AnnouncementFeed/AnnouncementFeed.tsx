@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { FiHeart, FiMessageCircle } from 'react-icons/fi'
-import { useNavigate } from 'react-router-dom'
 import {
   getAnnouncementFeed,
   toggleAnnouncementLike,
@@ -8,11 +7,13 @@ import {
   addAnnouncementComment,
   updateAnnouncementComment,
   deleteAnnouncementComment,
+  deleteAnnouncement,
 } from '../../services/announcementService'
 import type { Announcement, AnnouncementComment } from '../../services/announcementService'
 import { useAuth } from '../../contexts/AuthContext'
 import { useStompFeed } from '../../hooks/useStompFeed'
 import { CharCounter } from '../CharCounter/CharCounter'
+import { AnnouncementEditorModal } from '../AnnouncementEditorModal/AnnouncementEditorModal'
 import './AnnouncementFeed.css'
 
 const COMMENT_MAX_CHARS = 250
@@ -46,11 +47,17 @@ function AnnouncementCard({
   onLike,
   onRefresh,
   feedRefreshVersion,
+  isAdmin,
+  onEditAnnouncement,
+  onDeleteAnnouncement,
 }: {
   a: Announcement
   onLike: (id: number) => void
   onRefresh: () => void
   feedRefreshVersion: number
+  isAdmin: boolean
+  onEditAnnouncement: (announcement: Announcement) => void
+  onDeleteAnnouncement: (id: number) => void
 }) {
   const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState<AnnouncementComment[]>([])
@@ -130,6 +137,24 @@ function AnnouncementCard({
           <span className="ig-card-title">{a.title}</span>
         </div>
       </header>
+      {isAdmin && (
+        <div className="ig-card-admin-bar">
+          <button
+            type="button"
+            className="ig-card-admin-btn ig-card-admin-btn-edit"
+            onClick={() => onEditAnnouncement(a)}
+          >
+            Editar
+          </button>
+          <button
+            type="button"
+            className="ig-card-admin-btn ig-card-admin-btn-delete"
+            onClick={() => onDeleteAnnouncement(a.id)}
+          >
+            Excluir
+          </button>
+        </div>
+      )}
       {a.type === 'IMAGE' && a.imagePath && (
         <div className="ig-card-media">
           <img src={getImageUrl(a.imagePath) ?? ''} alt="" />
@@ -263,8 +288,25 @@ export function AnnouncementFeed() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [feedRefreshVersion, setFeedRefreshVersion] = useState(0)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null)
   const { user } = useAuth()
-  const navigate = useNavigate()
+  const isAdmin = user?.role === 'ADMIN'
+
+  const openCreate = () => {
+    setEditingAnnouncement(null)
+    setEditorOpen(true)
+  }
+
+  const openEdit = (announcement: Announcement) => {
+    setEditingAnnouncement(announcement)
+    setEditorOpen(true)
+  }
+
+  const closeEditor = () => {
+    setEditorOpen(false)
+    setEditingAnnouncement(null)
+  }
 
   const fetchFeed = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent === true
@@ -289,6 +331,19 @@ export function AnnouncementFeed() {
       }
     }
   }, [])
+
+  const handleDeleteAnnouncement = useCallback(
+    async (id: number) => {
+      if (!window.confirm('Excluir este aviso?')) return
+      try {
+        await deleteAnnouncement(id)
+        fetchFeed({ silent: true })
+      } catch {
+        void 0
+      }
+    },
+    [fetchFeed]
+  )
 
   const handleLike = useCallback(
     async (id: number) => {
@@ -352,38 +407,68 @@ export function AnnouncementFeed() {
 
   if (announcements.length === 0) {
     return (
-      <div className="announcement-feed">
-        <div className="announcement-feed-empty">
-          <p>Nenhum aviso no momento.</p>
+      <>
+        <AnnouncementEditorModal
+          open={editorOpen}
+          onClose={closeEditor}
+          onSuccess={() => fetchFeed({ silent: true })}
+          editingAnnouncement={editingAnnouncement}
+        />
+        <div className="announcement-feed">
+          {isAdmin && (
+            <div className="announcement-feed-toolbar">
+              <button
+                type="button"
+                className="announcement-feed-create-btn"
+                onClick={openCreate}
+              >
+                Criar aviso
+              </button>
+            </div>
+          )}
+          <div className="announcement-feed-empty">
+            <p>Nenhum aviso no momento.</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <section className="announcement-feed">
-      {user?.role === 'ADMIN' && (
-        <div className="announcement-feed-toolbar">
-          <button
-            type="button"
-            className="announcement-feed-create-btn"
-            onClick={() => navigate('/admin/announcements', { state: { openCreate: true } })}
-          >
-            Criar aviso
-          </button>
+    <>
+      <AnnouncementEditorModal
+        open={editorOpen}
+        onClose={closeEditor}
+        onSuccess={() => fetchFeed({ silent: true })}
+        editingAnnouncement={editingAnnouncement}
+      />
+      <section className="announcement-feed">
+        {isAdmin && (
+          <div className="announcement-feed-toolbar">
+            <button
+              type="button"
+              className="announcement-feed-create-btn"
+              onClick={openCreate}
+            >
+              Criar aviso
+            </button>
+          </div>
+        )}
+        <div className="announcement-feed-column">
+          {announcements.map((a) => (
+            <AnnouncementCard
+              key={a.id}
+              a={a}
+              onLike={handleLike}
+              onRefresh={() => fetchFeed({ silent: true })}
+              feedRefreshVersion={feedRefreshVersion}
+              isAdmin={isAdmin}
+              onEditAnnouncement={openEdit}
+              onDeleteAnnouncement={handleDeleteAnnouncement}
+            />
+          ))}
         </div>
-      )}
-      <div className="announcement-feed-column">
-        {announcements.map((a) => (
-          <AnnouncementCard
-            key={a.id}
-            a={a}
-            onLike={handleLike}
-            onRefresh={() => fetchFeed({ silent: true })}
-            feedRefreshVersion={feedRefreshVersion}
-          />
-        ))}
-      </div>
-    </section>
+      </section>
+    </>
   )
 }

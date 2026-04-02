@@ -6,7 +6,6 @@ import { Classes } from './pages/Classes/Classes'
 import { EditClass } from './pages/EditClass/EditClass'
 import { Students } from './pages/Students/Students'
 import { Disciplines } from './pages/Disciplines/Disciplines'
-import { Announcements } from './pages/Announcements/Announcements'
 import { Materials } from './pages/Materials/Materials'
 import { Aulas } from './pages/Aulas/Aulas'
 import { AulaDetail } from './pages/AulaDetail/AulaDetail'
@@ -80,14 +79,7 @@ function App() {
             </AdminRoute>
           }
         />
-        <Route
-          path="/admin/announcements"
-          element={
-            <AdminRoute>
-              <Announcements />
-            </AdminRoute>
-          }
-        />
+        <Route path="/admin/announcements" element={<Navigate to="/" replace />} />
         <Route
           path="/admin/users/:id"
           element={
