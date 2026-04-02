@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { ToastContainer } from './components/Toast/Toast'
 import './index.css'
+import './styles/appPageLayout.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

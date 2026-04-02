@@ -1,6 +1,7 @@
 .aulas-container {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   background-color: var(--color-background);
@@ -9,12 +10,13 @@
 .aulas-header {
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  padding: 1.5rem 2rem;
+  padding: 1rem 1rem;
 }
 
 .aulas-header-content {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -29,17 +31,18 @@
 .aulas-content {
   flex: 1;
   width: 100%;
-  max-width: 1400px;
-  margin: 2rem auto;
-  padding: 0 2rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 1.5rem 0;
 }
 
 .aulas-card {
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
 }
 
 .aulas-card-header {
