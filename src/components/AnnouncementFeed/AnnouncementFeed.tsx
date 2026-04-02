@@ -5,12 +5,16 @@ import {
   toggleAnnouncementLike,
   getAnnouncementComments,
   addAnnouncementComment,
+  updateAnnouncementComment,
   deleteAnnouncementComment,
 } from '../../services/announcementService'
 import type { Announcement, AnnouncementComment } from '../../services/announcementService'
 import { useAuth } from '../../contexts/AuthContext'
 import { useStompFeed } from '../../hooks/useStompFeed'
+import { CharCounter } from '../CharCounter/CharCounter'
 import './AnnouncementFeed.css'
+
+const COMMENT_MAX_CHARS = 250
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 const UPLOAD_BASE = API_BASE.replace('/api', '')
@@ -40,15 +44,19 @@ function AnnouncementCard({
   a,
   onLike,
   onRefresh,
+  feedRefreshVersion,
 }: {
   a: Announcement
   onLike: (id: number) => void
   onRefresh: () => void
+  feedRefreshVersion: number
 }) {
   const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState<AnnouncementComment[]>([])
   const [newComment, setNewComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editContent, setEditContent] = useState('')
   const { user } = useAuth()
 
   const loadComments = useCallback(async () => {
@@ -62,8 +70,9 @@ function AnnouncementCard({
   }, [a.id, showComments])
 
   useEffect(() => {
-    loadComments()
-  }, [loadComments])
+    if (!showComments) return
+    void loadComments()
+  }, [showComments, feedRefreshVersion, loadComments])
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,6 +81,30 @@ function AnnouncementCard({
     try {
       await addAnnouncementComment(a.id, newComment.trim())
       setNewComment('')
+      loadComments()
+      onRefresh()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const startEditing = (c: AnnouncementComment) => {
+    setEditingCommentId(c.id)
+    setEditContent(c.content)
+  }
+
+  const cancelEditing = () => {
+    setEditingCommentId(null)
+    setEditContent('')
+  }
+
+  const handleUpdateComment = async (commentId: number) => {
+    if (!editContent.trim() || isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      await updateAnnouncementComment(a.id, commentId, editContent.trim())
+      setEditingCommentId(null)
+      setEditContent('')
       loadComments()
       onRefresh()
     } finally {
@@ -139,8 +172,12 @@ function AnnouncementCard({
                 placeholder="Adicione um comentário..."
                 className="ig-comment-input"
                 disabled={isSubmitting}
+                maxLength={COMMENT_MAX_CHARS}
               />
-              <button type="submit" className="ig-comment-send" disabled={isSubmitting || !newComment.trim()}>
+              {newComment.length > 0 && (
+                <CharCounter current={newComment.length} max={COMMENT_MAX_CHARS} size={22} />
+              )}
+              <button type="submit" className="ig-comment-send" disabled={isSubmitting || !newComment.trim() || newComment.length > COMMENT_MAX_CHARS}>
                 Publicar
               </button>
             </form>
@@ -148,16 +185,66 @@ function AnnouncementCard({
           <ul className="ig-comment-list">
             {comments.map((c) => (
               <li key={c.id} className="ig-comment-row">
-                <span className="ig-comment-author">{c.user.name}</span>
-                <span className="ig-comment-body">{c.content}</span>
-                {user?.id === c.user.id && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteComment(c.id)}
-                    className="ig-comment-delete"
-                  >
-                    Excluir
-                  </button>
+                <div className="ig-comment-header">
+                  <span className="ig-comment-author">{c.user.name}</span>
+                  <time className="ig-comment-time" dateTime={c.createdAt}>
+                    {formatRelativeTime(c.createdAt)}
+                  </time>
+                </div>
+                {editingCommentId === c.id ? (
+                  <div className="ig-comment-edit-form">
+                    <div className="ig-comment-edit-input-row">
+                      <input
+                        type="text"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="ig-comment-input"
+                        disabled={isSubmitting}
+                        maxLength={COMMENT_MAX_CHARS}
+                      />
+                      <CharCounter current={editContent.length} max={COMMENT_MAX_CHARS} size={22} />
+                    </div>
+                    <div className="ig-comment-edit-actions">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateComment(c.id)}
+                        className="ig-comment-action-btn ig-comment-action-save"
+                        disabled={isSubmitting || !editContent.trim() || editContent.length > COMMENT_MAX_CHARS}
+                      >
+                        Salvar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelEditing}
+                        className="ig-comment-action-btn"
+                        disabled={isSubmitting}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="ig-comment-body">{c.content}</p>
+                    {user?.id === c.user.id && (
+                      <div className="ig-comment-actions">
+                        <button
+                          type="button"
+                          onClick={() => startEditing(c)}
+                          className="ig-comment-action-btn"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteComment(c.id)}
+                          className="ig-comment-action-btn ig-comment-action-delete"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </li>
             ))}
@@ -172,6 +259,7 @@ export function AnnouncementFeed() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [feedRefreshVersion, setFeedRefreshVersion] = useState(0)
 
   const fetchFeed = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent === true
@@ -182,6 +270,7 @@ export function AnnouncementFeed() {
     try {
       const data = await getAnnouncementFeed()
       setAnnouncements(data)
+      setFeedRefreshVersion((v) => v + 1)
       if (!silent) {
         setError(null)
       }
@@ -271,7 +360,13 @@ export function AnnouncementFeed() {
       <h2 className="announcement-feed-heading">Avisos</h2>
       <div className="announcement-feed-column">
         {announcements.map((a) => (
-          <AnnouncementCard key={a.id} a={a} onLike={handleLike} onRefresh={() => fetchFeed({ silent: true })} />
+          <AnnouncementCard
+            key={a.id}
+            a={a}
+            onLike={handleLike}
+            onRefresh={() => fetchFeed({ silent: true })}
+            feedRefreshVersion={feedRefreshVersion}
+          />
         ))}
       </div>
     </section>

@@ -84,6 +84,10 @@ export async function addAnnouncementComment(id: number, content: string): Promi
   return api.post<AnnouncementComment>(`/announcements/${id}/comments`, { content })
 }
 
+export async function updateAnnouncementComment(announcementId: number, commentId: number, content: string): Promise<AnnouncementComment> {
+  return api.put<AnnouncementComment>(`/announcements/${announcementId}/comments/${commentId}`, { content })
+}
+
 export async function deleteAnnouncementComment(announcementId: number, commentId: number): Promise<void> {
   return api.delete(`/announcements/${announcementId}/comments/${commentId}`)
 }
