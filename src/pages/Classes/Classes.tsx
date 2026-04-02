@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoClose } from 'react-icons/io5'
+import { FiEdit2, FiInfo, FiTrash2 } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchClasses, createClass, deleteClass } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -198,18 +199,31 @@ export function Classes() {
                       <td>{c.teacherCount}</td>
                       <td className="class-actions-cell">
                         <button
+                          type="button"
                           onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
-                          className="btn-view-class"
+                          className="class-action-icon-btn class-action-icon-info"
+                          title="Detalhes da turma"
+                          aria-label={`Detalhes da turma ${c.name}`}
                         >
-                          Visualizar
+                          <FiInfo size={18} strokeWidth={2.25} />
                         </button>
                         <button
+                          type="button"
+                          onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
+                          className="class-action-icon-btn class-action-icon-edit"
+                          title="Editar turma"
+                          aria-label={`Editar turma ${c.name}`}
+                        >
+                          <FiEdit2 size={18} strokeWidth={2.25} />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleDeleteClick(c)}
-                          className="btn-delete-class"
+                          className="class-action-icon-btn class-action-icon-delete"
                           title="Excluir turma"
                           aria-label={`Excluir turma ${c.name}`}
                         >
-                          Excluir
+                          <FiTrash2 size={18} strokeWidth={2.25} />
                         </button>
                       </td>
                     </tr>
