@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom'
+import { Outlet, useNavigate, NavLink } from 'react-router-dom'
 import { FiLogOut } from 'react-icons/fi'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
@@ -9,10 +9,8 @@ import './AppShell.css'
 export function AppShell() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const items = getNavItemsForRole(user?.role)
-  const showHomeButton = location.pathname !== '/'
 
   const closeSidebar = () => setSidebarOpen(false)
   const toggleSidebar = () => setSidebarOpen((open) => !open)
@@ -26,34 +24,23 @@ export function AppShell() {
     <div className="app-shell">
       <div className="app-shell-content">
         <header className="app-shell-header">
-          <div className="app-shell-header-start">
-            <button
-              type="button"
-              className={`app-shell-menu-btn ${sidebarOpen ? 'app-shell-menu-btn-open' : ''}`}
-              onClick={toggleSidebar}
-              aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
-            >
-              <span className="app-shell-menu-line" />
-              <span className="app-shell-menu-line" />
-              <span className="app-shell-menu-line" />
-            </button>
-            <button
-              type="button"
-              className="app-shell-brand"
-              onClick={() => navigate('/')}
-            >
-              SISGES
-            </button>
-            {showHomeButton && (
-              <button
-                type="button"
-                className="app-shell-home-btn"
-                onClick={() => navigate('/')}
-              >
-                Página inicial
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            className={`app-shell-menu-btn ${sidebarOpen ? 'app-shell-menu-btn-open' : ''}`}
+            onClick={toggleSidebar}
+            aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
+          >
+            <span className="app-shell-menu-line" />
+            <span className="app-shell-menu-line" />
+            <span className="app-shell-menu-line" />
+          </button>
+          <button
+            type="button"
+            className="app-shell-brand"
+            onClick={() => navigate('/')}
+          >
+            SISGES
+          </button>
           <div className="app-shell-header-right">
             <span className="text-secondary app-shell-greeting">
               Olá, {user?.name || user?.email}
