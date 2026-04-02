@@ -161,20 +161,24 @@
 
 .ig-card-media {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  max-height: 280px;
   background: var(--color-background);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ig-card-media img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-height: 280px;
+  height: auto;
+  object-fit: contain;
   display: block;
 }
 
 .ig-card-caption {
-  padding: 0.2rem 1rem 0.25rem;
+  padding: 0.2rem 1rem 0.65rem;
   margin-top: 0;
   font-size: 0.9rem;
   color: var(--color-text-secondary);

@@ -194,13 +194,13 @@ function AnnouncementCard({
           </div>
         )}
       </header>
+      {a.content && (
+        <div className="ig-card-caption">{a.content}</div>
+      )}
       {a.type === 'IMAGE' && a.imagePath && (
         <div className="ig-card-media">
           <img src={getImageUrl(a.imagePath) ?? ''} alt="" />
         </div>
-      )}
-      {a.content && (
-        <div className="ig-card-caption">{a.content}</div>
       )}
       <div className="ig-card-actions">
         <div className="ig-card-actions-left">
