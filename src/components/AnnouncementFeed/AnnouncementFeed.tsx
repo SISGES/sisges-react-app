@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { FiEdit2, FiHeart, FiMessageCircle, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiHeart, FiMessageCircle, FiMoreVertical, FiTrash2 } from 'react-icons/fi'
 import {
   getAnnouncementFeed,
   toggleAnnouncementLike,
@@ -65,7 +65,21 @@ function AnnouncementCard({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
   const [editContent, setEditContent] = useState('')
+  const [postMenuOpen, setPostMenuOpen] = useState(false)
+  const postMenuRef = useRef<HTMLDivElement | null>(null)
   const { user } = useAuth()
+
+  useEffect(() => {
+    if (!postMenuOpen) return
+    const close = (e: MouseEvent) => {
+      const el = postMenuRef.current
+      if (el && !el.contains(e.target as Node)) {
+        setPostMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [postMenuOpen])
 
   const loadComments = useCallback(async () => {
     if (!showComments) return
@@ -136,29 +150,50 @@ function AnnouncementCard({
         <div className="ig-card-header-text">
           <span className="ig-card-title">{a.title}</span>
         </div>
+        {isAdmin && (
+          <div className="ig-card-header-menu" ref={postMenuRef}>
+            <button
+              type="button"
+              className="ig-card-menu-trigger"
+              onClick={() => setPostMenuOpen((v) => !v)}
+              aria-expanded={postMenuOpen}
+              aria-haspopup="true"
+              aria-label="Opções do aviso"
+              title="Opções"
+            >
+              <FiMoreVertical size={18} strokeWidth={2} aria-hidden />
+            </button>
+            {postMenuOpen && (
+              <div className="ig-card-menu-dropdown" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="ig-card-menu-item"
+                  onClick={() => {
+                    onEditAnnouncement(a)
+                    setPostMenuOpen(false)
+                  }}
+                >
+                  <FiEdit2 size={12} strokeWidth={2} aria-hidden />
+                  <span>Editar</span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="ig-card-menu-item ig-card-menu-item--danger"
+                  onClick={() => {
+                    onDeleteAnnouncement(a.id)
+                    setPostMenuOpen(false)
+                  }}
+                >
+                  <FiTrash2 size={12} strokeWidth={2} aria-hidden />
+                  <span>Excluir</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
-      {isAdmin && (
-        <div className="ig-card-admin-bar app-icon-btn-row">
-          <button
-            type="button"
-            className="app-icon-btn app-icon-btn--edit"
-            onClick={() => onEditAnnouncement(a)}
-            title="Editar aviso"
-            aria-label="Editar aviso"
-          >
-            <FiEdit2 size={18} strokeWidth={2.25} />
-          </button>
-          <button
-            type="button"
-            className="app-icon-btn app-icon-btn--delete"
-            onClick={() => onDeleteAnnouncement(a.id)}
-            title="Excluir aviso"
-            aria-label="Excluir aviso"
-          >
-            <FiTrash2 size={18} strokeWidth={2.25} />
-          </button>
-        </div>
-      )}
       {a.type === 'IMAGE' && a.imagePath && (
         <div className="ig-card-media">
           <img src={getImageUrl(a.imagePath) ?? ''} alt="" />
