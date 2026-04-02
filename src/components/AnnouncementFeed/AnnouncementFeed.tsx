@@ -67,7 +67,7 @@ function AnnouncementCard({ a, onLike, onRefresh }: {
       loadComments()
       onRefresh()
     } catch {
-      // ignore
+      void 0
     }
   }
 
@@ -175,7 +175,7 @@ export function AnnouncementFeed() {
       await toggleAnnouncementLike(id)
       fetchFeed()
     } catch {
-      // ignore
+      void 0
     }
   }, [fetchFeed])
 

@@ -20,7 +20,6 @@ import type {
 } from '../../types/auth'
 import './EditAula.css'
 
-/** Converte "HH:mm" ou "HH:mm:ss" para minutos desde meia-noite */
 function timeToMins(t: string): number {
   const parts = t.split(':')
   const h = parseInt(parts[0] || '0', 10)
@@ -28,7 +27,6 @@ function timeToMins(t: string): number {
   return h * 60 + m
 }
 
-/** Verifica se dois intervalos de horário se sobrepõem */
 function timesOverlap(
   start1: string,
   end1: string,
@@ -137,7 +135,7 @@ export function EditAula() {
         }
       }
     } catch {
-      // Ignore
+      void 0
     }
   }, [isAdmin, user?.id, disciplineId])
 

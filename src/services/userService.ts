@@ -65,7 +65,6 @@ export async function getTeacherById(id: number): Promise<TeacherDetailResponse>
   return response
 }
 
-/** Retorna o perfil do professor logado. Use para professores acessando seus próprios dados. */
 export async function getTeacherMe(): Promise<TeacherDetailResponse> {
   const response = await api.get<TeacherDetailResponse>('/teachers/me')
   return response
@@ -155,7 +154,6 @@ export async function removeDisciplineFromClass(classId: number, disciplineId: n
   return response
 }
 
-/* Aula (class meeting) endpoints - /api/class */
 export async function searchAulas(filters?: AulaSearchFilters): Promise<AulaSearchResponse[]> {
   const body: {
     date?: string

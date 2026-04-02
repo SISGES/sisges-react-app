@@ -26,7 +26,6 @@
   color: var(--color-text-primary);
 }
 
-/* Main content */
 .classes-content {
   flex: 1;
   width: 100%;
@@ -135,7 +134,6 @@
   color: white;
 }
 
-/* Table */
 .class-table-wrapper {
   overflow-x: auto;
 }
@@ -176,7 +174,6 @@
   background-color: var(--color-background);
 }
 
-/* States */
 .classes-loading,
 .classes-error,
 .classes-empty {
@@ -234,7 +231,6 @@
   font-size: 0.9rem;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -386,7 +382,6 @@
   cursor: not-allowed;
 }
 
-/* Alerts */
 .alert-error {
   background-color: var(--color-error);
   color: white;
@@ -405,7 +400,6 @@
   text-align: center;
 }
 
-/* Modal de confirmação de exclusão */
 .confirm-modal-overlay {
   position: fixed;
   top: 0;
@@ -498,7 +492,6 @@
   cursor: not-allowed;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .classes-header {
     padding: 1rem;

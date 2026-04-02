@@ -59,7 +59,7 @@ export function Materials() {
         setClasses(c)
         setDisciplines(d)
       } catch {
-        // ignore
+        void 0
       }
     }
     load()

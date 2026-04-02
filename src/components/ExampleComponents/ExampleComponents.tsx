@@ -6,7 +6,6 @@ export function ExampleComponents() {
       <h2 className="example-title">Componentes de Exemplo</h2>
       
       <div className="example-grid">
-        {/* Cards */}
         <div className="card example-card">
           <h3 className="card-title">Card de Exemplo</h3>
           <p className="card-text">
@@ -15,7 +14,6 @@ export function ExampleComponents() {
           </p>
         </div>
 
-        {/* Botões */}
         <div className="example-section">
           <h3 className="section-title">Botões</h3>
           <div className="button-group">
@@ -24,7 +22,6 @@ export function ExampleComponents() {
           </div>
         </div>
 
-        {/* Alertas */}
         <div className="example-section">
           <h3 className="section-title">Alertas</h3>
           <div className="alert-group">
@@ -40,7 +37,6 @@ export function ExampleComponents() {
           </div>
         </div>
 
-        {/* Inputs */}
         <div className="example-section">
           <h3 className="section-title">Campos de Entrada</h3>
           <div className="input-group">

@@ -44,7 +44,7 @@ export function Disciplines() {
       const data = await searchTeachers()
       setTeachers(data)
     } catch {
-      // Ignore
+      void 0
     }
   }, [])
 

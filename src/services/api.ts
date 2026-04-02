@@ -26,18 +26,44 @@ function isAuthEndpoint(endpoint: string): boolean {
   return endpoint.startsWith('/auth/')
 }
 
+function getDefaultMessageForStatus(status: number): string {
+  switch (status) {
+    case 400: return 'Requisição inválida'
+    case 401: return 'Não autorizado. Faça login novamente.'
+    case 403: return 'Acesso negado'
+    case 404: return 'Recurso não encontrado'
+    case 500: return 'Erro interno do servidor'
+    default: return `Erro HTTP ${status}`
+  }
+}
+
 async function handleErrorResponse(response: Response): Promise<never> {
-  const errorData = await response.json().catch(() => ({
-    status: response.status,
-    code: 'INTERNAL_ERROR',
-    message: 'Erro desconhecido',
-    timestamp: new Date().toISOString(),
-  })) as SisgesErrorResponse
+  const text = await response.text()
+  const errorData = (() => {
+    if (!text.trim()) {
+      return {
+        status: response.status,
+        code: 'INTERNAL_ERROR',
+        message: getDefaultMessageForStatus(response.status),
+        timestamp: new Date().toISOString(),
+      } as SisgesErrorResponse
+    }
+    try {
+      return JSON.parse(text) as SisgesErrorResponse
+    } catch {
+      return {
+        status: response.status,
+        code: 'INTERNAL_ERROR',
+        message: getDefaultMessageForStatus(response.status),
+        timestamp: new Date().toISOString(),
+      } as SisgesErrorResponse
+    }
+  })()
 
   throw new ApiError({
     status: errorData.status || response.status,
     code: errorData.code || 'INTERNAL_ERROR',
-    message: errorData.message || `Erro HTTP ${response.status}`,
+    message: errorData.message || getDefaultMessageForStatus(response.status),
     timestamp: errorData.timestamp || new Date().toISOString(),
     errors: errorData.errors,
   })

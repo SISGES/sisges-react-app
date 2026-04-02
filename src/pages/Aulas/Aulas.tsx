@@ -58,7 +58,7 @@ export function Aulas() {
       setDisciplines(disciplinesData)
       setTeachers(teachersData)
     } catch {
-      // Ignore
+      void 0
     }
   }, [isAdmin])
 

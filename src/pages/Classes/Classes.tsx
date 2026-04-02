@@ -221,7 +221,6 @@ export function Classes() {
         </div>
       </div>
 
-      {/* Modal de confirmação para excluir turma */}
       {deleteConfirmClass && (
         <div className="confirm-modal-overlay" onClick={handleCloseDeleteModal}>
           <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -264,7 +263,6 @@ export function Classes() {
         </div>
       )}
 
-      {/* Modal for creating new class */}
       {showModal && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

@@ -7,7 +7,6 @@ import { useAuth } from '../../contexts/AuthContext'
 import type { DisciplineSimple } from '../../types/auth'
 import './CreateAula.css'
 
-/** Retorna a data de hoje em dd/mm/aaaa */
 function getTodayBr(): string {
   const now = new Date()
   const d = String(now.getDate()).padStart(2, '0')
@@ -16,7 +15,6 @@ function getTodayBr(): string {
   return `${d}/${m}/${y}`
 }
 
-/** Converte dd/mm/aaaa para yyyy-mm-dd (formato API) */
 function dateBrToIso(value: string): string {
   const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
   if (!match) return ''
@@ -28,7 +26,6 @@ function dateBrToIso(value: string): string {
   return `${year}-${m}-${d}`
 }
 
-/** Aplica máscara dd/mm/aaaa ao digitar */
 function formatDateInput(value: string): string {
   const digits = value.replace(/\D/g, '')
   if (digits.length <= 2) return digits
@@ -36,14 +33,12 @@ function formatDateInput(value: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`
 }
 
-/** Converte minutos desde meia-noite para "HH:mm" */
 function minsToTime(mins: number): string {
   const h = Math.floor(mins / 60)
   const m = mins % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-/** Converte "HH:mm" ou "HH:mm:ss" para minutos desde meia-noite */
 function timeToMins(t: string): number {
   const parts = t.split(':')
   const h = parseInt(parts[0] || '0', 10)
@@ -51,7 +46,6 @@ function timeToMins(t: string): number {
   return h * 60 + m
 }
 
-/** Verifica se dois intervalos de horário se sobrepõem */
 function timesOverlap(
   start1: string,
   end1: string,
@@ -174,7 +168,7 @@ export function CreateAula() {
           const c = await getClassById(id)
           classes.push({ id: c.id, name: c.name })
         } catch {
-          // skip
+          void 0
         }
       }
       setSchoolClassOptions(classes)

@@ -81,7 +81,7 @@ export function EditClass() {
       setAllTeachers(teachers)
       setAllDisciplines(disciplines)
     } catch {
-      // Ignore - we'll still show the class data
+      void 0
     }
   }, [])
 
@@ -277,7 +277,6 @@ export function EditClass() {
             </div>
 
             <div className="edit-class-sections">
-              {/* Students section */}
               <div className="edit-class-card">
                 <div className="edit-class-card-header">
                   <h3>Alunos ({schoolClass.students.length})</h3>
@@ -333,7 +332,6 @@ export function EditClass() {
                 </div>
               </div>
 
-              {/* Teachers section */}
               <div className="edit-class-card">
                 <div className="edit-class-card-header">
                   <h3>Professores ({schoolClass.teachers.length})</h3>
@@ -389,7 +387,6 @@ export function EditClass() {
                 </div>
               </div>
 
-              {/* Disciplines section */}
               <div className="edit-class-card edit-class-card-full">
                 <div className="edit-class-card-header">
                   <h3>Disciplinas ({disciplinesInClass.length})</h3>

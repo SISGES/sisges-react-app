@@ -1,6 +1,5 @@
 export type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT'
 
-// ---- LOGIN ----
 export interface LoginRequest {
   email: string
   password: string
@@ -161,7 +160,6 @@ export interface StudentAttendance {
   present: boolean
 }
 
-// Responsável simplificado
 export interface ResponsibleSimple {
   name: string
   phone: string
@@ -238,7 +236,6 @@ export interface UpdateDisciplineRequest {
   teachers?: DisciplineTeacherUpdate[]
 }
 
-/* Aula (class meeting) - distinct from turma (school class) */
 export interface AulaSearchFilters {
   date?: string
   disciplineId?: number
@@ -257,7 +254,6 @@ export interface AulaSearchResponse {
 }
 
 export interface AulaDetailStudent extends StudentSearchResponse {
-  /** true = presente, false = faltou, undefined/null = não lançada */
   present?: boolean | null
 }
 

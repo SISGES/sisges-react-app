@@ -8,7 +8,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Variáveis de cor - Light mode (padrão) */
   --color-background: #FFFFFF;
   --color-surface: #F1F5F9;
   --color-border: #E2E8F0;
@@ -25,7 +24,6 @@
 }
 
 [data-theme='dark'] {
-  /* Variáveis de cor - Dark mode */
   --color-background: #020617;
   --color-surface: #020617;
   --color-border: #1E293B;
@@ -41,7 +39,6 @@
   --color-close-icon: #E5E7EB;
 }
 
-/* Ícone X de fechar - sem fundo, cor oposta ao tema */
 .modal-close,
 .confirm-modal-close,
 .toast-close {
@@ -130,7 +127,6 @@ main {
   text-align: center;
 }
 
-/* Utilitários de cor */
 .bg-surface {
   background-color: var(--color-surface);
 }
@@ -171,7 +167,6 @@ main {
   border-color: var(--color-border);
 }
 
-/* Transições suaves para mudanças de tema */
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

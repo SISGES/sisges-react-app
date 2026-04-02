@@ -246,7 +246,6 @@
   color: var(--color-primary);
 }
 
-/* Confirm modal */
 .confirm-modal-overlay {
   position: fixed;
   top: 0;

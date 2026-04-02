@@ -108,6 +108,7 @@ export function RegisterUser() {
       const classes = await searchClasses()
       setAvailableClasses(classes)
     } catch {
+      void 0
     }
   }
 
