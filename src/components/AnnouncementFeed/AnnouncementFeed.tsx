@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { FiHeart, FiMessageCircle } from 'react-icons/fi'
 import {
   getAnnouncementFeed,
@@ -9,12 +9,13 @@ import {
 } from '../../services/announcementService'
 import type { Announcement, AnnouncementComment } from '../../services/announcementService'
 import { useAuth } from '../../contexts/AuthContext'
+import { useStompFeed } from '../../hooks/useStompFeed'
 import './AnnouncementFeed.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 const UPLOAD_BASE = API_BASE.replace('/api', '')
 
-const FEED_POLL_MS = 15000
+const FEED_POLL_FALLBACK_MS = 60000
 
 function getImageUrl(imagePath: string | null): string | null {
   if (!imagePath) return null
@@ -207,6 +208,16 @@ export function AnnouncementFeed() {
     [fetchFeed]
   )
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const debouncedRefresh = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      fetchFeed({ silent: true })
+    }, 300)
+  }, [fetchFeed])
+
+  useStompFeed(debouncedRefresh)
+
   useEffect(() => {
     fetchFeed()
   }, [fetchFeed])
@@ -217,7 +228,7 @@ export function AnnouncementFeed() {
         fetchFeed({ silent: true })
       }
     }
-    const id = window.setInterval(tick, FEED_POLL_MS)
+    const id = window.setInterval(tick, FEED_POLL_FALLBACK_MS)
     return () => window.clearInterval(id)
   }, [fetchFeed])
 
