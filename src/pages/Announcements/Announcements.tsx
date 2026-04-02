@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { IoClose } from 'react-icons/io5'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { BackButton } from '../../components/BackButton/BackButton'
+import { CharCounter } from '../../components/CharCounter/CharCounter'
 import {
   getAllAnnouncements,
   createAnnouncement,
@@ -22,7 +24,11 @@ const ROLES = [
   { value: 'STUDENT', label: 'Aluno' },
 ]
 
+const ANNOUNCEMENT_CONTENT_MAX_CHARS = 320
+
 export function Announcements() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +60,14 @@ export function Announcements() {
   useEffect(() => {
     fetchAnnouncements()
   }, [fetchAnnouncements])
+
+  useEffect(() => {
+    if (location.state?.openCreate) {
+      resetForm()
+      setShowModal(true)
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [location.pathname, location.state, navigate])
 
   const resetForm = () => {
     setTitle('')
@@ -147,6 +161,13 @@ export function Announcements() {
         <div className="announcements-header-content">
           <BackButton to="/" />
           <h1>Banners de Aviso</h1>
+          <button
+            type="button"
+            className="announcements-home-btn"
+            onClick={() => navigate('/')}
+          >
+            Página inicial
+          </button>
         </div>
       </header>
 
@@ -281,8 +302,12 @@ export function Announcements() {
                     placeholder="Texto do aviso"
                     rows={4}
                     disabled={isSubmitting}
+                    maxLength={ANNOUNCEMENT_CONTENT_MAX_CHARS}
                     style={{ resize: 'none' }}
                   />
+                  <div className="announcement-counter-row">
+                    <CharCounter current={content.length} max={ANNOUNCEMENT_CONTENT_MAX_CHARS} size={24} />
+                  </div>
                 </div>
               )}
               {type === 'IMAGE' && (

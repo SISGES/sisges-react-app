@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, NavLink } from 'react-router-dom'
-import { FiLogOut, FiMenu, FiX } from 'react-icons/fi'
+import { FiLogOut } from 'react-icons/fi'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
 import { getNavItemsForRole } from '../../config/navConfig'
@@ -13,6 +13,7 @@ export function AppShell() {
   const items = getNavItemsForRole(user?.role)
 
   const closeSidebar = () => setSidebarOpen(false)
+  const toggleSidebar = () => setSidebarOpen((open) => !open)
 
   const handleLogout = () => {
     logout()
@@ -21,38 +22,49 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
-      <header className="app-shell-header">
-        <button
-          type="button"
-          className="app-shell-menu-btn"
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Abrir menu"
-        >
-          <FiMenu size={22} />
-        </button>
-        <button
-          type="button"
-          className="app-shell-brand"
-          onClick={() => navigate('/')}
-        >
-          SISGES
-        </button>
-        <div className="app-shell-header-right">
-          <span className="text-secondary app-shell-greeting">
-            Olá, {user?.name || user?.email}
-          </span>
-          <ThemeToggle />
+      <div className="app-shell-content">
+        <header className="app-shell-header">
           <button
             type="button"
-            onClick={handleLogout}
-            className="btn-logout-icon"
-            title="Sair"
-            aria-label="Sair"
+            className={`app-shell-menu-btn ${sidebarOpen ? 'app-shell-menu-btn-open' : ''}`}
+            onClick={toggleSidebar}
+            aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
           >
-            <FiLogOut size={20} />
+            <span className="app-shell-menu-line" />
+            <span className="app-shell-menu-line" />
+            <span className="app-shell-menu-line" />
           </button>
+          <button
+            type="button"
+            className="app-shell-brand"
+            onClick={() => navigate('/')}
+          >
+            SISGES
+          </button>
+          <div className="app-shell-header-right">
+            <span className="text-secondary app-shell-greeting">
+              Olá, {user?.name || user?.email}
+            </span>
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="btn-logout-icon"
+              title="Sair"
+              aria-label="Sair"
+            >
+              <FiLogOut size={20} />
+            </button>
+          </div>
+        </header>
+        <aside className="app-shell-rail app-shell-rail-left" aria-hidden />
+        <div className="app-shell-center">
+          <main className="app-shell-main">
+            <Outlet />
+          </main>
         </div>
-      </header>
+        <aside className="app-shell-rail app-shell-rail-right" aria-hidden />
+      </div>
 
       {sidebarOpen && (
         <button
@@ -66,17 +78,6 @@ export function AppShell() {
         className={`app-shell-drawer ${sidebarOpen ? 'app-shell-drawer-open' : ''}`}
         aria-hidden={!sidebarOpen}
       >
-        <div className="app-shell-drawer-top">
-          <span className="app-shell-drawer-title">Menu</span>
-          <button
-            type="button"
-            className="app-shell-drawer-close"
-            onClick={closeSidebar}
-            aria-label="Fechar"
-          >
-            <FiX size={22} />
-          </button>
-        </div>
         <nav className="app-shell-nav" onClick={closeSidebar}>
           {items.map((item) => (
             <NavLink
@@ -92,10 +93,6 @@ export function AppShell() {
           ))}
         </nav>
       </aside>
-
-      <main className="app-shell-main">
-        <Outlet />
-      </main>
     </div>
   )
 }

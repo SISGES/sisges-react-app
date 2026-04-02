@@ -8,20 +8,16 @@ export function Home() {
 
   return (
     <div className="home-container">
-      <div className="home-timeline">
-        <aside className="home-rail home-rail-left" />
-        <main className="home-main">
-          <div className="home-feed-primary">
-            <AnnouncementFeed />
+      <main className="home-main">
+        <div className="home-feed-primary">
+          <AnnouncementFeed />
+        </div>
+        {user?.role === 'STUDENT' && (
+          <div className="home-student-secondary">
+            <StudentHomeSection />
           </div>
-          {user?.role === 'STUDENT' && (
-            <div className="home-student-secondary">
-              <StudentHomeSection />
-            </div>
-          )}
-        </main>
-        <aside className="home-rail home-rail-right" />
-      </div>
+        )}
+      </main>
     </div>
   )
 }

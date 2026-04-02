@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { FiHeart, FiMessageCircle } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import {
   getAnnouncementFeed,
   toggleAnnouncementLike,
@@ -127,9 +128,6 @@ function AnnouncementCard({
       <header className="ig-card-header">
         <div className="ig-card-header-text">
           <span className="ig-card-title">{a.title}</span>
-          <time className="ig-card-time" dateTime={a.createdAt}>
-            {formatRelativeTime(a.createdAt)}
-          </time>
         </div>
       </header>
       {a.type === 'IMAGE' && a.imagePath && (
@@ -141,25 +139,30 @@ function AnnouncementCard({
         <div className="ig-card-caption">{a.content}</div>
       )}
       <div className="ig-card-actions">
-        <button
-          type="button"
-          onClick={() => user && onLike(a.id)}
-          className={`ig-action-btn ${a.likedByCurrentUser ? 'liked' : ''}`}
-          disabled={!user}
-          title={a.likedByCurrentUser ? 'Descurtir' : 'Curtir'}
-        >
-          <FiHeart size={22} fill={a.likedByCurrentUser ? 'currentColor' : 'none'} />
-          <span className="ig-action-count">{a.likeCount}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowComments((v) => !v)}
-          className="ig-action-btn"
-          title="Comentários"
-        >
-          <FiMessageCircle size={22} />
-          <span className="ig-action-count">{a.commentCount}</span>
-        </button>
+        <div className="ig-card-actions-left">
+          <button
+            type="button"
+            onClick={() => user && onLike(a.id)}
+            className={`ig-action-btn ${a.likedByCurrentUser ? 'liked' : ''}`}
+            disabled={!user}
+            title={a.likedByCurrentUser ? 'Descurtir' : 'Curtir'}
+          >
+            <FiHeart size={22} fill={a.likedByCurrentUser ? 'currentColor' : 'none'} />
+            <span className="ig-action-count">{a.likeCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowComments((v) => !v)}
+            className="ig-action-btn"
+            title="Comentários"
+          >
+            <FiMessageCircle size={22} />
+            <span className="ig-action-count">{a.commentCount}</span>
+          </button>
+        </div>
+        <time className="ig-card-time" dateTime={a.createdAt}>
+          {formatRelativeTime(a.createdAt)}
+        </time>
       </div>
       {showComments && (
         <div className="ig-comments">
@@ -260,6 +263,8 @@ export function AnnouncementFeed() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [feedRefreshVersion, setFeedRefreshVersion] = useState(0)
+  const { user } = useAuth()
+  const navigate = useNavigate()
 
   const fetchFeed = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent === true
@@ -357,7 +362,17 @@ export function AnnouncementFeed() {
 
   return (
     <section className="announcement-feed">
-      <h2 className="announcement-feed-heading">Avisos</h2>
+      {user?.role === 'ADMIN' && (
+        <div className="announcement-feed-toolbar">
+          <button
+            type="button"
+            className="announcement-feed-create-btn"
+            onClick={() => navigate('/admin/announcements', { state: { openCreate: true } })}
+          >
+            Criar aviso
+          </button>
+        </div>
+      )}
       <div className="announcement-feed-column">
         {announcements.map((a) => (
           <AnnouncementCard
