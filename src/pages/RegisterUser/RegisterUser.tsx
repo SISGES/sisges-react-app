@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { IoClose } from 'react-icons/io5'
 import { FiPlus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
@@ -44,6 +44,7 @@ const ACADEMIC_YEAR_OPTIONS = [
 
 export function RegisterUser() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { showToast } = useToast()
 
   const [role, setRole] = useState<UserRole>('TEACHER')
@@ -74,6 +75,12 @@ export function RegisterUser() {
   const [isCreatingClass, setIsCreatingClass] = useState(false)
   const [classModalError, setClassModalError] = useState<string | null>(null)
 
+  useEffect(() => {
+    const r = searchParams.get('role')
+    if (r === 'STUDENT' || r === 'TEACHER' || r === 'ADMIN') {
+      setRole(r as UserRole)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (role === 'STUDENT') {

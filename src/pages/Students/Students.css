@@ -51,6 +51,15 @@
   align-items: center;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.students-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .students-card-title {

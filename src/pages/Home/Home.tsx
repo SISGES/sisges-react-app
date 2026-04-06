@@ -12,9 +12,9 @@ export function Home() {
         <div className="home-feed-primary">
           <AnnouncementFeed />
         </div>
-        {user?.role === 'STUDENT' && (
+        {user?.role?.toUpperCase() === 'STUDENT' && (
           <div className="home-student-secondary">
-            <StudentHomeSection />
+            <StudentHomeSection variant="materials" />
           </div>
         )}
       </main>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiInfo } from 'react-icons/fi'
+import { FiInfo, FiPlus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchUsers } from '../../services/userService'
 import { ApiError } from '../../services/api'
@@ -49,12 +49,24 @@ export function Students() {
       <div className="students-content">
         <div className="students-card">
           <div className="students-card-header">
-            <h3 className="students-card-title">Alunos Cadastrados</h3>
-            {!isLoading && !error && (
-              <span className="student-count">
-                {students.length} aluno{students.length !== 1 ? 's' : ''}
-              </span>
-            )}
+            <div className="students-card-header-left">
+              <h3 className="students-card-title">Alunos Cadastrados</h3>
+              {!isLoading && !error && (
+                <span className="student-count">
+                  {students.length} aluno{students.length !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/admin/register?role=STUDENT')}
+              className="app-icon-btn app-icon-btn--add app-icon-btn--text"
+              title="Cadastrar novo aluno"
+              aria-label="Cadastrar novo aluno"
+            >
+              <FiPlus size={18} strokeWidth={2.25} />
+              <span>Novo aluno</span>
+            </button>
           </div>
 
           {isLoading ? (

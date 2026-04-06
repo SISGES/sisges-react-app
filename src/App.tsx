@@ -15,7 +15,10 @@ import { UserDetail } from './pages/UserDetail/UserDetail'
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute/AdminRoute'
 import { TeacherRoute } from './components/TeacherRoute/TeacherRoute'
+import { StudentRoute } from './components/StudentRoute/StudentRoute'
 import { AppShell } from './components/AppShell/AppShell'
+import { StudentMyClass } from './pages/StudentMyClass/StudentMyClass'
+import { StudentFaltas } from './pages/StudentFaltas/StudentFaltas'
 import { useAuth } from './contexts/AuthContext'
 import './themes/theme.css'
 import './App.css'
@@ -134,6 +137,22 @@ function App() {
             <TeacherRoute>
               <UserDetail />
             </TeacherRoute>
+          }
+        />
+        <Route
+          path="/minha-turma"
+          element={
+            <StudentRoute>
+              <StudentMyClass />
+            </StudentRoute>
+          }
+        />
+        <Route
+          path="/faltas"
+          element={
+            <StudentRoute>
+              <StudentFaltas />
+            </StudentRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

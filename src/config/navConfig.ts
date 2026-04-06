@@ -6,7 +6,8 @@ export interface NavItem {
 
 export function getNavItemsForRole(role: string | undefined): NavItem[] {
   if (!role) return []
-  if (role === 'ADMIN') {
+  const r = role.toUpperCase()
+  if (r === 'ADMIN') {
     return [
       { label: 'AVISOS', to: '/', end: true },
       { label: 'ALUNOS', to: '/admin/students' },
@@ -15,15 +16,19 @@ export function getNavItemsForRole(role: string | undefined): NavItem[] {
       { label: 'AULAS', to: '/aulas' },
     ]
   }
-  if (role === 'TEACHER') {
+  if (r === 'TEACHER') {
     return [
       { label: 'AVISOS', to: '/', end: true },
       { label: 'AULAS', to: '/aulas' },
       { label: 'MATERIAIS', to: '/materiais' },
     ]
   }
-  if (role === 'STUDENT') {
-    return [{ label: 'AVISOS', to: '/', end: true }]
+  if (r === 'STUDENT') {
+    return [
+      { label: 'AVISOS', to: '/', end: true },
+      { label: 'MINHA TURMA', to: '/minha-turma' },
+      { label: 'FALTAS', to: '/faltas' },
+    ]
   }
   return []
 }
