@@ -10,6 +10,7 @@
 
   --color-background: #FFFFFF;
   --color-surface: #F1F5F9;
+  --color-input-background: #FFFFFF;
   --color-border: #E2E8F0;
   --color-text-primary: #0F172A;
   --color-text-secondary: #475569;
@@ -25,7 +26,8 @@
 
 [data-theme='dark'] {
   --color-background: #020617;
-  --color-surface: #020617;
+  --color-surface: #0F172A;
+  --color-input-background: #1E293B;
   --color-border: #1E293B;
   --color-text-primary: #E5E7EB;
   --color-text-secondary: #CBD5F5;

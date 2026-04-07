@@ -13,6 +13,7 @@ export function getNavItemsForRole(role: string | undefined): NavItem[] {
       { label: 'ALUNOS', to: '/admin/students' },
       { label: 'CLASSES', to: '/admin/classes' },
       { label: 'DISCIPLINAS', to: '/admin/disciplines' },
+      { label: 'NOTAS', to: '/admin/notas' },
       { label: 'AULAS', to: '/aulas' },
     ]
   }

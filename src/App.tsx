@@ -19,6 +19,7 @@ import { StudentRoute } from './components/StudentRoute/StudentRoute'
 import { AppShell } from './components/AppShell/AppShell'
 import { StudentMyClass } from './pages/StudentMyClass/StudentMyClass'
 import { StudentFaltas } from './pages/StudentFaltas/StudentFaltas'
+import { GradingConfig } from './pages/GradingConfig/GradingConfig'
 import { useAuth } from './contexts/AuthContext'
 import './themes/theme.css'
 import './App.css'
@@ -79,6 +80,14 @@ function App() {
           element={
             <AdminRoute>
               <Disciplines />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/notas"
+          element={
+            <AdminRoute>
+              <GradingConfig />
             </AdminRoute>
           }
         />
