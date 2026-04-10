@@ -3,7 +3,7 @@ import { gray200, gray400, gray700 } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { radius, spacing } from '../theme/safeSpacing';
 import { StatusBadge } from './StatusBadge';
-import { formatCurrency, calcularTotalOrcamento } from '../utils/format';
+import { formatCurrency, calcularTotalOrcamento } from '../utils/orcamentoFormat';
 
 export function BudgetCard({ orcamento, onPress }) {
   const { total } = calcularTotalOrcamento(orcamento);

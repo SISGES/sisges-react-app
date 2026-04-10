@@ -17,7 +17,7 @@ import { typography } from '../theme/typography';
 import { radius, spacing } from '../theme/safeSpacing';
 import { StatusBadge } from '../components/StatusBadge';
 import { Button } from '../components/Button';
-import { formatCurrency, calcularTotalOrcamento } from '../utils/format';
+import { formatCurrency, calcularTotalOrcamento } from '../utils/orcamentoFormat';
 
 export function OrcamentoDetail({
   orcamento,

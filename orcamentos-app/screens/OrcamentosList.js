@@ -7,7 +7,7 @@ import { radius, spacing } from '../theme/safeSpacing';
 import { Button } from '../components/Button';
 import { BudgetCard } from '../components/BudgetCard';
 import { FilterSortModal } from '../components/FilterSortModal';
-import { calcularTotalOrcamento } from '../utils/format';
+import { calcularTotalOrcamento } from '../utils/orcamentoFormat';
 
 export function OrcamentosList({ orcamentos, setOrcamentos, navigate }) {
   const [busca, setBusca] = useState('');

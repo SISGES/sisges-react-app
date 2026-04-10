@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { OrcamentosList } from './screens/OrcamentosList';
 import { OrcamentoForm } from './screens/OrcamentoForm';
 import { OrcamentoDetail } from './screens/OrcamentoDetail';
-import { gerarId } from './utils/format';
+import { gerarId } from './utils/orcamentoFormat';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 

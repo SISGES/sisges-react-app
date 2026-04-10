@@ -24,7 +24,7 @@ import { radius, spacing } from '../theme/safeSpacing';
 import { Button } from '../components/Button';
 import { FieldInput } from '../components/FieldInput';
 import { ServiceModal } from '../components/ServiceModal';
-import { formatCurrency, gerarId, calcularTotalOrcamento } from '../utils/format';
+import { formatCurrency, gerarId, calcularTotalOrcamento } from '../utils/orcamentoFormat';
 
 const STATUS_ORDER = ['Rascunho', 'Enviado', 'Aprovado', 'Recusado'];
 
