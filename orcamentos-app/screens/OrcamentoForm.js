@@ -20,7 +20,7 @@ import {
   dangerBase,
 } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 import { Button } from '../components/Button';
 import { FieldInput } from '../components/FieldInput';
 import { ServiceModal } from '../components/ServiceModal';

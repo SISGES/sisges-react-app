@@ -2,7 +2,7 @@ import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { gray100, gray200, gray400, gray600, gray700, dangerBase } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { fonts } from '../theme/fonts';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 
 export function FieldInput({
   label,

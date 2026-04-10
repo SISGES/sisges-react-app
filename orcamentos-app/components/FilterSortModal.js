@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { purpleBase, gray200, gray500, gray600, gray700 } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 import { Button } from './Button';
 
 const STATUS_LIST = ['Rascunho', 'Enviado', 'Aprovado', 'Recusado'];

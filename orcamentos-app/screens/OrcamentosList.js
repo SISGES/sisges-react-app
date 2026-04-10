@@ -3,7 +3,7 @@ import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity } from 
 import { Ionicons } from '@expo/vector-icons';
 import { purpleBase, gray100, gray200, gray400, gray500, gray700 } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 import { Button } from '../components/Button';
 import { BudgetCard } from '../components/BudgetCard';
 import { FilterSortModal } from '../components/FilterSortModal';

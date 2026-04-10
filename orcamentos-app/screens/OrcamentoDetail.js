@@ -14,7 +14,7 @@ import {
   dangerBase,
 } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 import { StatusBadge } from '../components/StatusBadge';
 import { Button } from '../components/Button';
 import { formatCurrency, calcularTotalOrcamento } from '../utils/format';

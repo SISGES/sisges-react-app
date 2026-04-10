@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { purpleBase, gray100, gray200, gray400, gray600, gray700, dangerBase } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 import { Button } from './Button';
 import { FieldInput } from './FieldInput';
 

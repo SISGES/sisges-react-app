@@ -1,7 +1,7 @@
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { gray200, gray400, gray700 } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency, calcularTotalOrcamento } from '../utils/format';
 

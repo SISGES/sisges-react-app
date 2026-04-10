@@ -1,7 +1,7 @@
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { purpleBase, dangerBase } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 
 export function Button({
   title,

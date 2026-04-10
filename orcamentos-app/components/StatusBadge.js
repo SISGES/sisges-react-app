@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { statusColors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { radius, spacing } from '../theme/spacing';
+import { radius, spacing } from '../theme/safeSpacing';
 
 export function StatusBadge({ status }) {
   const c = statusColors[status];
