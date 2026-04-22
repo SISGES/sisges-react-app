@@ -146,7 +146,7 @@ export function RegisterUser() {
     <div className="flex flex-col flex-1 min-h-0">
       <PageHeader title="Cadastrar Usuário" back={<BackButton to="/" />} />
 
-      <div className="flex-1 p-6 max-w-2xl">
+      <div className="mx-auto w-full max-w-5xl flex-1 p-6">
         <div className="flex flex-col gap-6">
           {/* Role selector */}
           <div className={sectionCls}>

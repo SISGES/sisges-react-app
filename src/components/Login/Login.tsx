@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { ApiError } from '../../services/authService'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
 import { Alert, Input, Spinner } from '../ui'
+import { SisgesLogo } from '../SisgesLogo/SisgesLogo'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -54,9 +55,13 @@ export function Login() {
 
       <div className="w-full max-w-sm">
         {/* Logo / header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--color-text-primary)]">SISGES</h1>
-          <p className="mt-1 text-sm text-[var(--color-text-muted)]">Sistema de Gestão Escolar</p>
+        <div className="mb-8 flex flex-col items-center gap-2 text-center">
+          <SisgesLogo
+            variant="lockup"
+            className="justify-center"
+            textClassName="text-2xl font-bold tracking-tight text-[var(--color-text-primary)] sm:text-3xl"
+          />
+          <p className="text-sm text-[var(--color-text-muted)]">Sistema de Gestão Escolar</p>
         </div>
 
         {/* Card */}

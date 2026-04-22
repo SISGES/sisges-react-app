@@ -4,6 +4,7 @@ import { FiLogOut, FiMenu, FiX } from 'react-icons/fi'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
 import { getNavItemsForRole } from '../../config/navConfig'
+import { SisgesLogo } from '../SisgesLogo/SisgesLogo'
 
 function getInitials(name?: string, email?: string): string {
   if (name) {
@@ -49,9 +50,9 @@ export function AppShell() {
         <button
           type="button"
           onClick={() => { navigate('/'); closeDrawer() }}
-          className="text-lg font-bold tracking-wide text-[var(--color-text-primary)] bg-transparent border-none cursor-pointer p-0 hover:text-[var(--color-primary)] transition-colors"
+          className="flex w-full min-w-0 items-center text-left font-bold tracking-tight text-[var(--color-text-primary)] bg-transparent border-none cursor-pointer p-0 hover:opacity-90 transition-opacity"
         >
-          SISGES
+          <SisgesLogo variant="lockup" className="min-w-0" />
         </button>
       </div>
 
@@ -143,9 +144,9 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="text-base font-bold tracking-wide text-[var(--color-text-primary)] bg-transparent border-none cursor-pointer p-0 mr-auto"
+            className="mr-auto min-w-0 flex max-w-[min(12rem,55vw)] items-center text-left text-[var(--color-text-primary)] bg-transparent border-none cursor-pointer p-0"
           >
-            SISGES
+            <SisgesLogo variant="lockup" className="min-w-0" textClassName="text-sm font-bold tracking-tight text-[var(--color-text-primary)] sm:text-base" />
           </button>
           <ThemeToggle />
           <button
