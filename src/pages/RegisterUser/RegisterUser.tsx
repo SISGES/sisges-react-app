@@ -1,46 +1,28 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { IoClose } from 'react-icons/io5'
 import { FiPlus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { register, getErrorMessage } from '../../services/authService'
 import { ApiError } from '../../services/api'
 import { useToast } from '../../contexts/ToastContext'
 import { searchClasses, searchResponsibles, createClass } from '../../services/userService'
-import type {
-  UserRole,
-  RegisterUserRequest,
-  ResponsibleData,
-  ClassSearchResponse,
-  ResponsibleSearchResponse,
-  CreateClassRequest,
-} from '../../types/auth'
-import './RegisterUser.css'
+import type { UserRole, RegisterUserRequest, ResponsibleData, ClassSearchResponse, ResponsibleSearchResponse, CreateClassRequest } from '../../types/auth'
+import { PageHeader, Button, Modal, FormField, Input, Select, Alert } from '../../components/ui'
 
 type ResponsibleMode = 'existing' | 'new'
 
-const INITIAL_RESPONSIBLE_DATA: ResponsibleData = {
-  name: '',
-  phone: '',
-  alternativePhone: '',
-  email: '',
-  alternativeEmail: '',
-}
+const INITIAL_RESPONSIBLE_DATA: ResponsibleData = { name: '', phone: '', alternativePhone: '', email: '', alternativeEmail: '' }
 
 const ACADEMIC_YEAR_OPTIONS = [
-  { value: '1º ano - Fundamental', label: '1º ano - Fundamental' },
-  { value: '2º ano - Fundamental', label: '2º ano - Fundamental' },
-  { value: '3º ano - Fundamental', label: '3º ano - Fundamental' },
-  { value: '4º ano - Fundamental', label: '4º ano - Fundamental' },
-  { value: '5º ano - Fundamental', label: '5º ano - Fundamental' },
-  { value: '6º ano', label: '6º ano' },
-  { value: '7º ano', label: '7º ano' },
-  { value: '8º ano', label: '8º ano' },
-  { value: '9º ano', label: '9º ano' },
-  { value: '1º ano - Médio', label: '1º ano - Médio' },
-  { value: '2º ano - Médio', label: '2º ano - Médio' },
-  { value: '3º ano - Médio', label: '3º ano - Médio' },
+  '1º ano - Fundamental', '2º ano - Fundamental', '3º ano - Fundamental',
+  '4º ano - Fundamental', '5º ano - Fundamental',
+  '6º ano', '7º ano', '8º ano', '9º ano',
+  '1º ano - Médio', '2º ano - Médio', '3º ano - Médio',
 ]
+
+const ROLE_LABELS: Record<string, string> = { TEACHER: 'Professor', STUDENT: 'Aluno', ADMIN: 'Administrador' }
+
+function getRoleLabel(r: string) { return ROLE_LABELS[r] ?? r }
 
 export function RegisterUser() {
   const navigate = useNavigate()
@@ -48,27 +30,21 @@ export function RegisterUser() {
   const { showToast } = useToast()
 
   const [role, setRole] = useState<UserRole>('TEACHER')
-
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [gender, setGender] = useState('')
-
   const [classId, setClassId] = useState('')
   const [responsibleMode, setResponsibleMode] = useState<ResponsibleMode>('new')
   const [responsibleId, setResponsibleId] = useState('')
   const [responsibleData, setResponsibleData] = useState<ResponsibleData>(INITIAL_RESPONSIBLE_DATA)
-
   const [addAnother, setAddAnother] = useState(false)
-
   const [availableClasses, setAvailableClasses] = useState<ClassSearchResponse[]>([])
   const [availableResponsibles, setAvailableResponsibles] = useState<ResponsibleSearchResponse[]>([])
   const [loadingDropdowns, setLoadingDropdowns] = useState(false)
-
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-
   const [showClassModal, setShowClassModal] = useState(false)
   const [newClassName, setNewClassName] = useState('')
   const [newClassAcademicYear, setNewClassAcademicYear] = useState('')
@@ -77,184 +53,85 @@ export function RegisterUser() {
 
   useEffect(() => {
     const r = searchParams.get('role')
-    if (r === 'STUDENT' || r === 'TEACHER' || r === 'ADMIN') {
-      setRole(r as UserRole)
-    }
+    if (r === 'STUDENT' || r === 'TEACHER' || r === 'ADMIN') setRole(r as UserRole)
   }, [searchParams])
 
   useEffect(() => {
-    if (role === 'STUDENT') {
-      setLoadingDropdowns(true)
-      Promise.all([
-        searchClasses().catch(() => []),
-        searchResponsibles().catch(() => []),
-      ])
-        .then(([classes, responsibles]) => {
-          setAvailableClasses(classes)
-          setAvailableResponsibles(responsibles)
-        })
-        .finally(() => {
-          setLoadingDropdowns(false)
-        })
-    }
+    if (role !== 'STUDENT') return
+    setLoadingDropdowns(true)
+    Promise.all([searchClasses().catch(() => []), searchResponsibles().catch(() => [])])
+      .then(([classes, responsibles]) => { setAvailableClasses(classes); setAvailableResponsibles(responsibles) })
+      .finally(() => setLoadingDropdowns(false))
   }, [role])
 
   const resetForm = () => {
-    setName('')
-    setPassword('')
-    setBirthDate('')
-    setGender('')
-    setClassId('')
-    setResponsibleMode('new')
-    setResponsibleId('')
-    setResponsibleData(INITIAL_RESPONSIBLE_DATA)
-    setFieldErrors({})
+    setName(''); setPassword(''); setBirthDate(''); setGender('')
+    setClassId(''); setResponsibleMode('new'); setResponsibleId('')
+    setResponsibleData(INITIAL_RESPONSIBLE_DATA); setFieldErrors({})
   }
 
   const refreshClasses = async () => {
-    try {
-      const classes = await searchClasses()
-      setAvailableClasses(classes)
-    } catch {
-      void 0
-    }
-  }
-
-  const handleOpenClassModal = () => {
-    setNewClassName('')
-    setNewClassAcademicYear('')
-    setClassModalError(null)
-    setShowClassModal(true)
-  }
-
-  const handleCloseClassModal = () => {
-    setShowClassModal(false)
-    setClassModalError(null)
+    try { setAvailableClasses(await searchClasses()) } catch { void 0 }
   }
 
   const handleCreateClass = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setClassModalError(null)
-    setIsCreatingClass(true)
-
+    setClassModalError(null); setIsCreatingClass(true)
     try {
-      const requestData: CreateClassRequest = {
-        name: newClassName,
-        academicYear: newClassAcademicYear,
-      }
-
-      const response = await createClass(requestData)
-      showToast(`Turma "${response.name}" criada com sucesso!`, 'success')
+      const req: CreateClassRequest = { name: newClassName, academicYear: newClassAcademicYear }
+      const res = await createClass(req)
+      showToast(`Turma "${res.name}" criada com sucesso!`, 'success')
       await refreshClasses()
-      setClassId(String(response.id))
-      handleCloseClassModal()
+      setClassId(String(res.id))
+      setShowClassModal(false); setNewClassName(''); setNewClassAcademicYear('')
     } catch (err) {
-      if (err instanceof ApiError) {
-        setClassModalError(err.message)
-      } else {
-        setClassModalError('Erro ao criar turma.')
-      }
+      setClassModalError(err instanceof ApiError ? err.message : 'Erro ao criar turma.')
     } finally {
       setIsCreatingClass(false)
     }
   }
 
-  const handleResponsibleChange = (field: keyof ResponsibleData, value: string) => {
-    setResponsibleData((prev) => ({ ...prev, [field]: value }))
-  }
-
   const formatPhone = (value: string): string => {
-    const numbers = value.replace(/\D/g, '')
-    let formatted = ''
-    if (numbers.length > 0) {
-      formatted = '(' + numbers.slice(0, 2)
-    }
-    if (numbers.length > 2) {
-      formatted += ') ' + numbers.slice(2, 7)
-    }
-    if (numbers.length > 7) {
-      formatted += '-' + numbers.slice(7, 11)
-    }
-    return formatted
-  }
-
-  const handlePhoneChange = (field: 'phone' | 'alternativePhone', value: string) => {
-    const formatted = formatPhone(value)
-    setResponsibleData((prev) => ({ ...prev, [field]: formatted }))
+    const n = value.replace(/\D/g, '')
+    let f = n.length > 0 ? '(' + n.slice(0, 2) : ''
+    if (n.length > 2) f += ') ' + n.slice(2, 7)
+    if (n.length > 7) f += '-' + n.slice(7, 11)
+    return f
   }
 
   const handleBirthDateChange = (value: string) => {
-    const numbers = value.replace(/\D/g, '')
-    let formatted = ''
-    if (numbers.length > 0) {
-      formatted = numbers.slice(0, 2)
-    }
-    if (numbers.length > 2) {
-      formatted += '/' + numbers.slice(2, 4)
-    }
-    if (numbers.length > 4) {
-      formatted += '/' + numbers.slice(4, 8)
-    }
-    
-    setBirthDate(formatted)
+    const n = value.replace(/\D/g, '')
+    let f = n.slice(0, 2)
+    if (n.length > 2) f += '/' + n.slice(2, 4)
+    if (n.length > 4) f += '/' + n.slice(4, 8)
+    setBirthDate(f)
   }
 
   const birthDateToISO = (brDate: string): string => {
     const parts = brDate.split('/')
-    if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+    if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4)
       return `${parts[2]}-${parts[1]}-${parts[0]}`
-    }
     return brDate
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError(null)
-    setFieldErrors({})
-    setIsLoading(true)
-
+    e.preventDefault(); setError(null); setFieldErrors({}); setIsLoading(true)
     try {
-      const requestData: RegisterUserRequest = {
-        name,
-        password,
-        birthDate: birthDateToISO(birthDate),
-        gender,
-        role,
-      }
-
+      const requestData: RegisterUserRequest = { name, password, birthDate: birthDateToISO(birthDate), gender, role }
       if (role === 'STUDENT') {
-        if (classId) {
-          requestData.classId = parseInt(classId, 10)
-        }
-
-        if (responsibleMode === 'existing' && responsibleId) {
-          requestData.responsibleId = parseInt(responsibleId, 10)
-        } else if (responsibleMode === 'new') {
-          requestData.responsibleData = {
-            name: responsibleData.name,
-            phone: responsibleData.phone,
-            email: responsibleData.email,
-            alternativePhone: responsibleData.alternativePhone || undefined,
-            alternativeEmail: responsibleData.alternativeEmail || undefined,
-          }
-        }
+        if (classId) requestData.classId = parseInt(classId, 10)
+        if (responsibleMode === 'existing' && responsibleId) requestData.responsibleId = parseInt(responsibleId, 10)
+        else if (responsibleMode === 'new') requestData.responsibleData = { name: responsibleData.name, phone: responsibleData.phone, email: responsibleData.email, alternativePhone: responsibleData.alternativePhone || undefined, alternativeEmail: responsibleData.alternativeEmail || undefined }
       }
-
       const response = await register(requestData)
-      showToast(`Usuário "${response.name}" cadastrado com sucesso como ${getRoleLabel(response.role)}.`, 'success')
+      showToast(`Usuário "${response.name}" cadastrado como ${getRoleLabel(response.role)}.`, 'success')
       resetForm()
-
-      if (!addAnother) {
-        navigate('/')
-      }
+      if (!addAnother) navigate('/')
     } catch (err) {
       if (err instanceof ApiError && err.code === 'VALIDATION_ERROR' && err.errors) {
         const errors: Record<string, string> = {}
-        for (const fieldErr of err.errors) {
-          errors[fieldErr.field] = fieldErr.message
-        }
-        setFieldErrors(errors)
-        setError('Corrija os erros nos campos abaixo.')
+        for (const fe of err.errors) errors[fe.field] = fe.message
+        setFieldErrors(errors); setError('Corrija os erros nos campos abaixo.')
       } else {
         setError(getErrorMessage(err))
       }
@@ -263,40 +140,30 @@ export function RegisterUser() {
     }
   }
 
-  const getRoleLabel = (r: string): string => {
-    switch (r) {
-      case 'ADMIN':
-        return 'Administrador'
-      case 'TEACHER':
-        return 'Professor'
-      case 'STUDENT':
-        return 'Aluno'
-      default:
-        return r
-    }
-  }
+  const sectionCls = 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-5 flex flex-col gap-4'
 
   return (
-    <div className="register-container">
-      <header className="register-header">
-        <div className="register-header-content">
-          <BackButton to="/" />
-          <h1>Cadastrar Usuário</h1>
-        </div>
-      </header>
+    <div className="flex flex-col flex-1 min-h-0">
+      <PageHeader title="Cadastrar Usuário" back={<BackButton to="/" />} />
 
-      <div className="register-content">
-        <div className="register-card">
-          <div className="role-selector">
-            <span className="role-selector-label">Tipo de Usuário</span>
-            <div className="role-options">
+      <div className="flex-1 p-6 max-w-2xl">
+        <div className="flex flex-col gap-6">
+          {/* Role selector */}
+          <div className={sectionCls}>
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">Tipo de Usuário</p>
+            <div className="flex gap-2 flex-wrap">
               {(['TEACHER', 'STUDENT', 'ADMIN'] as UserRole[]).map((r) => (
                 <button
                   key={r}
                   type="button"
-                  className={`role-option${role === r ? ' active' : ''}`}
                   onClick={() => setRole(r)}
                   disabled={isLoading}
+                  className={[
+                    'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer disabled:opacity-50',
+                    role === r
+                      ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                      : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]',
+                  ].join(' ')}
                 >
                   {getRoleLabel(r)}
                 </button>
@@ -304,384 +171,159 @@ export function RegisterUser() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="register-form">
-            {error && (
-              <div className="alert-error" role="alert">
-                {error}
-              </div>
-            )}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            {error && <Alert type="error">{error}</Alert>}
 
-            <div className="form-group">
-              <label htmlFor="name" className="form-label">
-                Nome <span className="required">*</span>
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={`form-input${fieldErrors.name ? ' input-error' : ''}`}
-                placeholder="Nome completo"
-                required
-                maxLength={255}
-                disabled={isLoading}
-              />
-              {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
+            <div className={sectionCls}>
+              <FormField label="Nome" required error={fieldErrors.name}>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" required maxLength={255} disabled={isLoading} />
+              </FormField>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField label="Senha" required error={fieldErrors.password}>
+                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} disabled={isLoading} />
+                </FormField>
+                <FormField label="Gênero" required error={fieldErrors.gender}>
+                  <Select value={gender} onChange={(e) => setGender(e.target.value)} required disabled={isLoading}>
+                    <option value="" disabled>Selecione</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Outro">Outro</option>
+                  </Select>
+                </FormField>
+              </div>
+              <FormField label="Data de Nascimento" required error={fieldErrors.birthDate}>
+                <Input type="text" inputMode="numeric" value={birthDate} onChange={(e) => handleBirthDateChange(e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} required disabled={isLoading} />
+              </FormField>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="password" className="form-label">
-                  Senha <span className="required">*</span>
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`form-input${fieldErrors.password ? ' input-error' : ''}`}
-                  placeholder="Mínimo 6 caracteres"
-                  required
-                  minLength={6}
-                  disabled={isLoading}
-                />
-                {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="gender" className="form-label">
-                  Gênero <span className="required">*</span>
-                </label>
-                <select
-                  id="gender"
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className={`form-select${fieldErrors.gender ? ' input-error' : ''}`}
-                  required
-                  disabled={isLoading}
-                >
-                  <option value="" disabled>
-                    Selecione
-                  </option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                  <option value="Outro">Outro</option>
-                </select>
-                {fieldErrors.gender && <span className="field-error">{fieldErrors.gender}</span>}
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="birthDate" className="form-label">
-                Data de Nascimento <span className="required">*</span>
-              </label>
-              <input
-                id="birthDate"
-                type="text"
-                inputMode="numeric"
-                value={birthDate}
-                onChange={(e) => handleBirthDateChange(e.target.value)}
-                className={`form-input${fieldErrors.birthDate ? ' input-error' : ''}`}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-                required
-                disabled={isLoading}
-              />
-              {fieldErrors.birthDate && <span className="field-error">{fieldErrors.birthDate}</span>}
-            </div>
-
+            {/* Student-only fields */}
             {role === 'STUDENT' && (
-              <div className="form-section">
-                <h3 className="form-section-title">Dados do Aluno</h3>
-
-                <div className="form-group">
-                  <label htmlFor="classId" className="form-label">
-                    Turma (opcional)
-                  </label>
-                  <div className="input-with-action">
-                    <select
-                      id="classId"
-                      value={classId}
-                      onChange={(e) => setClassId(e.target.value)}
-                      className={`form-select${fieldErrors.classId ? ' input-error' : ''}`}
-                      disabled={isLoading || loadingDropdowns}
-                    >
-                      <option value="">
-                        {loadingDropdowns ? 'Carregando turmas...' : 'Selecione uma turma'}
-                      </option>
-                      {availableClasses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.academicYear})
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={handleOpenClassModal}
-                      className="app-icon-btn app-icon-btn--add"
-                      title="Adicionar nova turma"
-                      aria-label="Adicionar nova turma"
-                      disabled={isLoading}
-                    >
-                      <FiPlus size={18} strokeWidth={2.25} />
-                    </button>
-                  </div>
-                  {fieldErrors.classId && <span className="field-error">{fieldErrors.classId}</span>}
+              <>
+                <div className={sectionCls}>
+                  <p className="text-sm font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">Dados do Aluno</p>
+                  <FormField label="Turma (opcional)" error={fieldErrors.classId}>
+                    <div className="flex gap-2">
+                      <Select
+                        value={classId}
+                        onChange={(e) => setClassId(e.target.value)}
+                        disabled={isLoading || loadingDropdowns}
+                        className="flex-1"
+                      >
+                        <option value="">{loadingDropdowns ? 'Carregando...' : 'Selecione uma turma'}</option>
+                        {availableClasses.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.academicYear})</option>)}
+                      </Select>
+                      <button
+                        type="button"
+                        onClick={() => { setNewClassName(''); setNewClassAcademicYear(''); setClassModalError(null); setShowClassModal(true) }}
+                        disabled={isLoading}
+                        title="Nova turma"
+                        className="flex items-center justify-center w-9 h-9 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors disabled:opacity-50 flex-shrink-0"
+                      >
+                        <FiPlus size={16} />
+                      </button>
+                    </div>
+                  </FormField>
                 </div>
 
-                <div className="form-section">
-                  <h3 className="form-section-title">Responsável Legal</h3>
-
-                  <div className="responsible-toggle">
-                    <button
-                      type="button"
-                      className={`responsible-toggle-btn${responsibleMode === 'new' ? ' active' : ''}`}
-                      onClick={() => setResponsibleMode('new')}
-                      disabled={isLoading}
-                    >
-                      Cadastrar novo responsável
-                    </button>
-                    <button
-                      type="button"
-                      className={`responsible-toggle-btn${responsibleMode === 'existing' ? ' active' : ''}`}
-                      onClick={() => setResponsibleMode('existing')}
-                      disabled={isLoading}
-                    >
-                      Usar responsável existente
-                    </button>
+                <div className={sectionCls}>
+                  <p className="text-sm font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">Responsável Legal</p>
+                  <div className="flex gap-2">
+                    {(['new', 'existing'] as ResponsibleMode[]).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setResponsibleMode(m)}
+                        disabled={isLoading}
+                        className={[
+                          'px-3 py-1.5 text-sm rounded-md border transition-colors cursor-pointer disabled:opacity-50',
+                          responsibleMode === m
+                            ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                            : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)]',
+                        ].join(' ')}
+                      >
+                        {m === 'new' ? 'Novo responsável' : 'Responsável existente'}
+                      </button>
+                    ))}
                   </div>
 
                   {responsibleMode === 'existing' ? (
-                    <div className="form-group">
-                      <label htmlFor="responsibleId" className="form-label">
-                        Responsável
-                      </label>
-                      <select
-                        id="responsibleId"
-                        value={responsibleId}
-                        onChange={(e) => setResponsibleId(e.target.value)}
-                        className={`form-select${fieldErrors.responsibleId ? ' input-error' : ''}`}
-                        disabled={isLoading || loadingDropdowns}
-                      >
-                        <option value="">
-                          {loadingDropdowns ? 'Carregando responsáveis...' : 'Selecione um responsável'}
-                        </option>
-                        {availableResponsibles.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name} - {r.email}
-                          </option>
-                        ))}
-                      </select>
+                    <FormField label="Responsável" error={fieldErrors.responsibleId}>
+                      <Select value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)} disabled={isLoading || loadingDropdowns}>
+                        <option value="">{loadingDropdowns ? 'Carregando...' : 'Selecione um responsável'}</option>
+                        {availableResponsibles.map((r) => <option key={r.id} value={r.id}>{r.name} - {r.email}</option>)}
+                      </Select>
                       {availableResponsibles.length === 0 && !loadingDropdowns && (
-                        <span className="field-hint">Nenhum responsável cadastrado. Cadastre um novo responsável.</span>
+                        <p className="text-xs text-[var(--color-text-muted)]">Nenhum responsável cadastrado.</p>
                       )}
-                      {fieldErrors.responsibleId && (
-                        <span className="field-error">{fieldErrors.responsibleId}</span>
-                      )}
-                    </div>
+                    </FormField>
                   ) : (
                     <>
-                      <div className="form-group">
-                        <label htmlFor="respName" className="form-label">
-                          Nome do Responsável <span className="required">*</span>
-                        </label>
-                        <input
-                          id="respName"
-                          type="text"
-                          value={responsibleData.name}
-                          onChange={(e) => handleResponsibleChange('name', e.target.value)}
-                          className={`form-input${fieldErrors['responsibleData.name'] ? ' input-error' : ''}`}
-                          placeholder="Nome completo do responsável"
-                          required
-                          maxLength={255}
-                          disabled={isLoading}
-                        />
-                        {fieldErrors['responsibleData.name'] && (
-                          <span className="field-error">{fieldErrors['responsibleData.name']}</span>
-                        )}
+                      <FormField label="Nome do Responsável" required error={fieldErrors['responsibleData.name']}>
+                        <Input value={responsibleData.name} onChange={(e) => setResponsibleData((p) => ({ ...p, name: e.target.value }))} placeholder="Nome completo" required maxLength={255} disabled={isLoading} />
+                      </FormField>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField label="Telefone" required error={fieldErrors['responsibleData.phone']}>
+                          <Input type="text" inputMode="numeric" value={responsibleData.phone} onChange={(e) => setResponsibleData((p) => ({ ...p, phone: formatPhone(e.target.value) }))} placeholder="(31) 97215-2822" required maxLength={15} disabled={isLoading} />
+                        </FormField>
+                        <FormField label="Telefone Alternativo">
+                          <Input type="text" inputMode="numeric" value={responsibleData.alternativePhone || ''} onChange={(e) => setResponsibleData((p) => ({ ...p, alternativePhone: formatPhone(e.target.value) }))} placeholder="(31) 97215-2822" maxLength={15} disabled={isLoading} />
+                        </FormField>
                       </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label htmlFor="respPhone" className="form-label">
-                            Telefone <span className="required">*</span>
-                          </label>
-                          <input
-                            id="respPhone"
-                            type="text"
-                            inputMode="numeric"
-                            value={responsibleData.phone}
-                            onChange={(e) => handlePhoneChange('phone', e.target.value)}
-                            className={`form-input${fieldErrors['responsibleData.phone'] ? ' input-error' : ''}`}
-                            placeholder="(31) 97215-2822"
-                            required
-                            maxLength={15}
-                            disabled={isLoading}
-                          />
-                          {fieldErrors['responsibleData.phone'] && (
-                            <span className="field-error">{fieldErrors['responsibleData.phone']}</span>
-                          )}
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="respAltPhone" className="form-label">
-                            Telefone Alternativo
-                          </label>
-                          <input
-                            id="respAltPhone"
-                            type="text"
-                            inputMode="numeric"
-                            value={responsibleData.alternativePhone || ''}
-                            onChange={(e) => handlePhoneChange('alternativePhone', e.target.value)}
-                            className="form-input"
-                            placeholder="(31) 97215-2822"
-                            maxLength={15}
-                            disabled={isLoading}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label htmlFor="respEmail" className="form-label">
-                            E-mail do Responsável <span className="required">*</span>
-                          </label>
-                          <input
-                            id="respEmail"
-                            type="email"
-                            value={responsibleData.email}
-                            onChange={(e) => handleResponsibleChange('email', e.target.value)}
-                            className={`form-input${fieldErrors['responsibleData.email'] ? ' input-error' : ''}`}
-                            placeholder="responsavel@email.com"
-                            required
-                            maxLength={255}
-                            disabled={isLoading}
-                          />
-                          {fieldErrors['responsibleData.email'] && (
-                            <span className="field-error">{fieldErrors['responsibleData.email']}</span>
-                          )}
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="respAltEmail" className="form-label">
-                            E-mail Alternativo
-                          </label>
-                          <input
-                            id="respAltEmail"
-                            type="email"
-                            value={responsibleData.alternativeEmail || ''}
-                            onChange={(e) => handleResponsibleChange('alternativeEmail', e.target.value)}
-                            className="form-input"
-                            placeholder="alternativo@email.com"
-                            maxLength={255}
-                            disabled={isLoading}
-                          />
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField label="E-mail do Responsável" required error={fieldErrors['responsibleData.email']}>
+                          <Input type="email" value={responsibleData.email} onChange={(e) => setResponsibleData((p) => ({ ...p, email: e.target.value }))} placeholder="responsavel@email.com" required maxLength={255} disabled={isLoading} />
+                        </FormField>
+                        <FormField label="E-mail Alternativo">
+                          <Input type="email" value={responsibleData.alternativeEmail || ''} onChange={(e) => setResponsibleData((p) => ({ ...p, alternativeEmail: e.target.value }))} placeholder="alternativo@email.com" maxLength={255} disabled={isLoading} />
+                        </FormField>
                       </div>
                     </>
                   )}
                 </div>
-              </div>
+              </>
             )}
 
-            <div className="form-actions">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={addAnother}
-                  onChange={(e) => setAddAnother(e.target.checked)}
-                  disabled={isLoading}
-                />
-                <span>Cadastrar e adicionar outro</span>
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text-primary)] cursor-pointer">
+                <input type="checkbox" checked={addAnother} onChange={(e) => setAddAnother(e.target.checked)} disabled={isLoading} className="accent-[var(--color-primary)] w-4 h-4" />
+                Cadastrar e adicionar outro
               </label>
-
-              <button
-                type="submit"
-                className="btn-primary btn-submit"
-                disabled={isLoading}
-              >
+              <Button type="submit" loading={isLoading}>
                 {isLoading ? 'Cadastrando...' : 'Cadastrar Usuário'}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
       </div>
 
-      {showClassModal && (
-        <div className="modal-overlay" onClick={handleCloseClassModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Nova Turma</h2>
-              <button onClick={handleCloseClassModal} className="modal-close" type="button" aria-label="Fechar">
-                <IoClose size={22} />
-              </button>
-            </div>
-            <form onSubmit={handleCreateClass} className="modal-form">
-              {classModalError && (
-                <div className="alert-error" role="alert">
-                  {classModalError}
-                </div>
-              )}
-
-              <div className="form-group">
-                <label htmlFor="newClassName" className="form-label">
-                  Nome da Turma <span className="required">*</span>
-                </label>
-                <input
-                  id="newClassName"
-                  type="text"
-                  value={newClassName}
-                  onChange={(e) => setNewClassName(e.target.value)}
-                  className="form-input"
-                  placeholder="Ex: Turma A"
-                  required
-                  maxLength={100}
-                  disabled={isCreatingClass}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="newClassAcademicYear" className="form-label">
-                  Série/Ano Letivo <span className="required">*</span>
-                </label>
-                <select
-                  id="newClassAcademicYear"
-                  value={newClassAcademicYear}
-                  onChange={(e) => setNewClassAcademicYear(e.target.value)}
-                  className="form-select"
-                  required
-                  disabled={isCreatingClass}
-                >
-                  <option value="" disabled>Selecione a série</option>
-                  {ACADEMIC_YEAR_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={handleCloseClassModal}
-                  className="btn-secondary"
-                  disabled={isCreatingClass}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={isCreatingClass}
-                >
-                  {isCreatingClass ? 'Criando...' : 'Criar Turma'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Create class modal */}
+      <Modal
+        open={showClassModal}
+        onClose={() => setShowClassModal(false)}
+        title="Nova Turma"
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowClassModal(false)} disabled={isCreatingClass}>Cancelar</Button>
+            <Button type="submit" form="register-class-form" loading={isCreatingClass}>Criar Turma</Button>
+          </>
+        }
+      >
+        <form id="register-class-form" onSubmit={handleCreateClass} className="flex flex-col gap-4">
+          {classModalError && <Alert type="error">{classModalError}</Alert>}
+          <FormField label="Nome da Turma" required>
+            <Input value={newClassName} onChange={(e) => setNewClassName(e.target.value)} placeholder="Ex: Turma A" required maxLength={100} disabled={isCreatingClass} />
+          </FormField>
+          <FormField label="Série / Ano Letivo" required>
+            <Select value={newClassAcademicYear} onChange={(e) => setNewClassAcademicYear(e.target.value)} required disabled={isCreatingClass}>
+              <option value="" disabled>Selecione a série</option>
+              {ACADEMIC_YEAR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </Select>
+          </FormField>
+        </form>
+      </Modal>
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { BackButton } from '../../components/BackButton/BackButton'
 import { searchUsers } from '../../services/userService'
 import { ApiError } from '../../services/api'
 import type { UserSearchResponse } from '../../types/auth'
-import './Students.css'
+import { PageHeader, Button, DataCard, StateBlock, tableStyles } from '../../components/ui'
 
 export function Students() {
   const navigate = useNavigate()
@@ -18,97 +18,65 @@ export function Students() {
     setError(null)
     try {
       const data = await searchUsers()
-      const filtered = data.filter((u) => u.role === 'STUDENT')
-      setStudents(filtered)
+      setStudents(data.filter((u) => u.role === 'STUDENT'))
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-      } else if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Erro ao carregar alunos.')
-      }
+      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Erro ao carregar alunos.')
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    fetchStudents()
-  }, [fetchStudents])
+  useEffect(() => { fetchStudents() }, [fetchStudents])
 
   return (
-    <div className="students-container">
-      <header className="students-header">
-        <div className="students-header-content">
-          <BackButton to="/" />
-          <h1>Alunos</h1>
-        </div>
-      </header>
+    <div className="flex flex-col flex-1 min-h-0">
+      <PageHeader
+        title="Alunos"
+        back={<BackButton to="/" />}
+        action={
+          <Button size="sm" icon={<FiPlus size={14} />} onClick={() => navigate('/admin/register?role=STUDENT')}>
+            Novo aluno
+          </Button>
+        }
+      />
 
-      <div className="students-content">
-        <div className="students-card">
-          <div className="students-card-header">
-            <div className="students-card-header-left">
-              <h3 className="students-card-title">Alunos Cadastrados</h3>
-              {!isLoading && !error && (
-                <span className="student-count">
-                  {students.length} aluno{students.length !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/admin/register?role=STUDENT')}
-              className="app-icon-btn app-icon-btn--add app-icon-btn--text"
-              title="Cadastrar novo aluno"
-              aria-label="Cadastrar novo aluno"
-            >
-              <FiPlus size={18} strokeWidth={2.25} />
-              <span>Novo aluno</span>
-            </button>
-          </div>
-
-          {isLoading ? (
-            <div className="students-loading">
-              <div className="loading-spinner-sm"></div>
-              <span>Carregando alunos...</span>
-            </div>
-          ) : error ? (
-            <div className="students-error">
-              <p>{error}</p>
-              <button onClick={fetchStudents} className="btn-retry">
-                Tentar novamente
-              </button>
-            </div>
-          ) : students.length === 0 ? (
-            <div className="students-empty">
-              <p>Nenhum aluno cadastrado.</p>
-            </div>
-          ) : (
-            <div className="student-table-wrapper">
-              <table className="student-table">
+      <div className="flex-1 p-6">
+        <DataCard
+          title="Alunos Cadastrados"
+          count={!isLoading && !error ? students.length : undefined}
+          countLabel={students.length === 1 ? 'aluno' : 'alunos'}
+        >
+          <StateBlock
+            loading={isLoading}
+            loadingText="Carregando alunos..."
+            error={error}
+            onRetry={fetchStudents}
+            empty={students.length === 0}
+            emptyText="Nenhum aluno cadastrado."
+          >
+            <div className={tableStyles.wrapper}>
+              <table className={tableStyles.table}>
                 <thead>
                   <tr>
-                    <th>Nome</th>
-                    <th>E-mail</th>
-                    <th>Ações</th>
+                    {['Nome', 'E-mail', 'Ações'].map((h) => (
+                      <th key={h} className={tableStyles.th}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {students.map((s) => (
-                    <tr key={s.id}>
-                      <td>{s.name}</td>
-                      <td>{s.email}</td>
-                      <td className="student-actions-cell">
+                    <tr key={s.id} className={tableStyles.trHover}>
+                      <td className={tableStyles.td}>{s.name}</td>
+                      <td className={tableStyles.td}>{s.email}</td>
+                      <td className={tableStyles.actionsCell}>
                         <button
                           type="button"
                           onClick={() => navigate(`/admin/users/${s.id}`)}
-                          className="app-icon-btn app-icon-btn--info"
                           title="Ver detalhes"
                           aria-label={`Ver detalhes de ${s.name}`}
+                          className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors ml-auto"
                         >
-                          <FiInfo size={18} strokeWidth={2.25} />
+                          <FiInfo size={15} />
                         </button>
                       </td>
                     </tr>
@@ -116,8 +84,8 @@ export function Students() {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </StateBlock>
+        </DataCard>
       </div>
     </div>
   )

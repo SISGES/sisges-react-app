@@ -32,3 +32,8 @@ dist-ssr
 
 # Instruction files
 INSTRUCTIONS_*.md
+
+# Cypress
+/cypress/videos
+/cypress/screenshots
+cypress/cypress.env.json

@@ -21,8 +21,6 @@ import { StudentMyClass } from './pages/StudentMyClass/StudentMyClass'
 import { StudentFaltas } from './pages/StudentFaltas/StudentFaltas'
 import { GradingConfig } from './pages/GradingConfig/GradingConfig'
 import { useAuth } from './contexts/AuthContext'
-import './themes/theme.css'
-import './App.css'
 
 function App() {
   const { isAuthenticated } = useAuth()

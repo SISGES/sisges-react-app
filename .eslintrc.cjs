@@ -15,4 +15,11 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
+  overrides: [
+    {
+      files: ['cypress/**/*.ts'],
+      globals: { cy: 'readonly', Cypress: 'readonly' },
+      rules: { '@typescript-eslint/no-namespace': 'off' },
+    },
+  ],
 }

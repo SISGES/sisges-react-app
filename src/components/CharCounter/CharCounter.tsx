@@ -1,5 +1,3 @@
-import './CharCounter.css'
-
 interface CharCounterProps {
   current: number
   max: number
@@ -25,16 +23,9 @@ export function CharCounter({ current, max, size = 24 }: CharCounterProps) {
   const showNumber = remaining <= 20
 
   return (
-    <div className="char-counter" style={{ width: size, height: size, flexShrink: 0 }}>
+    <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="var(--color-border)"
-          strokeWidth={2}
-        />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-border)" strokeWidth={2} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -50,7 +41,7 @@ export function CharCounter({ current, max, size = 24 }: CharCounterProps) {
       </svg>
       {showNumber && (
         <span
-          className="char-counter-number"
+          className="absolute font-medium leading-none"
           style={{
             color: over ? 'var(--color-error)' : 'var(--color-text-muted)',
             fontSize: size * 0.38,

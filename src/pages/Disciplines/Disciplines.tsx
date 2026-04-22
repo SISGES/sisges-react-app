@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { IoClose } from 'react-icons/io5'
 import { FiEdit2, FiPlus } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { getDisciplines, createDiscipline, updateDiscipline, searchTeachers } from '../../services/userService'
 import { ApiError } from '../../services/api'
 import type { DisciplineResponse, TeacherSearchResponse } from '../../types/auth'
-import './Disciplines.css'
+import { PageHeader, Button, Modal, DataCard, StateBlock, tableStyles, FormField, Input, Textarea, Alert } from '../../components/ui'
 
 export function Disciplines() {
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([])
@@ -13,7 +12,7 @@ export function Disciplines() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
-  const [editingDiscipline, setEditingDiscipline] = useState<DisciplineResponse | null>(null)
+  const [editing, setEditing] = useState<DisciplineResponse | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
@@ -25,77 +24,48 @@ export function Disciplines() {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await getDisciplines()
-      setDisciplines(data)
+      setDisciplines(await getDisciplines())
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-      } else if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Erro ao carregar disciplinas.')
-      }
+      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Erro ao carregar disciplinas.')
     } finally {
       setIsLoading(false)
     }
   }, [])
 
   const fetchTeachers = useCallback(async () => {
-    try {
-      const data = await searchTeachers()
-      setTeachers(data)
-    } catch {
-      void 0
-    }
+    try { setTeachers(await searchTeachers()) } catch { void 0 }
   }, [])
 
-  useEffect(() => {
-    fetchDisciplines()
-    fetchTeachers()
-  }, [fetchDisciplines, fetchTeachers])
+  useEffect(() => { fetchDisciplines(); fetchTeachers() }, [fetchDisciplines, fetchTeachers])
 
   const resetForm = () => {
-    setName('')
-    setDescription('')
-    setSelectedTeacherIds([])
-    setEditingDiscipline(null)
-    setSubmitError(null)
-    setSubmitSuccess(null)
+    setName(''); setDescription(''); setSelectedTeacherIds([])
+    setEditing(null); setSubmitError(null); setSubmitSuccess(null)
   }
 
-  const handleCloseModal = () => {
-    setShowModal(false)
-    resetForm()
-  }
+  const handleClose = () => { setShowModal(false); resetForm() }
 
   const handleEdit = (d: DisciplineResponse) => {
-    setEditingDiscipline(d)
+    setEditing(d)
     setName(d.name)
     setDescription(d.description || '')
     setSelectedTeacherIds(d.teachers?.map((t) => t.id) ?? [])
     setShowModal(true)
   }
 
-  const toggleTeacher = (teacherId: number) => {
-    setSelectedTeacherIds((prev) =>
-      prev.includes(teacherId) ? prev.filter((id) => id !== teacherId) : [...prev, teacherId]
-    )
+  const toggleTeacher = (id: number) => {
+    setSelectedTeacherIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setSubmitError(null)
-    setSubmitSuccess(null)
-    setIsSubmitting(true)
+    setSubmitError(null); setSubmitSuccess(null); setIsSubmitting(true)
     try {
-      if (editingDiscipline) {
-        await updateDiscipline(editingDiscipline.id, {
+      if (editing) {
+        await updateDiscipline(editing.id, {
           name: name.trim(),
           description: description.trim() || undefined,
-          teachers: teachers.map((t) => ({
-            teacherId: t.id,
-            vinculado: selectedTeacherIds.includes(t.id),
-          })),
+          teachers: teachers.map((t) => ({ teacherId: t.id, vinculado: selectedTeacherIds.includes(t.id) })),
         })
         setSubmitSuccess('Disciplina atualizada com sucesso!')
       } else {
@@ -106,101 +76,68 @@ export function Disciplines() {
         })
         setSubmitSuccess('Disciplina criada com sucesso!')
       }
-      resetForm()
-      fetchDisciplines()
-      setTimeout(handleCloseModal, 1200)
+      resetForm(); fetchDisciplines()
+      setTimeout(handleClose, 1200)
     } catch (err) {
-      if (err instanceof ApiError) {
-        setSubmitError(err.message)
-      } else if (err instanceof Error) {
-        setSubmitError(err.message)
-      } else {
-        setSubmitError(editingDiscipline ? 'Erro ao atualizar disciplina.' : 'Erro ao criar disciplina.')
-      }
+      setSubmitError(err instanceof ApiError ? err.message : 'Erro ao salvar disciplina.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="disciplines-container">
-      <header className="disciplines-header">
-        <div className="disciplines-header-content">
-          <BackButton to="/" />
-          <h1>Disciplinas</h1>
-        </div>
-      </header>
+    <div className="flex flex-col flex-1 min-h-0">
+      <PageHeader
+        title="Disciplinas"
+        back={<BackButton to="/" />}
+        action={
+          <Button size="sm" icon={<FiPlus size={14} />} onClick={() => { resetForm(); setShowModal(true) }}>
+            Nova disciplina
+          </Button>
+        }
+      />
 
-      <div className="disciplines-content">
-        <div className="disciplines-card">
-          <div className="disciplines-card-header">
-            <h3 className="disciplines-card-title">Disciplinas Cadastradas</h3>
-            {!isLoading && !error && (
-              <button
-                type="button"
-                onClick={() => setShowModal(true)}
-                className="app-icon-btn app-icon-btn--add app-icon-btn--text"
-                title="Nova disciplina"
-                aria-label="Nova disciplina"
-              >
-                <FiPlus size={18} strokeWidth={2.25} />
-                <span>Nova disciplina</span>
-              </button>
-            )}
-          </div>
-
-          {isLoading ? (
-            <div className="disciplines-loading">
-              <div className="loading-spinner-sm"></div>
-              <span>Carregando disciplinas...</span>
-            </div>
-          ) : error ? (
-            <div className="disciplines-error">
-              <p>{error}</p>
-              <button onClick={fetchDisciplines} className="btn-retry">
-                Tentar novamente
-              </button>
-            </div>
-          ) : disciplines.length === 0 ? (
-            <div className="disciplines-empty">
-              <p>Nenhuma disciplina cadastrada.</p>
-              <button
-                type="button"
-                onClick={() => setShowModal(true)}
-                className="app-icon-btn app-icon-btn--add app-icon-btn--text"
-                title="Criar primeira disciplina"
-                aria-label="Criar primeira disciplina"
-              >
-                <FiPlus size={18} strokeWidth={2.25} />
-                <span>Criar primeira disciplina</span>
-              </button>
-            </div>
-          ) : (
-            <div className="discipline-table-wrapper">
-              <table className="discipline-table">
+      <div className="flex-1 p-6">
+        <DataCard
+          title="Disciplinas Cadastradas"
+          count={!isLoading && !error ? disciplines.length : undefined}
+          countLabel={disciplines.length === 1 ? 'disciplina' : 'disciplinas'}
+        >
+          <StateBlock
+            loading={isLoading}
+            loadingText="Carregando disciplinas..."
+            error={error}
+            onRetry={fetchDisciplines}
+            empty={disciplines.length === 0}
+            emptyText="Nenhuma disciplina cadastrada."
+          >
+            <div className={tableStyles.wrapper}>
+              <table className={tableStyles.table}>
                 <thead>
                   <tr>
-                    <th>Nome</th>
-                    <th>Descrição</th>
-                    <th>Professores</th>
-                    <th>Ações</th>
+                    {['Nome', 'Descrição', 'Professores', 'Ações'].map((h) => (
+                      <th key={h} className={tableStyles.th}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {disciplines.map((d) => (
-                    <tr key={d.id}>
-                      <td>{d.name}</td>
-                      <td className="discipline-desc">{d.description || '-'}</td>
-                      <td>{d.teachers?.map((t) => t.name).join(', ') || '-'}</td>
-                      <td className="discipline-actions-cell">
+                    <tr key={d.id} className={tableStyles.trHover}>
+                      <td className={tableStyles.td}>{d.name}</td>
+                      <td className={`${tableStyles.td} text-[var(--color-text-muted)] max-w-xs truncate`}>
+                        {d.description || '—'}
+                      </td>
+                      <td className={tableStyles.td}>
+                        {d.teachers?.map((t) => t.name).join(', ') || '—'}
+                      </td>
+                      <td className={tableStyles.actionsCell}>
                         <button
                           type="button"
                           onClick={() => handleEdit(d)}
-                          className="app-icon-btn app-icon-btn--edit"
                           title="Editar disciplina"
-                          aria-label={`Editar disciplina ${d.name}`}
+                          className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors ml-auto"
                         >
-                          <FiEdit2 size={18} strokeWidth={2.25} />
+                          <FiEdit2 size={15} />
                         </button>
                       </td>
                     </tr>
@@ -208,92 +145,69 @@ export function Disciplines() {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </StateBlock>
+        </DataCard>
       </div>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editingDiscipline ? 'Editar Disciplina' : 'Nova Disciplina'}</h2>
-              <button onClick={handleCloseModal} className="modal-close" aria-label="Fechar">
-                <IoClose size={22} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="modal-form">
-              {submitError && (
-                <div className="alert-error" role="alert">
-                  {submitError}
-                </div>
-              )}
-              {submitSuccess && (
-                <div className="alert-success" role="status">
-                  {submitSuccess}
-                </div>
-              )}
-              <div className="form-group">
-                <label htmlFor="disciplineName" className="form-label">
-                  Nome *
-                </label>
-                <input
-                  id="disciplineName"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="form-input"
-                  placeholder="Ex: Matemática"
-                  required
-                  maxLength={150}
-                  disabled={isSubmitting}
-                />
+      <Modal
+        open={showModal}
+        onClose={handleClose}
+        title={editing ? 'Editar Disciplina' : 'Nova Disciplina'}
+        footer={
+          <>
+            <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>Cancelar</Button>
+            <Button type="submit" form="discipline-form" loading={isSubmitting}>
+              {editing ? 'Salvar' : 'Criar'}
+            </Button>
+          </>
+        }
+      >
+        <form id="discipline-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {submitError && <Alert type="error">{submitError}</Alert>}
+          {submitSuccess && <Alert type="success">{submitSuccess}</Alert>}
+          <FormField label="Nome" required>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Matemática"
+              required
+              maxLength={150}
+              disabled={isSubmitting}
+            />
+          </FormField>
+          <FormField label="Descrição">
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Descrição opcional"
+              maxLength={5000}
+              rows={3}
+              disabled={isSubmitting}
+            />
+          </FormField>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">Professores vinculados</span>
+            {teachers.length === 0 ? (
+              <p className="text-sm text-[var(--color-text-muted)]">Nenhum professor cadastrado.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {teachers.map((t) => (
+                  <label key={t.id} className="flex items-center gap-2 text-sm text-[var(--color-text-primary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedTeacherIds.includes(t.id)}
+                      onChange={() => toggleTeacher(t.id)}
+                      disabled={isSubmitting}
+                      className="accent-[var(--color-primary)] w-4 h-4"
+                    />
+                    {t.name}
+                  </label>
+                ))}
               </div>
-              <div className="form-group">
-                <label htmlFor="disciplineDesc" className="form-label">
-                  Descrição
-                </label>
-                <textarea
-                  id="disciplineDesc"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="form-input form-textarea"
-                  placeholder="Descrição opcional"
-                  maxLength={5000}
-                  rows={3}
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Professores vinculados</label>
-                <div className="discipline-teachers-select">
-                  {teachers.map((t) => (
-                    <label key={t.id} className="discipline-teacher-option">
-                      <input
-                        type="checkbox"
-                        checked={selectedTeacherIds.includes(t.id)}
-                        onChange={() => toggleTeacher(t.id)}
-                        disabled={isSubmitting}
-                      />
-                      <span>{t.name}</span>
-                    </label>
-                  ))}
-                  {teachers.length === 0 && (
-                    <span className="text-muted-small">Nenhum professor cadastrado.</span>
-                  )}
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={handleCloseModal} className="btn-secondary" disabled={isSubmitting}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? (editingDiscipline ? 'Salvando...' : 'Criando...') : editingDiscipline ? 'Salvar' : 'Criar'}
-                </button>
-              </div>
-            </form>
+            )}
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   )
 }

@@ -1,8 +1,6 @@
 import { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import '../ProtectedRoute/ProtectedRoute.css'
-
 interface AdminRouteProps {
   children: ReactNode
 }
@@ -13,9 +11,9 @@ export function AdminRoute({ children }: AdminRouteProps) {
 
   if (isLoading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="text-secondary">Carregando...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-text-secondary">Carregando...</p>
       </div>
     )
   }

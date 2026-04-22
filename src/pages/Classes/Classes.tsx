@@ -1,26 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoClose } from 'react-icons/io5'
 import { FiEdit2, FiInfo, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { BackButton } from '../../components/BackButton/BackButton'
 import { searchClasses, createClass, deleteClass } from '../../services/userService'
 import { ApiError } from '../../services/api'
 import type { ClassSearchResponse, CreateClassRequest } from '../../types/auth'
-import './Classes.css'
+import { PageHeader, Button, Modal, ConfirmModal, DataCard, StateBlock, tableStyles, FormField, Input, Select, Alert } from '../../components/ui'
 
 const ACADEMIC_YEAR_OPTIONS = [
-  { value: '1º ano - Fundamental', label: '1º ano - Fundamental' },
-  { value: '2º ano - Fundamental', label: '2º ano - Fundamental' },
-  { value: '3º ano - Fundamental', label: '3º ano - Fundamental' },
-  { value: '4º ano - Fundamental', label: '4º ano - Fundamental' },
-  { value: '5º ano - Fundamental', label: '5º ano - Fundamental' },
-  { value: '6º ano', label: '6º ano' },
-  { value: '7º ano', label: '7º ano' },
-  { value: '8º ano', label: '8º ano' },
-  { value: '9º ano', label: '9º ano' },
-  { value: '1º ano - Médio', label: '1º ano - Médio' },
-  { value: '2º ano - Médio', label: '2º ano - Médio' },
-  { value: '3º ano - Médio', label: '3º ano - Médio' },
+  '1º ano - Fundamental', '2º ano - Fundamental', '3º ano - Fundamental',
+  '4º ano - Fundamental', '5º ano - Fundamental',
+  '6º ano', '7º ano', '8º ano', '9º ano',
+  '1º ano - Médio', '2º ano - Médio', '3º ano - Médio',
 ]
 
 export function Classes() {
@@ -33,34 +24,25 @@ export function Classes() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
-
   const [className, setClassName] = useState('')
   const [academicYear, setAcademicYear] = useState('')
-  const [deleteConfirmClass, setDeleteConfirmClass] = useState<ClassSearchResponse | null>(null)
+
+  const [deleteTarget, setDeleteTarget] = useState<ClassSearchResponse | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchClasses = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await searchClasses()
-      setClasses(data)
+      setClasses(await searchClasses())
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-      } else if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Erro ao carregar turmas.')
-      }
+      setError(err instanceof Error ? err.message : 'Erro ao carregar turmas.')
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    fetchClasses()
-  }, [fetchClasses])
+  useEffect(() => { fetchClasses() }, [fetchClasses])
 
   const resetForm = () => {
     setClassName('')
@@ -69,39 +51,17 @@ export function Classes() {
     setSubmitSuccess(null)
   }
 
-  const handleOpenModal = () => {
-    resetForm()
-    setShowModal(true)
-  }
-
-  const handleCloseModal = () => {
-    setShowModal(false)
-    resetForm()
-  }
-
-  const handleDeleteClick = (c: ClassSearchResponse) => {
-    setDeleteConfirmClass(c)
-  }
-
-  const handleCloseDeleteModal = () => {
-    if (!isDeleting) setDeleteConfirmClass(null)
-  }
+  const handleCloseModal = () => { setShowModal(false); resetForm() }
 
   const handleConfirmDelete = async () => {
-    if (!deleteConfirmClass) return
+    if (!deleteTarget) return
     setIsDeleting(true)
     try {
-      await deleteClass(deleteConfirmClass.id)
-      setDeleteConfirmClass(null)
+      await deleteClass(deleteTarget.id)
+      setDeleteTarget(null)
       fetchClasses()
     } catch (err) {
-      if (err instanceof ApiError) {
-        alert(err.message)
-      } else if (err instanceof Error) {
-        alert(err.message)
-      } else {
-        alert('Erro ao excluir turma.')
-      }
+      alert(err instanceof Error ? err.message : 'Erro ao excluir turma.')
     } finally {
       setIsDeleting(false)
     }
@@ -112,259 +72,151 @@ export function Classes() {
     setSubmitError(null)
     setSubmitSuccess(null)
     setIsSubmitting(true)
-
     try {
-      const requestData: CreateClassRequest = {
-        name: className,
-        academicYear: academicYear,
-      }
-
-      const response = await createClass(requestData)
-      setSubmitSuccess(`Turma "${response.name}" criada com sucesso!`)
+      const req: CreateClassRequest = { name: className, academicYear }
+      const res = await createClass(req)
+      setSubmitSuccess(`Turma "${res.name}" criada com sucesso!`)
       resetForm()
       fetchClasses()
-      setTimeout(() => {
-        handleCloseModal()
-      }, 1500)
+      setTimeout(handleCloseModal, 1500)
     } catch (err) {
-      if (err instanceof ApiError) {
-        setSubmitError(err.message)
-      } else if (err instanceof Error) {
-        setSubmitError(err.message)
-      } else {
-        setSubmitError('Erro ao criar turma.')
-      }
+      setSubmitError(err instanceof ApiError ? err.message : 'Erro ao criar turma.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="classes-container">
-      <header className="classes-header">
-        <div className="classes-header-content">
-          <BackButton to="/" />
-          <h1>Gestão de Turmas</h1>
-        </div>
-      </header>
+    <div className="flex flex-col flex-1 min-h-0">
+      <PageHeader
+        title="Gestão de Turmas"
+        back={<BackButton to="/" />}
+        action={
+          <Button size="sm" icon={<FiPlus size={14} />} onClick={() => { resetForm(); setShowModal(true) }}>
+            Nova turma
+          </Button>
+        }
+      />
 
-      <div className="classes-content">
-        <div className="classes-card">
-          <div className="classes-card-header">
-            <div className="classes-card-header-left">
-              <h3 className="classes-card-title">Turmas Cadastradas</h3>
-              {!isLoading && !error && (
-                <span className="class-count">{classes.length} turma{classes.length !== 1 ? 's' : ''}</span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={handleOpenModal}
-              className="app-icon-btn app-icon-btn--add app-icon-btn--text"
-              title="Nova turma"
-              aria-label="Nova turma"
-            >
-              <FiPlus size={18} strokeWidth={2.25} />
-              <span>Nova turma</span>
-            </button>
-          </div>
-
-          {isLoading ? (
-            <div className="classes-loading">
-              <div className="loading-spinner-sm"></div>
-              <span>Carregando turmas...</span>
-            </div>
-          ) : error ? (
-            <div className="classes-error">
-              <p>{error}</p>
-              <button onClick={fetchClasses} className="btn-retry">
-                Tentar novamente
-              </button>
-            </div>
-          ) : classes.length === 0 ? (
-            <div className="classes-empty">
-              <p>Nenhuma turma cadastrada.</p>
-            </div>
-          ) : (
-            <div className="class-table-wrapper">
-              <table className="class-table">
+      <div className="flex-1 p-6">
+        <DataCard
+          title="Turmas Cadastradas"
+          count={!isLoading && !error ? classes.length : undefined}
+          countLabel={classes.length === 1 ? 'turma' : 'turmas'}
+        >
+          <StateBlock
+            loading={isLoading}
+            loadingText="Carregando turmas..."
+            error={error}
+            onRetry={fetchClasses}
+            empty={classes.length === 0}
+            emptyText="Nenhuma turma cadastrada."
+          >
+            <div className={tableStyles.wrapper}>
+              <table className={tableStyles.table}>
                 <thead>
                   <tr>
-                    <th>Nome</th>
-                    <th>Série</th>
-                    <th>Alunos</th>
-                    <th>Professores</th>
-                    <th>Ações</th>
+                    {['Nome', 'Série', 'Alunos', 'Professores', 'Ações'].map((h) => (
+                      <th key={h} className={tableStyles.th}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {classes.map((c) => (
-                    <tr key={c.id}>
-                      <td>{c.name}</td>
-                      <td>{c.academicYear}</td>
-                      <td>{c.studentCount}</td>
-                      <td>{c.teacherCount}</td>
-                      <td className="class-actions-cell app-icon-btn-row">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
-                          className="app-icon-btn app-icon-btn--info"
-                          title="Detalhes da turma"
-                          aria-label={`Detalhes da turma ${c.name}`}
-                        >
-                          <FiInfo size={18} strokeWidth={2.25} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/admin/classes/${c.id}/edit`)}
-                          className="app-icon-btn app-icon-btn--edit"
-                          title="Editar turma"
-                          aria-label={`Editar turma ${c.name}`}
-                        >
-                          <FiEdit2 size={18} strokeWidth={2.25} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteClick(c)}
-                          className="app-icon-btn app-icon-btn--delete"
-                          title="Excluir turma"
-                          aria-label={`Excluir turma ${c.name}`}
-                        >
-                          <FiTrash2 size={18} strokeWidth={2.25} />
-                        </button>
+                    <tr key={c.id} className={tableStyles.trHover}>
+                      <td className={tableStyles.td}>{c.name}</td>
+                      <td className={tableStyles.td}>{c.academicYear}</td>
+                      <td className={tableStyles.td}>{c.studentCount}</td>
+                      <td className={tableStyles.td}>{c.teacherCount}</td>
+                      <td className={tableStyles.actionsCell}>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <IconBtn title="Detalhes" onClick={() => navigate(`/admin/classes/${c.id}/edit`)}>
+                            <FiInfo size={15} />
+                          </IconBtn>
+                          <IconBtn title="Editar" onClick={() => navigate(`/admin/classes/${c.id}/edit`)}>
+                            <FiEdit2 size={15} />
+                          </IconBtn>
+                          <IconBtn title="Excluir" danger onClick={() => setDeleteTarget(c)}>
+                            <FiTrash2 size={15} />
+                          </IconBtn>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </StateBlock>
+        </DataCard>
       </div>
 
-      {deleteConfirmClass && (
-        <div className="confirm-modal-overlay" onClick={handleCloseDeleteModal}>
-          <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-modal-header">
-              <h3>Excluir turma</h3>
-              <button
-                onClick={handleCloseDeleteModal}
-                className="confirm-modal-close"
-                disabled={isDeleting}
-                aria-label="Fechar"
-              >
-                <IoClose size={22} />
-              </button>
-            </div>
-            <div className="confirm-modal-body">
-              <p>
-                Tem certeza que deseja excluir a turma <strong>{deleteConfirmClass.name}</strong>?
-                Esta ação não pode ser desfeita.
-              </p>
-            </div>
-            <div className="confirm-modal-actions">
-              <button
-                type="button"
-                onClick={handleCloseDeleteModal}
-                className="btn-secondary"
-                disabled={isDeleting}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="btn-danger"
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Excluindo...' : 'Excluir'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Create modal */}
+      <Modal
+        open={showModal}
+        onClose={handleCloseModal}
+        title="Nova Turma"
+        footer={
+          <>
+            <Button variant="secondary" onClick={handleCloseModal} disabled={isSubmitting}>Cancelar</Button>
+            <Button type="submit" form="class-form" loading={isSubmitting}>Criar Turma</Button>
+          </>
+        }
+      >
+        <form id="class-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {submitError && <Alert type="error">{submitError}</Alert>}
+          {submitSuccess && <Alert type="success">{submitSuccess}</Alert>}
+          <FormField label="Nome da Turma" required>
+            <Input
+              value={className}
+              onChange={(e) => setClassName(e.target.value)}
+              placeholder="Ex: 1º Ano A"
+              required
+              maxLength={100}
+              disabled={isSubmitting}
+            />
+          </FormField>
+          <FormField label="Série / Ano Letivo" required>
+            <Select
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
+              required
+              disabled={isSubmitting}
+            >
+              <option value="" disabled>Selecione a série</option>
+              {ACADEMIC_YEAR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </Select>
+          </FormField>
+        </form>
+      </Modal>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Nova Turma</h2>
-              <button onClick={handleCloseModal} className="modal-close" aria-label="Fechar">
-                <IoClose size={22} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="modal-form">
-              {submitError && (
-                <div className="alert-error" role="alert">
-                  {submitError}
-                </div>
-              )}
-
-              {submitSuccess && (
-                <div className="alert-success" role="status">
-                  {submitSuccess}
-                </div>
-              )}
-
-              <div className="form-group">
-                <label htmlFor="className" className="form-label">
-                  Nome da Turma <span className="required">*</span>
-                </label>
-                <input
-                  id="className"
-                  type="text"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
-                  className="form-input"
-                  placeholder="Ex: 1º Ano A"
-                  required
-                  maxLength={100}
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="academicYear" className="form-label">
-                  Série/Ano Letivo <span className="required">*</span>
-                </label>
-                <select
-                  id="academicYear"
-                  value={academicYear}
-                  onChange={(e) => setAcademicYear(e.target.value)}
-                  className="form-select"
-                  required
-                  disabled={isSubmitting}
-                >
-                  <option value="" disabled>Selecione a série</option>
-                  {ACADEMIC_YEAR_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="btn-secondary"
-                  disabled={isSubmitting}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Criando...' : 'Criar Turma'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Delete confirm */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        onClose={() => { if (!isDeleting) setDeleteTarget(null) }}
+        onConfirm={handleConfirmDelete}
+        title="Excluir turma"
+        message={<>Tem certeza que deseja excluir a turma <strong>{deleteTarget?.name}</strong>? Esta ação não pode ser desfeita.</>}
+        confirmLabel={isDeleting ? 'Excluindo...' : 'Excluir'}
+        loading={isDeleting}
+      />
     </div>
+  )
+}
+
+function IconBtn({ children, title, onClick, danger }: { children: React.ReactNode; title: string; onClick: () => void; danger?: boolean }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={[
+        'flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent cursor-pointer transition-colors',
+        danger
+          ? 'text-[var(--color-text-muted)] hover:text-[var(--color-error)] hover:border-[var(--color-error)]'
+          : 'text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]',
+      ].join(' ')}
+    >
+      {children}
+    </button>
   )
 }

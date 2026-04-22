@@ -1,24 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { FiEdit2, FiInfo, FiPlus, FiTrash2 } from 'react-icons/fi'
-import { IoClose } from 'react-icons/io5'
 import { BackButton } from '../../components/BackButton/BackButton'
-import {
-  getAulaById,
-  deleteAula,
-  submitAulaFrequency,
-} from '../../services/userService'
-import {
-  getActivitiesByMeeting,
-  createActivity,
-  deleteActivity,
-} from '../../services/activityService'
+import { getAulaById, deleteAula, submitAulaFrequency } from '../../services/userService'
+import { getActivitiesByMeeting, createActivity, deleteActivity } from '../../services/activityService'
 import { uploadFile } from '../../services/uploadService'
 import type { EvaluativeActivity } from '../../services/activityService'
 import { ApiError } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
 import type { AulaDetailResponse } from '../../types/auth'
-import './AulaDetail.css'
+import { PageHeader, Button, ConfirmModal, Modal, StateBlock, FormField, Input, Textarea, Alert } from '../../components/ui'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+const UPLOAD_BASE = API_BASE.replace('/api', '')
+const getFileUrl = (path: string | null) => path ? (path.startsWith('http') ? path : `${UPLOAD_BASE}${path}`) : null
 
 export function AulaDetail() {
   const { id } = useParams<{ id: string }>()
@@ -46,70 +41,39 @@ export function AulaDetail() {
 
   const fetchActivities = useCallback(async () => {
     if (!aulaId) return
-    try {
-      const list = await getActivitiesByMeeting(aulaId)
-      setActivities(list)
-    } catch {
-      setActivities([])
-    }
+    try { setActivities(await getActivitiesByMeeting(aulaId)) }
+    catch { setActivities([]) }
   }, [aulaId])
 
   useEffect(() => {
     if (!aulaId || isNaN(aulaId)) return
     let cancelled = false
     async function fetchAula() {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true); setError(null)
       try {
         const data = await getAulaById(aulaId!)
         if (!cancelled) {
-          setAula(data)
-          fetchActivities()
+          setAula(data); fetchActivities()
           const initial: Record<number, 'P' | 'F'> = {}
-          ;(data.students ?? []).forEach((s) => {
-            const status = s.present === true ? 'P' : s.present === false ? 'F' : 'P'
-            initial[s.id] = status
-          })
+          ;(data.students ?? []).forEach((s) => { initial[s.id] = s.present === false ? 'F' : 'P' })
           setAttendance(initial)
         }
       } catch (err) {
-        if (!cancelled) {
-          if (err instanceof ApiError) {
-            setError(err.message)
-          } else if (err instanceof Error) {
-            setError(err.message)
-          } else {
-            setError('Erro ao carregar detalhes da aula.')
-          }
-        }
+        if (!cancelled) setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Erro ao carregar detalhes da aula.')
       } finally {
         if (!cancelled) setIsLoading(false)
       }
     }
     fetchAula()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [aulaId, fetchActivities])
 
   const handleDelete = async () => {
     if (!aulaId || !isAdmin) return
     setIsDeleting(true)
-    try {
-      await deleteAula(aulaId)
-      setDeleteConfirm(false)
-      navigate('/aulas')
-    } catch (err) {
-      if (err instanceof ApiError) {
-        alert(err.message)
-      } else if (err instanceof Error) {
-        alert(err.message)
-      } else {
-        alert('Erro ao excluir aula.')
-      }
-    } finally {
-      setIsDeleting(false)
-    }
+    try { await deleteAula(aulaId); setDeleteConfirm(false); navigate('/aulas') }
+    catch (err) { alert(err instanceof Error ? err.message : 'Erro ao excluir aula.') }
+    finally { setIsDeleting(false) }
   }
 
   const handleToggleAttendance = async (studentId: number, newStatus: 'P' | 'F') => {
@@ -117,332 +81,192 @@ export function AulaDetail() {
     setIsSubmittingFreq(studentId)
     const prevStatus = attendance[studentId] ?? 'P'
     setAttendance((prev) => ({ ...prev, [studentId]: newStatus }))
-    try {
-      await submitAulaFrequency(aulaId, {
-        entries: [{ studentId, status: newStatus }],
-      })
-    } catch (err) {
-      setAttendance((prev) => ({ ...prev, [studentId]: prevStatus }))
-      alert(err instanceof ApiError ? err.message : 'Erro ao atualizar frequência.')
-    } finally {
-      setIsSubmittingFreq(null)
-    }
+    try { await submitAulaFrequency(aulaId, { entries: [{ studentId, status: newStatus }] }) }
+    catch (err) { setAttendance((prev) => ({ ...prev, [studentId]: prevStatus })); alert(err instanceof ApiError ? err.message : 'Erro ao atualizar frequência.') }
+    finally { setIsSubmittingFreq(null) }
   }
 
   const handleSubmitActivity = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!aulaId || !activityTitle.trim()) return
-    setIsSubmittingActivity(true)
-    setActivityError(null)
+    setIsSubmittingActivity(true); setActivityError(null)
     try {
       let filePath: string | undefined
-      if (activityFile) {
-        const { path } = await uploadFile(activityFile, 'activities')
-        filePath = path
-      }
-      await createActivity({
-        classMeetingId: aulaId,
-        title: activityTitle.trim(),
-        description: activityDesc.trim() || undefined,
-        filePath,
-      })
-      setActivityTitle('')
-      setActivityDesc('')
-      setActivityFile(null)
-      setShowActivityModal(false)
+      if (activityFile) { const { path } = await uploadFile(activityFile, 'activities'); filePath = path }
+      await createActivity({ classMeetingId: aulaId, title: activityTitle.trim(), description: activityDesc.trim() || undefined, filePath })
+      setActivityTitle(''); setActivityDesc(''); setActivityFile(null); setShowActivityModal(false)
       fetchActivities()
-    } catch (err) {
-      setActivityError(err instanceof Error ? err.message : 'Erro ao criar atividade.')
-    } finally {
-      setIsSubmittingActivity(false)
-    }
+    } catch (err) { setActivityError(err instanceof Error ? err.message : 'Erro ao criar atividade.') }
+    finally { setIsSubmittingActivity(false) }
   }
 
   const handleDeleteActivity = async (id: number) => {
     if (!window.confirm('Excluir esta atividade?')) return
-    try {
-      await deleteActivity(id)
-      fetchActivities()
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao excluir.')
-    }
+    try { await deleteActivity(id); fetchActivities() }
+    catch (err) { alert(err instanceof Error ? err.message : 'Erro ao excluir.') }
   }
-
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
-  const UPLOAD_BASE = API_BASE.replace('/api', '')
-  const getFileUrl = (path: string | null) =>
-    path ? (path.startsWith('http') ? path : `${UPLOAD_BASE}${path}`) : null
 
   if (!aulaId || isNaN(aulaId)) {
-    return (
-      <div className="aula-detail-container">
-        <p>ID inválido.</p>
-      </div>
-    )
+    return <div className="flex-1 flex items-center justify-center"><p className="text-sm text-[var(--color-error)]">ID inválido.</p></div>
   }
 
-  if (isLoading) {
-    return (
-      <div className="aula-detail-container">
-        <div className="aula-detail-loading">
-          <div className="loading-spinner"></div>
-          <span>Carregando...</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (error || !aula) {
-    return (
-      <div className="aula-detail-container">
-        <header className="aula-detail-header">
-          <BackButton to="/aulas" />
-        </header>
-        <div className="aula-detail-error">
-          <p>{error || 'Aula não encontrada.'}</p>
-          <button onClick={() => navigate('/aulas')} className="btn-secondary">
-            Voltar
-          </button>
-        </div>
-      </div>
-    )
-  }
+  const headerActions = aula ? (
+    <div className="flex items-center gap-2">
+      {canEdit && (
+        <button type="button" onClick={() => navigate(`/aulas/${aulaId}/edit`)} title="Editar" className="flex items-center justify-center w-8 h-8 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors">
+          <FiEdit2 size={15} />
+        </button>
+      )}
+      {isAdmin && (
+        <button type="button" onClick={() => setDeleteConfirm(true)} title="Excluir" disabled={isDeleting} className="flex items-center justify-center w-8 h-8 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] cursor-pointer transition-colors disabled:opacity-50">
+          <FiTrash2 size={15} />
+        </button>
+      )}
+    </div>
+  ) : undefined
 
   return (
-    <div className="aula-detail-container">
-      <header className="aula-detail-header">
-        <div className="aula-detail-header-content">
-          <BackButton to="/aulas" />
-          <h1>Detalhes da Aula</h1>
-          <div className="aula-detail-actions app-icon-btn-row">
-            {canEdit && (
-              <button
-                type="button"
-                onClick={() => navigate(`/aulas/${aulaId}/edit`)}
-                className="app-icon-btn app-icon-btn--edit"
-                title="Editar aula"
-                aria-label="Editar aula"
-              >
-                <FiEdit2 size={18} strokeWidth={2.25} />
-              </button>
-            )}
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(true)}
-                className="app-icon-btn app-icon-btn--delete"
-                disabled={isDeleting}
-                title="Excluir aula"
-                aria-label="Excluir aula"
-              >
-                <FiTrash2 size={18} strokeWidth={2.25} />
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="flex flex-col flex-1 min-h-0">
+      <PageHeader title="Detalhes da Aula" back={<BackButton to="/aulas" />} action={headerActions} />
 
-      <div className="aula-detail-content">
-        <div className="aula-detail-card">
-          <h2>{aula.name}</h2>
-          <p className="aula-academic-year">{aula.academicYear}</p>
+      <div className="flex-1 p-6">
+        <StateBlock loading={isLoading} loadingText="Carregando..." error={error} empty={!aula} emptyText="Aula não encontrada.">
+          {aula && (
+            <div className="flex flex-col gap-6 max-w-2xl">
+              {/* Info */}
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-5">
+                <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{aula.name}</h2>
+                {aula.academicYear && <p className="text-sm text-[var(--color-text-muted)] mt-1">{aula.academicYear}</p>}
 
-          <div className="aula-section">
-            <h3>Professor</h3>
-            <div className="aula-professor">
-              <span>{aula.professor.name}</span>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/users/${aula.professor.id}`)}
-                  className="app-icon-btn app-icon-btn--info"
-                  aria-label="Ver detalhes do professor"
-                  title="Ver detalhes"
-                >
-                  <FiInfo size={18} strokeWidth={2.25} aria-hidden />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {canEdit && (
-            <div className="aula-section">
-              <div className="aula-section-header">
-                <h3>Atividades Avaliativas</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowActivityModal(true)}
-                  className="app-icon-btn app-icon-btn--add app-icon-btn--text"
-                  title="Nova atividade"
-                  aria-label="Nova atividade"
-                >
-                  <FiPlus size={18} strokeWidth={2.25} />
-                  <span>Nova atividade</span>
-                </button>
+                <div className="mt-4 border-t border-[var(--color-border)] pt-4 flex items-center justify-between gap-3">
+                  <span className="text-sm text-[var(--color-text-primary)]">{aula.professor.name}</span>
+                  {isAdmin && (
+                    <button type="button" onClick={() => navigate(`/users/${aula.professor.id}`)} title="Ver detalhes do professor" className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors">
+                      <FiInfo size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
-              {activities.length === 0 ? (
-                <p className="aula-empty-text">Nenhuma atividade cadastrada.</p>
-              ) : (
-                <ul className="aula-activities-list">
-                  {activities.map((a) => (
-                    <li key={a.id} className="aula-activity-item">
-                      <div className="aula-activity-info">
-                        <strong>{a.title}</strong>
-                        {a.description && <span className="aula-activity-desc">{a.description}</span>}
-                        {a.filePath && (
-                          <a
-                            href={getFileUrl(a.filePath) ?? '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="aula-activity-file"
-                          >
-                            Baixar documento
-                          </a>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteActivity(a.id)}
-                        className="app-icon-btn app-icon-btn--delete"
-                        title="Excluir atividade"
-                        aria-label="Excluir atividade"
-                      >
-                        <FiTrash2 size={18} strokeWidth={2.25} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+
+              {/* Activities */}
+              {canEdit && (
+                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Atividades Avaliativas</h3>
+                    <Button size="sm" icon={<FiPlus size={13} />} onClick={() => { setActivityTitle(''); setActivityDesc(''); setActivityFile(null); setActivityError(null); setShowActivityModal(true) }}>
+                      Nova atividade
+                    </Button>
+                  </div>
+                  <div className="p-5">
+                    {activities.length === 0 ? (
+                      <p className="text-sm text-[var(--color-text-muted)]">Nenhuma atividade cadastrada.</p>
+                    ) : (
+                      <ul className="flex flex-col gap-3">
+                        {activities.map((a) => (
+                          <li key={a.id} className="flex items-start justify-between gap-4 py-2 border-b border-[var(--color-border)] last:border-0">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-sm font-medium text-[var(--color-text-primary)]">{a.title}</span>
+                              {a.description && <span className="text-xs text-[var(--color-text-muted)]">{a.description}</span>}
+                              {a.filePath && <a href={getFileUrl(a.filePath) ?? '#'} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-primary)] hover:underline">Baixar documento</a>}
+                            </div>
+                            <button type="button" onClick={() => handleDeleteActivity(a.id)} title="Excluir" className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] cursor-pointer transition-colors flex-shrink-0">
+                              <FiTrash2 size={14} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
               )}
+
+              {/* Students / Attendance */}
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+                <div className="px-5 py-4 border-b border-[var(--color-border)]">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Alunos</h3>
+                </div>
+                <ul className="divide-y divide-[var(--color-border)]">
+                  {(aula.students ?? []).map((s) => {
+                    const currentStatus = attendance[s.id] ?? 'P'
+                    const isPresent = currentStatus === 'P'
+                    const isUpdating = isSubmittingFreq === s.id
+                    return (
+                      <li key={s.id} className="flex items-center gap-4 px-5 py-3">
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleAttendance(s.id, isPresent ? 'F' : 'P')}
+                            disabled={isUpdating}
+                            title={isPresent ? 'Marcar falta' : 'Marcar presença'}
+                            className={[
+                              'flex-shrink-0 w-11 h-6 rounded-full border-2 transition-colors duration-200 relative cursor-pointer disabled:opacity-50',
+                              isPresent ? 'bg-[var(--color-success)] border-[var(--color-success)]' : 'bg-[var(--color-background)] border-[var(--color-border)]',
+                            ].join(' ')}
+                          >
+                            <span className={[
+                              'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200',
+                              isPresent ? 'left-5' : 'left-0.5',
+                            ].join(' ')} />
+                          </button>
+                        )}
+                        <span className={[
+                          'text-xs font-semibold w-16 flex-shrink-0',
+                          isPresent ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]',
+                        ].join(' ')}>
+                          {isPresent ? 'PRESENTE' : 'FALTOU'}
+                        </span>
+                        <span className="text-sm text-[var(--color-text-primary)] flex-1">{s.name}</span>
+                        {isAdmin && (
+                          <button type="button" onClick={() => navigate(`/users/${s.id}`)} title="Ver detalhes" className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors flex-shrink-0">
+                            <FiInfo size={14} />
+                          </button>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
             </div>
           )}
-
-          <div className="aula-section">
-            <h3>Alunos</h3>
-            <div className="aula-students-card">
-              <ul className="aula-students-list">
-                {(aula.students ?? []).map((s) => {
-                  const currentStatus = attendance[s.id] ?? (s.present === true ? 'P' : s.present === false ? 'F' : 'P')
-                  const statusLabel = currentStatus === 'P' ? 'PRESENTE' : 'FALTOU'
-                  const isUpdating = isSubmittingFreq === s.id
-                  return (
-                    <li key={s.id} className="aula-student-item">
-                      {canEdit && (
-                        <label className="aula-attendance-toggle" title={statusLabel}>
-                          <input
-                            type="checkbox"
-                            checked={currentStatus === 'P'}
-                            onChange={() => handleToggleAttendance(s.id, currentStatus === 'P' ? 'F' : 'P')}
-                            disabled={isUpdating}
-                          />
-                          <span className="aula-toggle-slider" />
-                        </label>
-                      )}
-                      <span className={`aula-student-status aula-student-status--${currentStatus === 'P' ? 'presente' : 'faltou'}`}>
-                        {statusLabel}
-                      </span>
-                      <span className="aula-student-name">{s.name}</span>
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/users/${s.id}`)}
-                          className="app-icon-btn app-icon-btn--info"
-                          aria-label={`Ver detalhes de ${s.name}`}
-                          title="Ver detalhes"
-                        >
-                          <FiInfo size={18} strokeWidth={2.25} aria-hidden />
-                        </button>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          </div>
-        </div>
+        </StateBlock>
       </div>
 
-      {deleteConfirm && (
-        <div className="confirm-modal-overlay" onClick={() => !isDeleting && setDeleteConfirm(false)}>
-          <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-modal-header">
-              <h3>Excluir aula</h3>
-              <button onClick={() => setDeleteConfirm(false)} disabled={isDeleting} className="confirm-modal-close" aria-label="Fechar">
-                <IoClose size={22} />
-              </button>
-            </div>
-            <div className="confirm-modal-body">
-              <p>Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.</p>
-            </div>
-            <div className="confirm-modal-actions">
-              <button onClick={() => setDeleteConfirm(false)} className="btn-secondary" disabled={isDeleting}>
-                Cancelar
-              </button>
-              <button onClick={handleDelete} className="btn-danger" disabled={isDeleting}>
-                {isDeleting ? 'Excluindo...' : 'Excluir'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        open={deleteConfirm}
+        onClose={() => !isDeleting && setDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Excluir aula"
+        message="Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita."
+        confirmLabel={isDeleting ? 'Excluindo...' : 'Excluir'}
+        loading={isDeleting}
+      />
 
-      {showActivityModal && (
-        <div className="modal-overlay" onClick={() => !isSubmittingActivity && setShowActivityModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Nova Atividade Avaliativa</h2>
-              <button onClick={() => setShowActivityModal(false)} disabled={isSubmittingActivity} className="modal-close" aria-label="Fechar">
-                <IoClose size={22} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmitActivity} className="modal-form">
-              {activityError && <div className="alert-error">{activityError}</div>}
-              <div className="form-group">
-                <label htmlFor="activityTitle" className="form-label">Título *</label>
-                <input
-                  id="activityTitle"
-                  type="text"
-                  value={activityTitle}
-                  onChange={(e) => setActivityTitle(e.target.value)}
-                  className="form-input"
-                  required
-                  maxLength={255}
-                  disabled={isSubmittingActivity}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="activityDesc" className="form-label">Descrição</label>
-                <textarea
-                  id="activityDesc"
-                  value={activityDesc}
-                  onChange={(e) => setActivityDesc(e.target.value)}
-                  className="form-input form-textarea"
-                  rows={3}
-                  disabled={isSubmittingActivity}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="activityFile" className="form-label">Documento (PDF, TXT, DOCX)</label>
-                <input
-                  id="activityFile"
-                  type="file"
-                  accept=".pdf,.txt,.docx,.doc"
-                  onChange={(e) => setActivityFile(e.target.files?.[0] ?? null)}
-                  disabled={isSubmittingActivity}
-                />
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={() => setShowActivityModal(false)} className="btn-secondary" disabled={isSubmittingActivity}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary" disabled={isSubmittingActivity}>
-                  {isSubmittingActivity ? 'Criando...' : 'Criar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
+      <Modal
+        open={showActivityModal}
+        onClose={() => !isSubmittingActivity && setShowActivityModal(false)}
+        title="Nova Atividade Avaliativa"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowActivityModal(false)} disabled={isSubmittingActivity}>Cancelar</Button>
+            <Button type="submit" form="activity-form" loading={isSubmittingActivity}>Criar</Button>
+          </>
+        }
+      >
+        <form id="activity-form" onSubmit={handleSubmitActivity} className="flex flex-col gap-4">
+          {activityError && <Alert type="error">{activityError}</Alert>}
+          <FormField label="Título" required>
+            <Input value={activityTitle} onChange={(e) => setActivityTitle(e.target.value)} required maxLength={255} disabled={isSubmittingActivity} />
+          </FormField>
+          <FormField label="Descrição">
+            <Textarea value={activityDesc} onChange={(e) => setActivityDesc(e.target.value)} rows={3} disabled={isSubmittingActivity} />
+          </FormField>
+          <FormField label="Documento (PDF, TXT, DOCX)">
+            <input type="file" accept=".pdf,.txt,.docx,.doc" onChange={(e) => setActivityFile(e.target.files?.[0] ?? null)} disabled={isSubmittingActivity}
+              className="text-sm text-[var(--color-text-primary)] file:mr-3 file:px-3 file:py-1.5 file:text-xs file:font-medium file:rounded-md file:border file:border-[var(--color-border)] file:bg-[var(--color-background)] file:text-[var(--color-text-primary)] file:cursor-pointer hover:file:bg-[var(--color-surface)] file:transition-colors"
+            />
+          </FormField>
+        </form>
+      </Modal>
     </div>
   )
 }

@@ -9,16 +9,30 @@ import {
 } from '../../services/studentPortalService'
 import type { DisciplineMaterial } from '../../services/materialService'
 import type { EvaluativeActivity } from '../../services/activityService'
-import './StudentHomeSection.css'
+import { Spinner } from '../ui/FormField'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 const UPLOAD_BASE = API_BASE.replace('/api', '')
 
 export type StudentHomeSectionVariant = 'all' | 'materials' | 'class' | 'absences'
+export interface StudentHomeSectionProps { variant?: StudentHomeSectionVariant }
 
-export interface StudentHomeSectionProps {
-  variant?: StudentHomeSectionVariant
+function SectionCard({ title, children }: { title?: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+      {title && (
+        <div className="px-5 py-3 border-b border-[var(--color-border)]">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</h3>
+        </div>
+      )}
+      <div className="p-5">{children}</div>
+    </div>
+  )
 }
+
+const tableClass = 'w-full text-sm border-collapse'
+const thClass = 'text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] pb-2 border-b border-[var(--color-border)]'
+const tdClass = 'py-2 border-b border-[var(--color-border)] text-[var(--color-text-primary)] last:border-0'
 
 export function StudentHomeSection({ variant = 'all' }: StudentHomeSectionProps) {
   const [materials, setMaterials] = useState<DisciplineMaterial[]>([])
@@ -33,13 +47,9 @@ export function StudentHomeSection({ variant = 'all' }: StudentHomeSectionProps)
     setError(null)
     try {
       if (variant === 'class') {
-        const turma = await getMyClass()
-        setMyClass(turma)
+        setMyClass(await getMyClass())
       } else if (variant === 'absences') {
-        const [turma, faltas] = await Promise.all([
-          getMyClass(),
-          getMyAbsencesByDiscipline(),
-        ])
+        const [turma, faltas] = await Promise.all([getMyClass(), getMyAbsencesByDiscipline()])
         setMyClass(turma)
         setAbsencesByDiscipline(faltas)
       } else if (variant === 'materials') {
@@ -48,10 +58,7 @@ export function StudentHomeSection({ variant = 'all' }: StudentHomeSectionProps)
         setActivities(acts)
       } else {
         const [mats, acts, turma, faltas] = await Promise.all([
-          getMaterials(),
-          getMyActivities(),
-          getMyClass(),
-          getMyAbsencesByDiscipline(),
+          getMaterials(), getMyActivities(), getMyClass(), getMyAbsencesByDiscipline(),
         ])
         setMaterials(mats)
         setActivities(acts)
@@ -65,9 +72,7 @@ export function StudentHomeSection({ variant = 'all' }: StudentHomeSectionProps)
     }
   }, [variant])
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  useEffect(() => { fetchData() }, [fetchData])
 
   const getFileUrl = (path: string | null) =>
     path ? (path.startsWith('http') ? path : `${UPLOAD_BASE}${path}`) : null
@@ -78,119 +83,112 @@ export function StudentHomeSection({ variant = 'all' }: StudentHomeSectionProps)
 
   if (isLoading) {
     return (
-      <div className="student-home-section">
-        <div className="student-home-loading">
-          <div className="loading-spinner-sm"></div>
-          <span>Carregando...</span>
-        </div>
+      <div
+        className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-3 py-12 text-[var(--color-text-muted)]"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <Spinner size="md" />
+        <span className="text-sm">Carregando...</span>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="student-home-section">
-        <div className="student-home-error">
-          <p>{error}</p>
-          <button type="button" onClick={fetchData} className="btn-retry">
-            Tentar novamente
-          </button>
-        </div>
+      <div className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-3 py-12 text-center text-[var(--color-error)]">
+        <p className="text-sm">{error}</p>
+        <button
+          type="button"
+          onClick={fetchData}
+          className="text-sm px-3 py-1.5 border border-[var(--color-border)] rounded-md bg-transparent text-[var(--color-text-primary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] cursor-pointer transition-colors"
+        >
+          Tentar novamente
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="student-home-section">
-      <div className="student-home-grid">
-        {showMaterials && (
-          <>
-            <div className="student-home-card">
-              <h3>Materiais de Estudo</h3>
-              {materials.length === 0 ? (
-                <p className="student-home-empty">Nenhum material disponível.</p>
-              ) : (
-                <ul className="student-home-list">
-                  {materials.map((m) => (
-                    <li key={m.id}>
-                      <strong>{m.title}</strong>
-                      <span className="student-home-meta">{m.disciplineName}</span>
-                      {m.filePath && (
-                        <a
-                          href={getFileUrl(m.filePath) ?? '#'}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="student-home-link"
-                        >
-                          Baixar
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div className="student-home-card">
-              <h3>Atividades Avaliativas</h3>
-              {activities.length === 0 ? (
-                <p className="student-home-empty">Nenhuma atividade disponível.</p>
-              ) : (
-                <ul className="student-home-list">
-                  {activities.map((a) => (
-                    <li key={a.id}>
-                      <strong>{a.title}</strong>
-                      {a.description && (
-                        <span className="student-home-desc">{a.description}</span>
-                      )}
-                      {a.filePath && (
-                        <a
-                          href={getFileUrl(a.filePath) ?? '#'}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="student-home-link"
-                        >
-                          Baixar
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </>
-        )}
-
-        {showClass && (
-          <div className="student-home-card">
-            {variant !== 'class' && <h3>Minha turma</h3>}
-            {!myClass?.className ? (
-              <p className="student-home-empty">Nenhuma turma vinculada à sua conta.</p>
+    <div className="content-reveal flex flex-col gap-4">
+      {showMaterials && (
+        <>
+          <SectionCard title="Materiais de Estudo">
+            {materials.length === 0 ? (
+              <p className="text-sm text-[var(--color-text-muted)]">Nenhum material disponível.</p>
             ) : (
-              <>
-                <p className="student-home-class-meta">
-                  {myClass.className}
-                  {myClass.academicYear ? ` · ${myClass.academicYear}` : ''}
-                </p>
-                <h4 className="student-home-subheading">Colegas</h4>
+              <ul className="flex flex-col gap-3">
+                {materials.map((m) => (
+                  <li key={m.id} className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-[var(--color-text-primary)]">{m.title}</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">{m.disciplineName}</span>
+                    {m.filePath && (
+                      <a
+                        href={getFileUrl(m.filePath) ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[var(--color-primary)] hover:underline"
+                      >
+                        Baixar
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
+
+          <SectionCard title="Atividades Avaliativas">
+            {activities.length === 0 ? (
+              <p className="text-sm text-[var(--color-text-muted)]">Nenhuma atividade disponível.</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {activities.map((a) => (
+                  <li key={a.id} className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-[var(--color-text-primary)]">{a.title}</span>
+                    {a.description && <span className="text-xs text-[var(--color-text-muted)]">{a.description}</span>}
+                    {a.filePath && (
+                      <a
+                        href={getFileUrl(a.filePath) ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[var(--color-primary)] hover:underline"
+                      >
+                        Baixar
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
+        </>
+      )}
+
+      {showClass && (
+        <SectionCard title={variant !== 'class' ? 'Minha turma' : undefined}>
+          {!myClass?.className ? (
+            <p className="text-sm text-[var(--color-text-muted)]">Nenhuma turma vinculada à sua conta.</p>
+          ) : (
+            <div className="flex flex-col gap-5">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                {myClass.className}{myClass.academicYear ? ` · ${myClass.academicYear}` : ''}
+              </p>
+
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">Colegas</h4>
                 {myClass.classmates.length === 0 ? (
-                  <p className="student-home-empty">Não há outros alunos nesta turma.</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Não há outros alunos nesta turma.</p>
                 ) : (
-                  <div className="student-home-table-wrap">
-                    <table className="student-home-table">
-                      <thead>
-                        <tr>
-                          <th>Nome</th>
-                          <th>E-mail</th>
-                        </tr>
-                      </thead>
+                  <div className="overflow-x-auto">
+                    <table className={tableClass}>
+                      <thead><tr><th className={thClass}>Nome</th><th className={thClass}>E-mail</th></tr></thead>
                       <tbody>
                         {myClass.classmates.map((c) => (
                           <tr key={c.id}>
-                            <td>{c.name}</td>
-                            <td>
-                              <a href={`mailto:${c.email}`} className="student-home-mail">
-                                {c.email}
-                              </a>
+                            <td className={tdClass}>{c.name}</td>
+                            <td className={tdClass}>
+                              <a href={`mailto:${c.email}`} className="text-[var(--color-primary)] hover:underline">{c.email}</a>
                             </td>
                           </tr>
                         ))}
@@ -198,26 +196,22 @@ export function StudentHomeSection({ variant = 'all' }: StudentHomeSectionProps)
                     </table>
                   </div>
                 )}
-                <h4 className="student-home-subheading">Professores</h4>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">Professores</h4>
                 {myClass.teachers.length === 0 ? (
-                  <p className="student-home-empty">Nenhum professor vinculado à turma.</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Nenhum professor vinculado à turma.</p>
                 ) : (
-                  <div className="student-home-table-wrap">
-                    <table className="student-home-table">
-                      <thead>
-                        <tr>
-                          <th>Nome</th>
-                          <th>E-mail</th>
-                        </tr>
-                      </thead>
+                  <div className="overflow-x-auto">
+                    <table className={tableClass}>
+                      <thead><tr><th className={thClass}>Nome</th><th className={thClass}>E-mail</th></tr></thead>
                       <tbody>
                         {myClass.teachers.map((t) => (
                           <tr key={t.id}>
-                            <td>{t.name}</td>
-                            <td>
-                              <a href={`mailto:${t.email}`} className="student-home-mail">
-                                {t.email}
-                              </a>
+                            <td className={tdClass}>{t.name}</td>
+                            <td className={tdClass}>
+                              <a href={`mailto:${t.email}`} className="text-[var(--color-primary)] hover:underline">{t.email}</a>
                             </td>
                           </tr>
                         ))}
@@ -225,44 +219,43 @@ export function StudentHomeSection({ variant = 'all' }: StudentHomeSectionProps)
                     </table>
                   </div>
                 )}
-              </>
-            )}
-          </div>
-        )}
-
-        {showAbsences && (
-          <div className="student-home-card">
-            {variant !== 'absences' && <h3>Faltas por disciplina</h3>}
-            <p className="student-home-section-lead">
-              Total de aulas registradas como falta em cada componente curricular.
-            </p>
-            {!myClass?.className ? (
-              <p className="student-home-empty">Disponível quando você estiver vinculado a uma turma.</p>
-            ) : absencesByDiscipline.length === 0 ? (
-              <p className="student-home-empty">Nenhuma disciplina na turma.</p>
-            ) : (
-              <div className="student-home-table-wrap">
-                <table className="student-home-table">
-                  <thead>
-                    <tr>
-                      <th>Disciplina</th>
-                      <th className="student-home-th-narrow">Número de faltas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {absencesByDiscipline.map((row, i) => (
-                      <tr key={`${row.disciplineName}-${i}`}>
-                        <td>{row.disciplineName}</td>
-                        <td className="student-home-td-center">{row.absenceCount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </SectionCard>
+      )}
+
+      {showAbsences && (
+        <SectionCard title={variant !== 'absences' ? 'Faltas por disciplina' : undefined}>
+          <p className="text-sm text-[var(--color-text-muted)] mb-4">
+            Total de aulas registradas como falta em cada componente curricular.
+          </p>
+          {!myClass?.className ? (
+            <p className="text-sm text-[var(--color-text-muted)]">Disponível quando você estiver vinculado a uma turma.</p>
+          ) : absencesByDiscipline.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-muted)]">Nenhuma disciplina na turma.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tableClass}>
+                <thead>
+                  <tr>
+                    <th className={thClass}>Disciplina</th>
+                    <th className={`${thClass} text-right`}>Número de faltas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {absencesByDiscipline.map((row, i) => (
+                    <tr key={`${row.disciplineName}-${i}`}>
+                      <td className={tdClass}>{row.disciplineName}</td>
+                      <td className={`${tdClass} text-right font-medium`}>{row.absenceCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </SectionCard>
+      )}
     </div>
   )
 }
