@@ -1,0 +1,1735 @@
+
+================================================================================
+FILE: App.tsx
+================================================================================
+
+import { useCallback, useEffect, useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { Alert } from 'react-native';
+import { useFonts, Lato_400Regular, Lato_700Bold } from '@expo-google-fonts/lato';
+import * as SplashScreen from 'expo-splash-screen';
+import { OrcamentosList } from './screens/OrcamentosList';
+import { OrcamentoForm } from './screens/OrcamentoForm';
+import { OrcamentoDetail } from './screens/OrcamentoDetail';
+import { gerarId } from './utils/format';
+import type { Orcamento } from './types';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+type Nav =
+  | { screen: 'list' }
+  | { screen: 'form'; id: string | null }
+  | { screen: 'detail'; id: string };
+
+const SEED: Orcamento[] = [
+  {
+    id: 'seed-1',
+    titulo: 'Desenvolvimento de aplicativo de loja online',
+    cliente: 'Soluções Tecnológicas Beta',
+    itens: [
+      {
+        id: 'si1',
+        titulo: 'Desenvolvimento',
+        descricao: 'App completo',
+        quantidade: 1,
+        precoUnitario: 22300,
+      },
+    ],
+    status: 'Aprovado',
+    dataCriacao: '2025-01-15',
+    dataAtualizacao: '2025-02-01',
+  },
+  {
+    id: 'seed-2',
+    titulo: 'Consultoria em marketing digital',
+    cliente: 'Marketing Wizards',
+    itens: [
+      {
+        id: 'si2',
+        titulo: 'Consultoria',
+        descricao: 'Estratégia digital',
+        quantidade: 1,
+        precoUnitario: 4000,
+      },
+    ],
+    status: 'Rascunho',
+    dataCriacao: '2025-02-10',
+    dataAtualizacao: '2025-02-10',
+  },
+];
+
+export default function App() {
+  const [fontsLoaded] = useFonts({ Lato_400Regular, Lato_700Bold });
+  const [nav, setNav] = useState<Nav>({ screen: 'list' });
+  const [orcamentos, setOrcamentos] = useState<Orcamento[]>(SEED);
+
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  const navigate = useCallback((n: Nav) => setNav(n), []);
+
+  const salvarOrcamento = (o: Orcamento) => {
+    setOrcamentos((prev) => {
+      const idx = prev.findIndex((x) => x.id === o.id);
+      if (idx >= 0) {
+        const n = [...prev];
+        n[idx] = o;
+        return n;
+      }
+      return [o, ...prev];
+    });
+    setNav({ screen: 'detail', id: o.id });
+  };
+
+  const duplicar = (o: Orcamento) => {
+    const agora = new Date().toISOString().split('T')[0];
+    const novo: Orcamento = {
+      ...o,
+      id: gerarId(),
+      titulo: `${o.titulo} (cópia)`,
+      status: 'Rascunho',
+      dataCriacao: agora,
+      dataAtualizacao: agora,
+      itens: o.itens.map((i) => ({ ...i, id: gerarId() })),
+    };
+    setOrcamentos((prev) => [novo, ...prev]);
+    setNav({ screen: 'detail', id: novo.id });
+    Alert.alert('Duplicado', 'Uma cópia em rascunho foi criada.');
+  };
+
+  const excluir = (id: string) => {
+    setOrcamentos((prev) => prev.filter((o) => o.id !== id));
+    setNav({ screen: 'list' });
+  };
+
+  const compartilhar = (o: Orcamento) => {
+    const texto = `${o.titulo}\nCliente: ${o.cliente}\nStatus: ${o.status}`;
+    Alert.alert('Compartilhar', texto);
+  };
+
+  if (!fontsLoaded) return null;
+
+  if (nav.screen === 'form') {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <OrcamentoForm
+          orcamentoId={nav.id}
+          orcamentos={orcamentos}
+          onSave={salvarOrcamento}
+          onCancel={() =>
+            nav.id
+              ? setNav({ screen: 'detail', id: nav.id })
+              : setNav({ screen: 'list' })
+          }
+        />
+      </>
+    );
+  }
+
+  if (nav.screen === 'detail') {
+    const o = orcamentos.find((x) => x.id === nav.id);
+    if (!o) {
+      return (
+        <>
+          <StatusBar style="dark" />
+          <OrcamentosList orcamentos={orcamentos} setOrcamentos={setOrcamentos} navigate={navigate} />
+        </>
+      );
+    }
+    return (
+      <>
+        <StatusBar style="dark" />
+        <OrcamentoDetail
+          orcamento={o}
+          onBack={() => setNav({ screen: 'list' })}
+          onEdit={() => setNav({ screen: 'form', id: o.id })}
+          onDuplicate={() => duplicar(o)}
+          onDelete={() => excluir(o.id)}
+          onShare={() => compartilhar(o)}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <StatusBar style="dark" />
+      <OrcamentosList
+        orcamentos={orcamentos}
+        setOrcamentos={setOrcamentos}
+        navigate={navigate}
+      />
+    </>
+  );
+}
+
+
+================================================================================
+FILE: types/index.ts
+================================================================================
+
+export type StatusOrcamento =
+  | 'Rascunho'
+  | 'Enviado'
+  | 'Aprovado'
+  | 'Recusado';
+
+export interface ItemServico {
+  id: string;
+  descricao: string;
+  titulo?: string;
+  quantidade: number;
+  precoUnitario: number;
+}
+
+export interface Orcamento {
+  id: string;
+  cliente: string;
+  titulo: string;
+  itens: ItemServico[];
+  percentualDesconto?: number;
+  status: StatusOrcamento;
+  dataCriacao: string;
+  dataAtualizacao: string;
+}
+
+export type SortOption = 'recent' | 'oldest' | 'high' | 'low';
+
+
+================================================================================
+FILE: theme/colors.ts
+================================================================================
+
+/** Design system — manual (Imagem 2) */
+import type { StatusOrcamento } from '../types';
+
+export const purpleLight = '#DFDAF2';
+export const purpleBase = '#6A46EB';
+export const gray100 = '#FAFAFA';
+export const gray200 = '#F0F0F0';
+export const gray300 = '#E6E5E5';
+export const gray400 = '#A1A2A1';
+export const gray500 = '#676767';
+export const gray600 = '#4A4A4A';
+export const gray700 = '#0F0F0F';
+export const dangerLight = '#FFD6D6';
+export const dangerBase = '#DB4D4D';
+export const dangerDark = '#9E4949';
+export const successLight = '#BFF7BE';
+export const successBase = '#4BB84A';
+export const successDark = '#30752F';
+export const infoLight = '#CEEFFF';
+export const infoBase = '#2AA1D9';
+export const infoDark = '#1D7096';
+
+export const statusColors: Record<
+  StatusOrcamento,
+  { bg: string; text: string; dot: string }
+> = {
+  Enviado: { bg: infoLight, text: infoDark, dot: infoBase },
+  Rascunho: { bg: gray200, text: gray500, dot: gray500 },
+  Aprovado: { bg: successLight, text: successDark, dot: successBase },
+  Recusado: { bg: dangerLight, text: dangerDark, dot: dangerBase },
+};
+
+
+================================================================================
+FILE: theme/spacing.ts
+================================================================================
+
+export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 };
+export const radius = { sm: 6, md: 8, lg: 12, pill: 9999 };
+
+
+================================================================================
+FILE: theme/fonts.ts
+================================================================================
+
+export const fonts = {
+  regular: 'Lato_400Regular',
+  bold: 'Lato_700Bold',
+};
+
+
+================================================================================
+FILE: theme/typography.ts
+================================================================================
+
+import { TextStyle } from 'react-native';
+import { fonts } from './fonts';
+
+/** Lato — line height 140% (manual) */
+export const typography = {
+  titleLg: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    lineHeight: 25.2,
+    fontWeight: '700' as TextStyle['fontWeight'],
+  },
+  titleMd: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    lineHeight: 22.4,
+    fontWeight: '700' as TextStyle['fontWeight'],
+  },
+  titleSm: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    lineHeight: 19.6,
+    fontWeight: '700' as TextStyle['fontWeight'],
+  },
+  titleXs: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    lineHeight: 16.8,
+    fontWeight: '700' as TextStyle['fontWeight'],
+  },
+  textMd: {
+    fontFamily: fonts.regular,
+    fontSize: 16,
+    lineHeight: 22.4,
+    fontWeight: '400' as TextStyle['fontWeight'],
+  },
+  textSm: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 19.6,
+    fontWeight: '400' as TextStyle['fontWeight'],
+  },
+  textXs: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    lineHeight: 16.8,
+    fontWeight: '400' as TextStyle['fontWeight'],
+  },
+};
+
+
+================================================================================
+FILE: utils/format.ts
+================================================================================
+
+export function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+export function gerarId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2, 11);
+}
+
+export function calcularTotalOrcamento(orcamento: {
+  itens: { quantidade: number; precoUnitario: number }[];
+  percentualDesconto?: number;
+}): { subtotal: number; desconto: number; total: number } {
+  const subtotal = orcamento.itens.reduce(
+    (acc, i) => acc + i.quantidade * i.precoUnitario,
+    0
+  );
+  const desconto = orcamento.percentualDesconto
+    ? subtotal * (orcamento.percentualDesconto / 100)
+    : 0;
+  return { subtotal, desconto, total: subtotal - desconto };
+}
+
+
+================================================================================
+FILE: components/Button.tsx
+================================================================================
+
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  ActivityIndicator,
+} from 'react-native';
+import { purpleBase, purpleLight, dangerBase } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+
+type Variant = 'primary' | 'secondary' | 'danger';
+
+export function Button({
+  title,
+  onPress,
+  variant = 'primary',
+  icon,
+  style,
+  disabled,
+  loading,
+}: {
+  title: string;
+  onPress: () => void;
+  variant?: Variant;
+  icon?: React.ReactNode;
+  style?: ViewStyle;
+  disabled?: boolean;
+  loading?: boolean;
+}) {
+  const v = {
+    primary: { bg: purpleBase, border: purpleBase, color: '#FFF', borderW: 0 },
+    secondary: { bg: 'transparent', border: purpleBase, color: purpleBase, borderW: 1.5 },
+    danger: { bg: 'transparent', border: dangerBase, color: dangerBase, borderW: 1.5 },
+  }[variant];
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.btn,
+        { backgroundColor: v.bg, borderColor: v.border, borderWidth: v.borderW },
+        disabled && styles.disabled,
+        style,
+      ]}
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.85}
+    >
+      {loading ? (
+        <ActivityIndicator color={v.color} />
+      ) : (
+        <>
+          {icon}
+          <Text style={[styles.label, { color: v.color }]}>{title}</Text>
+        </>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    gap: spacing.sm,
+    minHeight: 48,
+  },
+  label: { ...typography.textMd, fontWeight: '600' },
+  disabled: { opacity: 0.45 },
+});
+
+
+================================================================================
+FILE: components/FieldInput.tsx
+================================================================================
+
+import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
+import { gray100, gray200, gray400, gray600, gray700, dangerBase } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { fonts } from '../theme/fonts';
+import { radius, spacing } from '../theme/spacing';
+
+export function FieldInput({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  error,
+  multiline,
+  keyboardType,
+  prefix,
+  right,
+}: {
+  label?: string;
+  value: string;
+  onChangeText: (t: string) => void;
+  placeholder?: string;
+  error?: boolean;
+  multiline?: boolean;
+  keyboardType?: TextInputProps['keyboardType'];
+  prefix?: string;
+  right?: React.ReactNode;
+}) {
+  const borderColor = error ? dangerBase : gray200;
+  return (
+    <View style={styles.wrap}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <View style={[styles.row, { borderColor }]}>
+        {prefix ? (
+          <Text style={[styles.prefix, error && { color: dangerBase }]}>{prefix}</Text>
+        ) : null}
+        <TextInput
+          style={[styles.input, multiline && styles.multiline]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={gray400}
+          multiline={multiline}
+          keyboardType={keyboardType}
+        />
+        {right}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { marginBottom: spacing.lg },
+  label: { ...typography.textSm, color: gray600, marginBottom: spacing.xs },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+    backgroundColor: gray100,
+    paddingHorizontal: spacing.md,
+    minHeight: 48,
+  },
+  prefix: { ...typography.textMd, color: gray600, marginRight: spacing.xs },
+  input: {
+    flex: 1,
+    ...typography.textMd,
+    fontFamily: fonts.regular,
+    color: gray700,
+    paddingVertical: spacing.sm,
+  },
+  multiline: { minHeight: 88, textAlignVertical: 'top', paddingTop: spacing.md },
+});
+
+
+================================================================================
+FILE: components/StatusBadge.tsx
+================================================================================
+
+import { View, Text, StyleSheet } from 'react-native';
+import { statusColors } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+import type { StatusOrcamento } from '../types';
+
+export function StatusBadge({ status }: { status: StatusOrcamento }) {
+  const c = statusColors[status];
+  return (
+    <View style={[styles.wrap, { backgroundColor: c.bg }]}>
+      <View style={[styles.dot, { backgroundColor: c.dot }]} />
+      <Text style={[styles.text, { color: c.text }]}>{status}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    gap: spacing.xs,
+  },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  text: { ...typography.textXs, fontWeight: '600' },
+});
+
+
+================================================================================
+FILE: components/BudgetCard.tsx
+================================================================================
+
+import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { gray200, gray400, gray700 } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+import { StatusBadge } from './StatusBadge';
+import { formatCurrency, calcularTotalOrcamento } from '../utils/format';
+import type { Orcamento } from '../types';
+
+export function BudgetCard({
+  orcamento,
+  onPress,
+}: {
+  orcamento: Orcamento;
+  onPress: () => void;
+}) {
+  const { total } = calcularTotalOrcamento(orcamento);
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.92}>
+      <View style={styles.header}>
+        <Text style={styles.titulo} numberOfLines={2}>
+          {orcamento.titulo}
+        </Text>
+        <StatusBadge status={orcamento.status} />
+      </View>
+      <Text style={styles.cliente} numberOfLines={1}>
+        {orcamento.cliente}
+      </Text>
+      <Text style={styles.valor}>{formatCurrency(total)}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFF',
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: gray200,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  titulo: { ...typography.titleMd, color: gray700, flex: 1 },
+  cliente: { ...typography.textSm, color: gray400, marginTop: spacing.xs },
+  valor: { ...typography.titleMd, color: gray700, marginTop: spacing.md, alignSelf: 'flex-end' },
+});
+
+
+================================================================================
+FILE: components/FilterSortModal.tsx
+================================================================================
+
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { purpleBase, gray200, gray500, gray600, gray700 } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+import { Button } from './Button';
+import type { StatusOrcamento, SortOption } from '../types';
+
+const STATUS_LIST: StatusOrcamento[] = [
+  'Rascunho',
+  'Enviado',
+  'Aprovado',
+  'Recusado',
+];
+
+const SORT_LABELS: Record<SortOption, string> = {
+  recent: 'Mais recente',
+  oldest: 'Mais antigo',
+  high: 'Maior valor',
+  low: 'Menor valor',
+};
+
+export function FilterSortModal({
+  visible,
+  onClose,
+  selectedStatuses,
+  onToggleStatus,
+  sort,
+  onSortChange,
+  onReset,
+  onApply,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  selectedStatuses: Set<StatusOrcamento>;
+  onToggleStatus: (s: StatusOrcamento) => void;
+  sort: SortOption;
+  onSortChange: (s: SortOption) => void;
+  onReset: () => void;
+  onApply: () => void;
+}) {
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Filtrar e ordenar</Text>
+            <TouchableOpacity onPress={onClose} hitSlop={12}>
+              <Ionicons name="close" size={24} color={gray700} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.body}>
+            <Text style={styles.section}>Status</Text>
+            {STATUS_LIST.map((s) => {
+              const on = selectedStatuses.has(s);
+              return (
+                <TouchableOpacity
+                  key={s}
+                  style={styles.row}
+                  onPress={() => onToggleStatus(s)}
+                >
+                  <View style={[styles.checkbox, on && styles.checkboxOn]}>
+                    {on ? <Ionicons name="checkmark" size={14} color="#FFF" /> : null}
+                  </View>
+                  <Text style={styles.rowLabel}>{s}</Text>
+                </TouchableOpacity>
+              );
+            })}
+            <Text style={[styles.section, { marginTop: spacing.xl }]}>Ordenação</Text>
+            {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+              <TouchableOpacity
+                key={key}
+                style={styles.row}
+                onPress={() => onSortChange(key)}
+              >
+                <View style={[styles.radio, sort === key && styles.radioOn]}>
+                  {sort === key ? <View style={styles.radioDot} /> : null}
+                </View>
+                <Text style={styles.rowLabel}>{SORT_LABELS[key]}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={styles.footer}>
+            <TouchableOpacity onPress={onReset}>
+              <Text style={styles.reset}>Resetar filtros</Text>
+            </TouchableOpacity>
+            <Button
+              title="Aplicar"
+              onPress={() => {
+                onApply();
+                onClose();
+              }}
+              style={styles.applyBtn}
+            />
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    maxHeight: '88%',
+    paddingBottom: spacing.xxl,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: gray200,
+  },
+  title: { ...typography.titleLg, color: purpleBase },
+  body: { padding: spacing.lg },
+  section: { ...typography.titleSm, color: gray700, marginBottom: spacing.md },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    gap: spacing.md,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: radius.sm,
+    borderWidth: 2,
+    borderColor: gray500,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxOn: { backgroundColor: purpleBase, borderColor: purpleBase },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: gray500,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOn: { borderColor: purpleBase },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: purpleBase },
+  rowLabel: { ...typography.textMd, color: gray700 },
+  footer: { paddingHorizontal: spacing.lg, gap: spacing.md },
+  reset: { ...typography.textMd, color: gray600, textAlign: 'center', paddingVertical: spacing.sm },
+  applyBtn: { width: '100%' },
+});
+
+
+================================================================================
+FILE: components/ServiceModal.tsx
+================================================================================
+
+import React, { useEffect, useState } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  TextInput,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { purpleBase, gray100, gray200, gray400, gray600, gray700, dangerBase } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+import { Button } from './Button';
+import { FieldInput } from './FieldInput';
+import type { ItemServico } from '../types';
+
+export function ServiceModal({
+  visible,
+  onClose,
+  initial,
+  onSave,
+  onDelete,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  initial: ItemServico | null;
+  onSave: (item: ItemServico) => void;
+  onDelete?: () => void;
+}) {
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [preco, setPreco] = useState('');
+  const [qtd, setQtd] = useState('1');
+
+  useEffect(() => {
+    if (!visible) return;
+    if (initial) {
+      setTitulo(initial.titulo ?? '');
+      setDescricao(initial.descricao ?? '');
+      setPreco(String(initial.precoUnitario));
+      setQtd(String(initial.quantidade));
+    } else {
+      setTitulo('');
+      setDescricao('');
+      setPreco('');
+      setQtd('1');
+    }
+  }, [visible, initial?.id]);
+
+  const handleSave = () => {
+    const p = parseFloat(preco.replace(',', '.')) || 0;
+    const q = parseInt(qtd, 10) || 1;
+    const nome = titulo.trim() || descricao.trim();
+    if (!nome) return;
+    onSave({
+      id: initial?.id ?? `i_${Date.now()}`,
+      titulo: titulo.trim() || descricao.trim(),
+      descricao: descricao.trim() || titulo.trim(),
+      quantidade: q,
+      precoUnitario: p,
+    });
+    onClose();
+  };
+
+  const inc = (d: number) => {
+    const n = Math.max(1, (parseInt(qtd, 10) || 1) + d);
+    setQtd(String(n));
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Serviço</Text>
+            <TouchableOpacity onPress={onClose} hitSlop={12}>
+              <Ionicons name="close" size={24} color={gray700} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
+            <FieldInput
+              label="Nome do serviço"
+              value={titulo}
+              onChangeText={setTitulo}
+              placeholder="Ex: Design de interfaces"
+            />
+            <FieldInput
+              label="Descrição"
+              value={descricao}
+              onChangeText={setDescricao}
+              placeholder="Detalhes do serviço"
+              multiline
+            />
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.label}>Preço unitário</Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.rs}>R$</Text>
+                  <TextInput
+                    style={styles.priceInput}
+                    value={preco}
+                    onChangeText={setPreco}
+                    placeholder="0,00"
+                    placeholderTextColor={gray400}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              </View>
+              <View style={styles.half}>
+                <Text style={styles.label}>Quantidade</Text>
+                <View style={styles.qtyRow}>
+                  <TouchableOpacity style={styles.qtyBtn} onPress={() => inc(-1)}>
+                    <Ionicons name="remove" size={20} color={purpleBase} />
+                  </TouchableOpacity>
+                  <Text style={styles.qtyVal}>{qtd}</Text>
+                  <TouchableOpacity style={styles.qtyBtn} onPress={() => inc(1)}>
+                    <Ionicons name="add" size={20} color={purpleBase} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+          <View style={styles.footer}>
+            {initial && onDelete ? (
+              <TouchableOpacity style={styles.trash} onPress={onDelete}>
+                <Ionicons name="trash-outline" size={24} color={dangerBase} />
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 40 }} />
+            )}
+            <Button title="Salvar" onPress={handleSave} style={{ flex: 1 }} />
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    maxHeight: '92%',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: gray200,
+  },
+  title: { ...typography.titleLg, color: purpleBase },
+  body: { padding: spacing.lg, maxHeight: 420 },
+  row: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.sm },
+  half: { flex: 1 },
+  label: { ...typography.textSm, color: gray600, marginBottom: spacing.xs },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: gray200,
+    borderRadius: radius.md,
+    backgroundColor: gray100,
+    paddingHorizontal: spacing.md,
+    minHeight: 48,
+  },
+  rs: { ...typography.textMd, color: gray600, marginRight: spacing.xs },
+  priceInput: { flex: 1, ...typography.textMd, color: gray700, paddingVertical: spacing.sm },
+  qtyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: gray200,
+    borderRadius: radius.md,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  qtyBtn: { padding: spacing.sm },
+  qtyVal: { ...typography.titleMd, color: gray700, minWidth: 28, textAlign: 'center' },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: gray200,
+  },
+  trash: { padding: spacing.sm },
+});
+
+
+================================================================================
+FILE: screens/OrcamentosList.tsx
+================================================================================
+
+import React, { useMemo, useState } from 'react';
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { purpleBase, gray100, gray200, gray400, gray500, gray700 } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+import { Button } from '../components/Button';
+import { BudgetCard } from '../components/BudgetCard';
+import { FilterSortModal } from '../components/FilterSortModal';
+import { calcularTotalOrcamento } from '../utils/format';
+import type { Orcamento, StatusOrcamento, SortOption } from '../types';
+
+type Nav = { screen: 'list' } | { screen: 'form'; id: string | null } | { screen: 'detail'; id: string };
+
+export function OrcamentosList({
+  orcamentos,
+  setOrcamentos,
+  navigate,
+}: {
+  orcamentos: Orcamento[];
+  setOrcamentos: React.Dispatch<React.SetStateAction<Orcamento[]>>;
+  navigate: (n: Nav) => void;
+}) {
+  const [busca, setBusca] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<Set<StatusOrcamento>>(
+    () => new Set(['Rascunho', 'Enviado', 'Aprovado', 'Recusado'])
+  );
+  const [sort, setSort] = useState<SortOption>('recent');
+  const [draftStatuses, setDraftStatuses] = useState<Set<StatusOrcamento>>(
+    () => new Set(['Rascunho', 'Enviado', 'Aprovado', 'Recusado'])
+  );
+  const [draftSort, setDraftSort] = useState<SortOption>('recent');
+
+  const rascunhos = orcamentos.filter((o) => o.status === 'Rascunho').length;
+
+  const lista = useMemo(() => {
+    let rows = [...orcamentos];
+    const statusFilter =
+      selectedStatuses.size === 0
+        ? null
+        : selectedStatuses.size === 4
+          ? null
+          : selectedStatuses;
+    if (statusFilter) {
+      rows = rows.filter((o) => statusFilter.has(o.status));
+    }
+    if (busca.trim()) {
+      const q = busca.toLowerCase();
+      rows = rows.filter(
+        (o) =>
+          o.titulo.toLowerCase().includes(q) || o.cliente.toLowerCase().includes(q)
+      );
+    }
+    rows.sort((a, b) => {
+      const ta = calcularTotalOrcamento(a).total;
+      const tb = calcularTotalOrcamento(b).total;
+      const da = new Date(a.dataAtualizacao).getTime();
+      const db = new Date(b.dataAtualizacao).getTime();
+      switch (sort) {
+        case 'recent':
+          return db - da;
+        case 'oldest':
+          return da - db;
+        case 'high':
+          return tb - ta;
+        case 'low':
+          return ta - tb;
+        default:
+          return 0;
+      }
+    });
+    return rows;
+  }, [orcamentos, busca, selectedStatuses, sort]);
+
+  const openFilter = () => {
+    setDraftStatuses(new Set(selectedStatuses));
+    setDraftSort(sort);
+    setFilterOpen(true);
+  };
+
+  const toggleDraftStatus = (s: StatusOrcamento) => {
+    setDraftStatuses((prev) => {
+      const n = new Set(prev);
+      if (n.has(s)) n.delete(s);
+      else n.add(s);
+      return n;
+    });
+  };
+
+  const resetFilters = () => {
+    setDraftStatuses(new Set(['Rascunho', 'Enviado', 'Aprovado', 'Recusado']));
+    setDraftSort('recent');
+  };
+
+  const applyFilters = () => {
+    setSelectedStatuses(new Set(draftStatuses));
+    setSort(draftSort);
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Orçamentos</Text>
+          <Text style={styles.subtitle}>
+            Você tem {rascunhos} {rascunhos === 1 ? 'item' : 'itens'} em rascunho
+          </Text>
+        </View>
+        <Button
+          title="Novo"
+          onPress={() => navigate({ screen: 'form', id: null })}
+          icon={<Ionicons name="add" size={20} color="#FFF" />}
+        />
+      </View>
+      <View style={styles.searchRow}>
+        <View style={styles.search}>
+          <Ionicons name="search" size={20} color={gray400} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Título ou cliente"
+            placeholderTextColor={gray400}
+            value={busca}
+            onChangeText={setBusca}
+          />
+        </View>
+        <TouchableOpacity style={styles.filterBtn} onPress={openFilter}>
+          <Ionicons name="options-outline" size={22} color={purpleBase} />
+        </TouchableOpacity>
+      </View>
+      <ScrollView        style={styles.scroll}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      >
+        {lista.length === 0 ? (
+          <Text style={styles.empty}>Nenhum orçamento encontrado</Text>
+        ) : (
+          lista.map((o) => (
+            <BudgetCard
+              key={o.id}
+              orcamento={o}
+              onPress={() => navigate({ screen: 'detail', id: o.id })}
+            />
+          ))
+        )}
+      </ScrollView>
+      <FilterSortModal
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        selectedStatuses={draftStatuses}
+        onToggleStatus={toggleDraftStatus}
+        sort={draftSort}
+        onSortChange={setDraftSort}
+        onReset={resetFilters}
+        onApply={applyFilters}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: gray100 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: 56,
+    paddingBottom: spacing.md,
+  },
+  title: { ...typography.titleLg, color: purpleBase },
+  subtitle: { ...typography.textSm, color: gray500, marginTop: spacing.xs },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  search: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: gray200,
+    paddingHorizontal: spacing.md,
+  },
+  searchIcon: { marginRight: spacing.sm },
+  searchInput: { flex: 1, ...typography.textMd, color: gray700, paddingVertical: spacing.md },
+  filterBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: gray200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scroll: { flex: 1 },
+  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
+  empty: { ...typography.textMd, color: gray500, textAlign: 'center', marginTop: spacing.xxl },
+});
+
+
+================================================================================
+FILE: screens/OrcamentoForm.tsx
+================================================================================
+
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  purpleBase,
+  purpleLight,
+  gray100,
+  gray200,
+  gray400,
+  gray500,
+  gray600,
+  gray700,
+  dangerBase,
+} from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+import { Button } from '../components/Button';
+import { FieldInput } from '../components/FieldInput';
+import { ServiceModal } from '../components/ServiceModal';
+import { formatCurrency, gerarId, calcularTotalOrcamento } from '../utils/format';
+import type { Orcamento, ItemServico, StatusOrcamento } from '../types';
+
+const STATUS_ORDER: StatusOrcamento[] = [
+  'Rascunho',
+  'Enviado',
+  'Aprovado',
+  'Recusado',
+];
+
+export function OrcamentoForm({
+  orcamentoId,
+  orcamentos,
+  onSave,
+  onCancel,
+}: {
+  orcamentoId: string | null;
+  orcamentos: Orcamento[];
+  onSave: (o: Orcamento) => void;
+  onCancel: () => void;
+}) {
+  const existente = orcamentoId
+    ? orcamentos.find((o) => o.id === orcamentoId)
+    : undefined;
+
+  const [titulo, setTitulo] = useState('');
+  const [cliente, setCliente] = useState('');
+  const [status, setStatus] = useState<StatusOrcamento>('Rascunho');
+  const [itens, setItens] = useState<ItemServico[]>([]);
+  const [descontoPct, setDescontoPct] = useState('');
+  const [modalItem, setModalItem] = useState<ItemServico | null | 'new'>(null);
+
+  useEffect(() => {
+    if (existente) {
+      setTitulo(existente.titulo);
+      setCliente(existente.cliente);
+      setStatus(existente.status);
+      setItens(existente.itens.map((i) => ({ ...i })));
+      setDescontoPct(
+        existente.percentualDesconto != null ? String(existente.percentualDesconto) : ''
+      );
+    } else {
+      setTitulo('');
+      setCliente('');
+      setStatus('Rascunho');
+      setItens([]);
+      setDescontoPct('');
+    }
+  }, [orcamentoId, existente?.id]);
+
+  const pct = parseFloat(descontoPct.replace(',', '.')) || 0;
+  const draft: Orcamento = {
+    id: existente?.id ?? 'temp',
+    titulo,
+    cliente,
+    itens,
+    percentualDesconto: pct > 0 ? pct : undefined,
+    status,
+    dataCriacao: existente?.dataCriacao ?? '',
+    dataAtualizacao: existente?.dataAtualizacao ?? '',
+  };
+  const { subtotal, desconto, total } = calcularTotalOrcamento(draft);
+
+  const abrirNovoServico = () => setModalItem('new');
+
+  const salvarItem = (item: ItemServico) => {
+    setItens((prev) => {
+      const idx = prev.findIndex((i) => i.id === item.id);
+      if (idx >= 0) {
+        const n = [...prev];
+        n[idx] = item;
+        return n;
+      }
+      return [...prev, item];
+    });
+  };
+
+  const removerItem = (id: string) => {
+    setItens((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const handleSalvar = () => {
+    if (!titulo.trim()) {
+      Alert.alert('Atenção', 'Informe o título.');
+      return;
+    }
+    if (!cliente.trim()) {
+      Alert.alert('Atenção', 'Informe o cliente.');
+      return;
+    }
+    if (itens.length === 0) {
+      Alert.alert('Atenção', 'Adicione pelo menos um serviço.');
+      return;
+    }
+    const agora = new Date().toISOString().split('T')[0];
+    const o: Orcamento = {
+      id: existente?.id ?? gerarId(),
+      titulo: titulo.trim(),
+      cliente: cliente.trim(),
+      itens: itens.map((i) => ({ ...i })),
+      percentualDesconto: pct > 0 ? pct : undefined,
+      status,
+      dataCriacao: existente?.dataCriacao ?? agora,
+      dataAtualizacao: agora,
+    };
+    onSave(o);
+    Alert.alert('Salvo', `Orçamento "${o.titulo}" salvo com sucesso.`);
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.top}>
+        <TouchableOpacity onPress={onCancel} style={styles.back} hitSlop={12}>
+          <Ionicons name="chevron-back" size={26} color={purpleBase} />
+        </TouchableOpacity>
+        <Text style={styles.screenTitle}>Orçamento</Text>
+        <View style={{ width: 26 }} />
+      </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.section}>Informações gerais</Text>
+        <FieldInput label="Título" value={titulo} onChangeText={setTitulo} placeholder="Título" />
+        <FieldInput
+          label="Cliente"
+          value={cliente}
+          onChangeText={setCliente}
+          placeholder="Nome do cliente"
+        />
+        <Text style={styles.section}>Status</Text>
+        <View style={styles.statusRow}>
+          {STATUS_ORDER.map((s) => (
+            <TouchableOpacity
+              key={s}
+              style={[styles.statusChip, status === s && styles.statusChipOn]}
+              onPress={() => setStatus(s)}
+            >
+              <View style={[styles.radio, status === s && styles.radioOn]}>
+                {status === s ? <View style={styles.radioDot} /> : null}
+              </View>
+              <Text style={[styles.statusLabel, status === s && styles.statusLabelOn]}>{s}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={styles.section}>Serviços inclusos</Text>
+        {itens.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.servicoCard}
+            onPress={() => setModalItem(item)}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.servTitulo} numberOfLines={1}>
+                {item.titulo ?? item.descricao}
+              </Text>
+              <Text style={styles.servDesc} numberOfLines={1}>
+                {item.descricao}
+              </Text>
+              <Text style={styles.servMeta}>
+                {formatCurrency(item.precoUnitario)} · Qt: {item.quantidade}
+              </Text>
+            </View>
+            <Ionicons name="pencil" size={20} color={purpleBase} />
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={styles.addServ} onPress={abrirNovoServico}>
+          <Ionicons name="add-circle-outline" size={22} color={purpleBase} />
+          <Text style={styles.addServText}>Adicionar serviço</Text>
+        </TouchableOpacity>
+        <Text style={styles.section}>Investimento</Text>
+        <View style={styles.investCard}>
+          <View style={styles.investRow}>
+            <Text style={styles.investLabel}>
+              Subtotal ({itens.length} {itens.length === 1 ? 'item' : 'itens'})
+            </Text>
+            <Text style={styles.investVal}>{formatCurrency(subtotal)}</Text>
+          </View>
+          <View style={styles.discRow}>
+            <FieldInput
+              label="Desconto (%)"
+              value={descontoPct}
+              onChangeText={setDescontoPct}
+              placeholder="0"
+              keyboardType="decimal-pad"
+            />
+            {desconto > 0 ? (
+              <Text style={styles.discVal}>- {formatCurrency(desconto)}</Text>
+            ) : null}
+          </View>
+          <View style={[styles.investRow, styles.totalRow]}>
+            <Text style={styles.totalLabel}>Valor total</Text>
+            <Text style={styles.totalVal}>{formatCurrency(total)}</Text>
+          </View>
+        </View>
+      </ScrollView>
+      <View style={styles.footer}>
+        <Button title="Cancelar" variant="secondary" onPress={onCancel} style={{ flex: 1 }} />
+        <Button title="Salvar" onPress={handleSalvar} style={{ flex: 1 }} />
+      </View>
+      <ServiceModal
+        visible={modalItem !== null}
+        onClose={() => setModalItem(null)}
+        initial={modalItem === 'new' ? null : modalItem}
+        onSave={salvarItem}
+        onDelete={
+          modalItem && modalItem !== 'new'
+            ? () => {
+                removerItem((modalItem as ItemServico).id);
+                setModalItem(null);
+              }
+            : undefined
+        }
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: gray100 },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingTop: 52,
+    paddingBottom: spacing.sm,
+  },
+  back: { padding: spacing.xs },
+  screenTitle: { ...typography.titleLg, color: purpleBase },
+  scroll: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  section: { ...typography.titleSm, color: gray700, marginTop: spacing.md, marginBottom: spacing.sm },
+  statusRow: { gap: spacing.sm },
+  statusChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    backgroundColor: '#FFF',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: gray200,
+    gap: spacing.md,
+  },
+  statusChipOn: { borderColor: purpleBase, backgroundColor: purpleLight },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: gray500,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOn: { borderColor: purpleBase },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: purpleBase },
+  statusLabel: { ...typography.textMd, color: gray600 },
+  statusLabelOn: { color: gray700, fontWeight: '600' },
+  servicoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: gray200,
+    marginBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  servTitulo: { ...typography.titleSm, color: gray700 },
+  servDesc: { ...typography.textSm, color: gray500, marginTop: 2 },
+  servMeta: { ...typography.textSm, color: gray600, marginTop: 4 },
+  addServ: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+    borderWidth: 1.5,
+    borderColor: purpleBase,
+    borderStyle: 'dashed',
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+  },
+  addServText: { ...typography.textMd, color: purpleBase, fontWeight: '600' },
+  investCard: {
+    backgroundColor: '#FFF',
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: gray200,
+  },
+  investRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  investLabel: { ...typography.textMd, color: gray600 },
+  investVal: { ...typography.titleSm, color: gray700 },
+  discRow: { marginBottom: spacing.sm },
+  discVal: { ...typography.textSm, color: dangerBase, textAlign: 'right', marginTop: -spacing.sm },
+  totalRow: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: gray200 },
+  totalLabel: { ...typography.titleMd, color: gray700 },
+  totalVal: { ...typography.titleLg, color: purpleBase },
+  footer: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    padding: spacing.lg,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: gray200,
+  },
+});
+
+
+================================================================================
+FILE: screens/OrcamentoDetail.tsx
+================================================================================
+
+import React from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  purpleBase,
+  gray100,
+  gray200,
+  gray400,
+  gray500,
+  gray600,
+  gray700,
+  successLight,
+  successDark,
+  dangerBase,
+} from '../theme/colors';
+import { typography } from '../theme/typography';
+import { radius, spacing } from '../theme/spacing';
+import { StatusBadge } from '../components/StatusBadge';
+import { Button } from '../components/Button';
+import { formatCurrency, calcularTotalOrcamento } from '../utils/format';
+import type { Orcamento } from '../types';
+
+export function OrcamentoDetail({
+  orcamento,
+  onBack,
+  onEdit,
+  onDuplicate,
+  onDelete,
+  onShare,
+}: {
+  orcamento: Orcamento;
+  onBack: () => void;
+  onEdit: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  onShare: () => void;
+}) {
+  const { subtotal, desconto, total } = calcularTotalOrcamento(orcamento);
+  const pct = orcamento.percentualDesconto;
+
+  const confirmDelete = () => {
+    Alert.alert('Excluir', 'Deseja excluir este orçamento?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: onDelete },
+    ]);
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.top}>
+        <TouchableOpacity onPress={onBack} hitSlop={12}>
+          <Ionicons name="chevron-back" size={26} color={purpleBase} />
+        </TouchableOpacity>
+        <View style={styles.topCenter}>
+          <Text style={styles.idText}>Orçamento #{orcamento.id.slice(-6).toUpperCase()}</Text>
+          <StatusBadge status={orcamento.status} />
+        </View>
+        <View style={{ width: 26 }} />
+      </View>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <View style={styles.card}>
+          <Text style={styles.titulo}>{orcamento.titulo}</Text>
+          <Text style={styles.cliente}>{orcamento.cliente}</Text>
+          <Text style={styles.meta}>Criado em {orcamento.dataCriacao}</Text>
+          <Text style={styles.meta}>Atualizado em {orcamento.dataAtualizacao}</Text>
+        </View>
+        <Text style={styles.section}>Serviços inclusos</Text>
+        {orcamento.itens.map((item) => (
+          <View key={item.id} style={styles.itemRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.itemTit}>{item.titulo ?? item.descricao}</Text>
+              <Text style={styles.itemDesc} numberOfLines={2}>
+                {item.descricao}
+              </Text>
+            </View>
+            <Text style={styles.itemPrice}>
+              {formatCurrency(item.precoUnitario * item.quantidade)}
+            </Text>
+          </View>
+        ))}
+        <Text style={styles.section}>Investimento</Text>
+        <View style={styles.invest}>
+          <View style={styles.row}>
+            <Text style={styles.rowLab}>Subtotal</Text>
+            <Text style={styles.rowVal}>{formatCurrency(subtotal)}</Text>
+          </View>
+          {pct != null && pct > 0 ? (
+            <View style={styles.row}>
+              <View style={styles.offBadge}>
+                <Text style={styles.offText}>{pct}% off</Text>
+              </View>
+              <Text style={styles.disc}>- {formatCurrency(desconto)}</Text>
+            </View>
+          ) : null}
+          <View style={[styles.row, styles.totalRow]}>
+            <Text style={styles.totalLab}>Valor total</Text>
+            <Text style={styles.totalVal}>{formatCurrency(total)}</Text>
+          </View>
+        </View>
+      </ScrollView>
+      <View style={styles.toolbar}>
+        <TouchableOpacity style={styles.toolBtn} onPress={confirmDelete}>
+          <Ionicons name="trash-outline" size={22} color={gray600} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.toolBtn} onPress={onDuplicate}>
+          <Ionicons name="copy-outline" size={22} color={gray600} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.toolBtn} onPress={onEdit}>
+          <Ionicons name="pencil" size={22} color={gray600} />
+        </TouchableOpacity>
+        <Button
+          title="Compartilhar"
+          onPress={onShare}
+          icon={<Ionicons name="paper-plane" size={18} color="#FFF" />}
+          style={{ flex: 1, marginLeft: spacing.sm }}
+        />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: gray100 },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingTop: 52,
+    paddingBottom: spacing.sm,
+  },
+  topCenter: { alignItems: 'center', flex: 1 },
+  idText: { ...typography.titleSm, color: gray700, marginBottom: spacing.xs },
+  scroll: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  card: {
+    backgroundColor: '#FFF',
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: gray200,
+    marginBottom: spacing.lg,
+  },
+  titulo: { ...typography.titleLg, color: gray700 },
+  cliente: { ...typography.textMd, color: gray500, marginTop: spacing.xs },
+  meta: { ...typography.textSm, color: gray400, marginTop: spacing.sm },
+  section: { ...typography.titleSm, color: gray700, marginBottom: spacing.sm },
+  itemRow: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: gray200,
+    marginBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  itemTit: { ...typography.titleSm, color: gray700 },
+  itemDesc: { ...typography.textSm, color: gray500, marginTop: 2 },
+  itemPrice: { ...typography.titleSm, color: gray700 },
+  invest: {
+    backgroundColor: '#FFF',
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: gray200,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  rowLab: { ...typography.textMd, color: gray600 },
+  rowVal: { ...typography.titleSm, color: gray700 },
+  offBadge: {
+    backgroundColor: successLight,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+  },
+  offText: { ...typography.textXs, color: successDark, fontWeight: '700' },
+  disc: { ...typography.textSm, color: dangerBase },
+  totalRow: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: gray200,
+  },
+  totalLab: { ...typography.titleMd, color: gray700 },
+  totalVal: { ...typography.titleLg, color: purpleBase },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: gray200,
+    gap: spacing.sm,
+  },
+  toolBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: gray200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
