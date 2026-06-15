@@ -7,10 +7,8 @@ import { uploadFile } from '../../services/uploadService'
 import type { DisciplineMaterial, CreateDisciplineMaterialRequest } from '../../services/materialService'
 import type { ClassSearchResponse, DisciplineResponse } from '../../types/auth'
 import { ApiError } from '../../services/api'
-import { PageHeader, Button, Modal, StateBlock, FormField, Select, Input, Textarea, Alert } from '../../components/ui'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
-const UPLOAD_BASE = API_BASE.replace('/api', '')
+import { PageHeader, Button, Modal, ConfirmModal, StateBlock, FormField, Select, Input, Textarea, Alert } from '../../components/ui'
+import { getBackendOrigin } from '../../config/apiBase'
 
 const selectCls = 'px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors'
 
@@ -29,6 +27,7 @@ export function Materials() {
   const [description, setDescription] = useState('')
   const [materialFile, setMaterialFile] = useState<File | null>(null)
   const [modalDisciplineId, setModalDisciplineId] = useState<number | null>(null)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const fetchMaterials = useCallback(async () => {
     if (!selectedClassId) { setMaterials([]); return }
@@ -67,19 +66,19 @@ export function Materials() {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Excluir este material?')) return
-    try { await deleteMaterial(id); fetchMaterials() }
+  const handleConfirmDelete = async () => {
+    if (deleteId === null) return
+    try { await deleteMaterial(deleteId); fetchMaterials() }
     catch (err) { alert(err instanceof ApiError ? err.message : 'Erro ao excluir.') }
+    finally { setDeleteId(null) }
   }
 
-  const getFileUrl = (path: string | null) => path ? (path.startsWith('http') ? path : `${UPLOAD_BASE}${path}`) : null
+  const getFileUrl = (path: string | null) => path ? (path.startsWith('http') ? path : `${getBackendOrigin()}${path.startsWith('/') ? '' : '/'}${path}`) : null
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <PageHeader title="Materiais de Estudo" back={<BackButton to="/" />} />
 
-      {/* Filters */}
       <div className="flex flex-wrap items-end gap-3 px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-[var(--color-text-muted)]">Turma</label>
@@ -124,7 +123,7 @@ export function Materials() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleDelete(m.id)}
+                    onClick={() => setDeleteId(m.id)}
                     title="Excluir material"
                     className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] cursor-pointer transition-colors flex-shrink-0"
                   >
@@ -136,6 +135,15 @@ export function Materials() {
           </StateBlock>
         )}
       </div>
+
+      <ConfirmModal
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleConfirmDelete}
+        title="Excluir material"
+        message="Tem certeza que deseja excluir este material? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+      />
 
       <Modal
         open={showModal}

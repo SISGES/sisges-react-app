@@ -17,17 +17,17 @@ import { CharCounter } from '../CharCounter/CharCounter'
 import { AnnouncementEditorModal } from '../AnnouncementEditorModal/AnnouncementEditorModal'
 import { Button } from '../ui/Button'
 import { Spinner } from '../ui/FormField'
+import { ConfirmModal } from '../ui/Modal'
+import { getBackendOrigin } from '../../config/apiBase'
 
 const COMMENT_MAX_CHARS = 250
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
-const UPLOAD_BASE = API_BASE.replace('/api', '')
 const FEED_POLL_FALLBACK_MS = 60000
 
 function getImageUrl(imagePath: string | null): string | null {
   if (!imagePath) return null
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath
-  return `${UPLOAD_BASE}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`
+  const origin = getBackendOrigin()
+  return `${origin}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`
 }
 
 function formatRelativeTime(iso: string): string {
@@ -40,8 +40,7 @@ function formatRelativeTime(iso: string): string {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
-/** Fixed preview height so all image posts align; image scales down inside the box. */
-const FEED_IMAGE_PREVIEW_H = 'h-72 sm:h-80' // 18rem / 20rem
+const FEED_IMAGE_PREVIEW_H = 'h-72 sm:h-80'
 
 function FeedImage({ src, title }: { src: string; title: string }) {
   const [lightbox, setLightbox] = useState(false)
@@ -108,10 +107,6 @@ function FeedImage({ src, title }: { src: string; title: string }) {
               className="absolute inset-0 box-border flex items-center justify-center bg-black/92 p-0"
               onClick={() => setLightbox(false)}
             >
-              {/*
-                Fixed viewport box + img fill + object-contain: wide images use the full width of the box
-                (w-auto/max-w on img was keeping horizontal shots small in some browsers).
-              */}
               <div
                 className="box-border h-[min(88dvh,calc(100dvh-3rem))] w-[min(98dvw,100dvw-0.5rem)] min-w-0 shrink-0"
                 onClick={(e) => e.stopPropagation()}
@@ -255,7 +250,6 @@ function AnnouncementCard({
 
   return (
     <article className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] overflow-visible">
-      {/* Header */}
       <header className="flex items-start justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)]">
         <span className="font-semibold text-[var(--color-text-primary)] text-sm leading-snug">{a.title}</span>
         {isAdmin && (
@@ -299,12 +293,10 @@ function AnnouncementCard({
         )}
       </header>
 
-      {/* Content */}
       {a.content && (
         <p className="px-4 py-3 text-sm text-[var(--color-text-secondary)] leading-relaxed">{a.content}</p>
       )}
 
-      {/* Image */}
       {a.type === 'IMAGE' && a.imagePath && (
         <FeedImage
           src={getImageUrl(a.imagePath) ?? ''}
@@ -312,7 +304,6 @@ function AnnouncementCard({
         />
       )}
 
-      {/* Actions */}
       <div className="flex items-center justify-between px-4 py-2.5">
         <div className="flex items-center gap-3">
           <button
@@ -346,7 +337,6 @@ function AnnouncementCard({
         </time>
       </div>
 
-      {/* Comments */}
       {showComments && (
         <div className="border-t border-[var(--color-border)] px-4 pt-3 pb-4 flex flex-col gap-3">
           {user && (
@@ -420,7 +410,6 @@ function AnnouncementCard({
                     )}
                   </div>
 
-                  {/* 3-dot menu — only visible to comment owner, not while editing */}
                   {user?.id === c.user.id && editingCommentId !== c.id && (
                     <div className="relative flex-shrink-0" ref={commentMenuId === c.id ? commentMenuRef : null}>
                       <button
@@ -477,6 +466,7 @@ export function AnnouncementFeed() {
   const [feedRefreshVersion, setFeedRefreshVersion] = useState(0)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
   const canPostAnnouncements = user?.role === 'ADMIN' || user?.role === 'TEACHER'
@@ -500,13 +490,19 @@ export function AnnouncementFeed() {
     }
   }, [])
 
-  const handleDeleteAnnouncement = useCallback(async (id: number) => {
-    if (!window.confirm('Excluir este aviso?')) return
+  const handleConfirmDelete = async () => {
+    if (deleteId === null) return
     try {
-      await deleteAnnouncement(id)
+      await deleteAnnouncement(deleteId)
       fetchFeed({ silent: true })
-    } catch { void 0 }
-  }, [fetchFeed])
+    } catch { void 0 } finally {
+      setDeleteId(null)
+    }
+  }
+
+  const handleDeleteAnnouncement = useCallback((id: number) => {
+    setDeleteId(id)
+  }, [])
 
   const handleLike = useCallback(async (id: number) => {
     try {
@@ -539,7 +535,6 @@ export function AnnouncementFeed() {
         editingAnnouncement={editingAnnouncement}
       />
 
-      {/* Toolbar */}
       {canPostAnnouncements && (
         <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)]">
           <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Avisos</h2>
@@ -549,7 +544,6 @@ export function AnnouncementFeed() {
         </div>
       )}
 
-      {/* States */}
       {isLoading ? (
         <div
           className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-3 py-12 text-[var(--color-text-muted)]"
@@ -589,6 +583,15 @@ export function AnnouncementFeed() {
           ))}
         </section>
       )}
+
+      <ConfirmModal
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleConfirmDelete}
+        title="Excluir aviso"
+        message="Tem certeza que deseja excluir este aviso? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+      />
     </div>
   )
 }

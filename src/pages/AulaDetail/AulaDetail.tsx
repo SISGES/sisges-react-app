@@ -10,10 +10,9 @@ import { ApiError } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
 import type { AulaDetailResponse } from '../../types/auth'
 import { PageHeader, Button, ConfirmModal, Modal, StateBlock, FormField, Input, Textarea, Alert } from '../../components/ui'
+import { getBackendOrigin } from '../../config/apiBase'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
-const UPLOAD_BASE = API_BASE.replace('/api', '')
-const getFileUrl = (path: string | null) => path ? (path.startsWith('http') ? path : `${UPLOAD_BASE}${path}`) : null
+const getFileUrl = (path: string | null) => path ? (path.startsWith('http') ? path : `${getBackendOrigin()}${path.startsWith('/') ? '' : '/'}${path}`) : null
 
 export function AulaDetail() {
   const { id } = useParams<{ id: string }>()
@@ -35,6 +34,7 @@ export function AulaDetail() {
   const [activityFile, setActivityFile] = useState<File | null>(null)
   const [isSubmittingActivity, setIsSubmittingActivity] = useState(false)
   const [activityError, setActivityError] = useState<string | null>(null)
+  const [deleteActivityId, setDeleteActivityId] = useState<number | null>(null)
 
   const isAdmin = user?.role === 'ADMIN'
   const canEdit = user?.role === 'TEACHER' || user?.role === 'ADMIN'
@@ -100,10 +100,11 @@ export function AulaDetail() {
     finally { setIsSubmittingActivity(false) }
   }
 
-  const handleDeleteActivity = async (id: number) => {
-    if (!window.confirm('Excluir esta atividade?')) return
-    try { await deleteActivity(id); fetchActivities() }
+  const handleConfirmDeleteActivity = async () => {
+    if (deleteActivityId === null) return
+    try { await deleteActivity(deleteActivityId); fetchActivities() }
     catch (err) { alert(err instanceof Error ? err.message : 'Erro ao excluir.') }
+    finally { setDeleteActivityId(null) }
   }
 
   if (!aulaId || isNaN(aulaId)) {
@@ -133,7 +134,6 @@ export function AulaDetail() {
         <StateBlock loading={isLoading} loadingText="Carregando..." error={error} empty={!aula} emptyText="Aula não encontrada.">
           {aula && (
             <div className="flex flex-col gap-6 max-w-2xl">
-              {/* Info */}
               <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-5">
                 <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{aula.name}</h2>
                 {aula.academicYear && <p className="text-sm text-[var(--color-text-muted)] mt-1">{aula.academicYear}</p>}
@@ -148,7 +148,6 @@ export function AulaDetail() {
                 </div>
               </div>
 
-              {/* Activities */}
               {canEdit && (
                 <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
@@ -169,7 +168,7 @@ export function AulaDetail() {
                               {a.description && <span className="text-xs text-[var(--color-text-muted)]">{a.description}</span>}
                               {a.filePath && <a href={getFileUrl(a.filePath) ?? '#'} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-primary)] hover:underline">Baixar documento</a>}
                             </div>
-                            <button type="button" onClick={() => handleDeleteActivity(a.id)} title="Excluir" className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] cursor-pointer transition-colors flex-shrink-0">
+                            <button type="button" onClick={() => setDeleteActivityId(a.id)} title="Excluir" className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] cursor-pointer transition-colors flex-shrink-0">
                               <FiTrash2 size={14} />
                             </button>
                           </li>
@@ -180,7 +179,6 @@ export function AulaDetail() {
                 </div>
               )}
 
-              {/* Students / Attendance */}
               <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
                 <div className="px-5 py-4 border-b border-[var(--color-border)]">
                   <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Alunos</h3>
@@ -239,6 +237,15 @@ export function AulaDetail() {
         message="Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita."
         confirmLabel={isDeleting ? 'Excluindo...' : 'Excluir'}
         loading={isDeleting}
+      />
+
+      <ConfirmModal
+        open={deleteActivityId !== null}
+        onClose={() => setDeleteActivityId(null)}
+        onConfirm={handleConfirmDeleteActivity}
+        title="Excluir atividade"
+        message="Tem certeza que deseja excluir esta atividade? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
       />
 
       <Modal
