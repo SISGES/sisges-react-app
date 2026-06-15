@@ -15,6 +15,7 @@ import type {
 } from '../../services/announcementService'
 import { ApiError } from '../../services/api'
 import { uploadFile } from '../../services/uploadService'
+import { useToast } from '../../contexts/ToastContext'
 
 const ROLES = [
   { value: 'ADMIN', label: 'Administrador' },
@@ -32,6 +33,7 @@ type Props = {
 }
 
 export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnouncement }: Props) {
+  const { showToast } = useToast()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [imagePath, setImagePath] = useState('')
@@ -39,7 +41,6 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
   const [hiddenForRoles, setHiddenForRoles] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,7 +52,6 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
     setImageFile(null)
     setHiddenForRoles([])
     setSubmitError(null)
-    setSubmitSuccess(null)
     setImagePreview(null)
   }, [])
 
@@ -73,7 +73,6 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
   useEffect(() => {
     if (!open) return
     setSubmitError(null)
-    setSubmitSuccess(null)
     if (editingAnnouncement) {
       setTitle(editingAnnouncement.title)
       setContent(editingAnnouncement.content || '')
@@ -100,7 +99,6 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSubmitError(null)
-    setSubmitSuccess(null)
     setIsSubmitting(true)
     try {
       let finalImagePath = imagePath.trim() || undefined
@@ -118,7 +116,7 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
           hiddenForRoles: hiddenForRoles.length > 0 ? hiddenForRoles : undefined,
         }
         await updateAnnouncement(editingAnnouncement.id, data)
-        setSubmitSuccess('Aviso atualizado com sucesso!')
+        showToast('Aviso atualizado com sucesso!', 'success')
       } else {
         const data: CreateAnnouncementRequest = {
           title: title.trim(),
@@ -128,10 +126,10 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
           hiddenForRoles: hiddenForRoles.length > 0 ? hiddenForRoles : undefined,
         }
         await createAnnouncement(data)
-        setSubmitSuccess('Aviso criado com sucesso!')
+        showToast('Aviso criado com sucesso!', 'success')
       }
       onSuccess()
-      setTimeout(handleClose, 1200)
+      handleClose()
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : 'Erro ao salvar aviso.')
     } finally {
@@ -162,7 +160,6 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
     >
       <form id="announcement-editor-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         {submitError && <Alert type="error">{submitError}</Alert>}
-        {submitSuccess && <Alert type="success">{submitSuccess}</Alert>}
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="announcementEditorTitle" className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -297,7 +294,6 @@ export function AnnouncementEditorModal({ open, onClose, onSuccess, editingAnnou
           )}
         </div>
 
-        {/* Hidden for roles */}
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-[var(--color-text-primary)]">Ocultar para (exceção)</span>
           <p className="text-xs text-[var(--color-text-muted)]">

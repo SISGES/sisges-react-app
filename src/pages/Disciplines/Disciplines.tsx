@@ -5,8 +5,10 @@ import { getDisciplines, createDiscipline, updateDiscipline, searchTeachers } fr
 import { ApiError } from '../../services/api'
 import type { DisciplineResponse, TeacherSearchResponse } from '../../types/auth'
 import { PageHeader, Button, Modal, DataCard, StateBlock, tableStyles, FormField, Input, Textarea, Alert } from '../../components/ui'
+import { useToast } from '../../contexts/ToastContext'
 
 export function Disciplines() {
+  const { showToast } = useToast()
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([])
   const [teachers, setTeachers] = useState<TeacherSearchResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -15,7 +17,6 @@ export function Disciplines() {
   const [editing, setEditing] = useState<DisciplineResponse | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<number[]>([])
@@ -40,7 +41,7 @@ export function Disciplines() {
 
   const resetForm = () => {
     setName(''); setDescription(''); setSelectedTeacherIds([])
-    setEditing(null); setSubmitError(null); setSubmitSuccess(null)
+    setEditing(null); setSubmitError(null)
   }
 
   const handleClose = () => { setShowModal(false); resetForm() }
@@ -59,7 +60,7 @@ export function Disciplines() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setSubmitError(null); setSubmitSuccess(null); setIsSubmitting(true)
+    setSubmitError(null); setIsSubmitting(true)
     try {
       if (editing) {
         await updateDiscipline(editing.id, {
@@ -67,17 +68,16 @@ export function Disciplines() {
           description: description.trim() || undefined,
           teachers: teachers.map((t) => ({ teacherId: t.id, vinculado: selectedTeacherIds.includes(t.id) })),
         })
-        setSubmitSuccess('Disciplina atualizada com sucesso!')
+        showToast('Disciplina atualizada com sucesso!', 'success')
       } else {
         await createDiscipline({
           name: name.trim(),
           description: description.trim() || undefined,
           teacherIds: selectedTeacherIds.length > 0 ? selectedTeacherIds : undefined,
         })
-        setSubmitSuccess('Disciplina criada com sucesso!')
+        showToast('Disciplina criada com sucesso!', 'success')
       }
-      resetForm(); fetchDisciplines()
-      setTimeout(handleClose, 1200)
+      resetForm(); fetchDisciplines(); handleClose()
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : 'Erro ao salvar disciplina.')
     } finally {
@@ -164,7 +164,6 @@ export function Disciplines() {
       >
         <form id="discipline-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           {submitError && <Alert type="error">{submitError}</Alert>}
-          {submitSuccess && <Alert type="success">{submitSuccess}</Alert>}
           <FormField label="Nome" required>
             <Input
               value={name}
