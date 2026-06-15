@@ -148,7 +148,6 @@ export function RegisterUser() {
 
       <div className="mx-auto w-full max-w-5xl flex-1 p-6">
         <div className="flex flex-col gap-6">
-          {/* Role selector */}
           <div className={sectionCls}>
             <p className="text-sm font-medium text-[var(--color-text-primary)]">Tipo de Usuário</p>
             <div className="flex gap-2 flex-wrap">
@@ -171,7 +170,6 @@ export function RegisterUser() {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {error && <Alert type="error">{error}</Alert>}
 
@@ -197,7 +195,6 @@ export function RegisterUser() {
               </FormField>
             </div>
 
-            {/* Student-only fields */}
             {role === 'STUDENT' && (
               <>
                 <div className={sectionCls}>
@@ -284,7 +281,6 @@ export function RegisterUser() {
               </>
             )}
 
-            {/* Actions */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <label className="flex items-center gap-2 text-sm text-[var(--color-text-primary)] cursor-pointer">
                 <input type="checkbox" checked={addAnother} onChange={(e) => setAddAnother(e.target.checked)} disabled={isLoading} className="accent-[var(--color-primary)] w-4 h-4" />
@@ -298,7 +294,6 @@ export function RegisterUser() {
         </div>
       </div>
 
-      {/* Create class modal */}
       <Modal
         open={showClassModal}
         onClose={() => setShowClassModal(false)}

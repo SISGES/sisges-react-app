@@ -61,12 +61,10 @@ export function UserDetail() {
           {user && (
             <div className="max-w-md mx-auto">
               <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-8 flex flex-col items-center gap-5">
-                {/* Avatar */}
                 <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] text-white text-xl font-semibold flex items-center justify-center flex-shrink-0">
                   {getInitials(user.name)}
                 </div>
 
-                {/* Name + role */}
                 <div className="text-center flex flex-col items-center gap-2">
                   <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{user.name}</h2>
                   <span className={[
@@ -77,7 +75,6 @@ export function UserDetail() {
                   </span>
                 </div>
 
-                {/* Info rows */}
                 <div className="w-full border-t border-[var(--color-border)] pt-5 flex flex-col gap-3">
                   {[
                     { label: 'E-mail', value: user.email },

@@ -203,7 +203,6 @@ export function GradingConfig() {
         <StateBlock loading={isLoading} loadingText="Carregando..." error={loadError} onRetry={fetchConfig}>
           <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-5xl flex-col gap-6">
 
-            {/* Annual section */}
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-5 flex flex-col gap-4">
               <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Ano letivo</h2>
               <div className="grid gap-4 md:grid-cols-2">
@@ -244,7 +243,6 @@ export function GradingConfig() {
               </div>
             </div>
 
-            {/* Trimester sections */}
             {trimesterData.map((t) => {
               const idx = t.idx
               const comp = compositionByTrimester[idx]
@@ -330,7 +328,6 @@ export function GradingConfig() {
                           ))}
                         </div>
 
-                        {/* Composition sum indicator */}
                         <div className={[
                           'flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium',
                           comp.valid
@@ -347,7 +344,6 @@ export function GradingConfig() {
               )
             })}
 
-            {/* Annual sum indicator */}
             <div className={[
               'flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium border',
               sumValid

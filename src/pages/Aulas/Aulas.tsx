@@ -61,7 +61,6 @@ export function Aulas() {
         }
       />
 
-      {/* Admin filters */}
       {isAdmin && (
         <div className="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
           <input

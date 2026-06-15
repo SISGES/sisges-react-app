@@ -48,13 +48,11 @@ export function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] px-4 py-12">
-      {/* Theme toggle — top right */}
       <div className="fixed top-4 right-4">
         <ThemeToggle />
       </div>
 
       <div className="w-full max-w-sm">
-        {/* Logo / header */}
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
           <SisgesLogo
             variant="lockup"
@@ -64,7 +62,6 @@ export function Login() {
           <p className="text-sm text-[var(--color-text-muted)]">Sistema de Gestão Escolar</p>
         </div>
 
-        {/* Card */}
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-md p-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {error && <Alert type="error">{error}</Alert>}

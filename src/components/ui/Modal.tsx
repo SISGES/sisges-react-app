@@ -24,15 +24,12 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg', f
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <button
         type="button"
         aria-label="Fechar"
         className="absolute inset-0 bg-black/50 cursor-default border-none p-0"
         onClick={onClose}
       />
-
-      {/* Panel */}
       <div
         role="dialog"
         aria-modal="true"
@@ -43,7 +40,6 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg', f
         ].join(' ')}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
           <h2 id="modal-title" className="text-base font-semibold text-[var(--color-text-primary)]">
             {title}
@@ -57,13 +53,9 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg', f
             <IoClose size={20} />
           </button>
         </div>
-
-        {/* Body */}
         <div className="px-6 py-5 flex flex-col gap-4">
           {children}
         </div>
-
-        {/* Footer */}
         {footer && (
           <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--color-border)]">
             {footer}

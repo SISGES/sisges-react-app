@@ -4,7 +4,6 @@ import { Spinner } from './FormField'
 const stateShellClass =
   'flex w-full min-h-[min(50vh,22rem)] flex-col items-center justify-center gap-3 py-12 text-center'
 
-/** Consistent card with a section header and body */
 export function DataCard({
   title,
   count,
@@ -37,7 +36,6 @@ export function DataCard({
   )
 }
 
-/** Standard loading / error / empty state block */
 export function StateBlock({
   loading,
   loadingText,
@@ -92,7 +90,6 @@ export function StateBlock({
   return <div className="content-reveal w-full min-w-0">{children}</div>
 }
 
-/** Standard data table with consistent th/td styling */
 export const tableStyles = {
   wrapper: 'overflow-x-auto',
   table: 'w-full text-sm border-collapse',

@@ -133,7 +133,6 @@ export function EditClass() {
         <StateBlock loading={isLoading} loadingText="Carregando..." error={error} onRetry={fetchClass}>
           {schoolClass && (
             <div className="flex flex-col gap-6">
-              {/* Alunos */}
               <SectionPanel
                 title={`Alunos (${schoolClass.students.length})`}
                 items={schoolClass.students}
@@ -158,7 +157,6 @@ export function EditClass() {
                 />
               </SectionPanel>
 
-              {/* Professores */}
               <SectionPanel
                 title={`Professores (${schoolClass.teachers.length})`}
                 items={schoolClass.teachers}
@@ -183,7 +181,6 @@ export function EditClass() {
                 />
               </SectionPanel>
 
-              {/* Disciplinas */}
               <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
                   <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
@@ -230,7 +227,6 @@ export function EditClass() {
         </StateBlock>
       </div>
 
-      {/* Confirm unlink */}
       <ConfirmModal
         open={!!confirmModal}
         onClose={() => setConfirmModal(null)}
@@ -240,7 +236,6 @@ export function EditClass() {
         confirmLabel={confirmModal?.type === 'discipline' ? 'Remover' : 'Desvincular'}
       />
 
-      {/* Create discipline modal */}
       <Modal
         open={showCreateDisciplineModal}
         onClose={() => setShowCreateDisciplineModal(false)}

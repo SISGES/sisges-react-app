@@ -45,7 +45,6 @@ export function AppShell() {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Brand */}
       <div className="px-4 py-5 border-b border-[var(--color-border)]">
         <button
           type="button"
@@ -56,7 +55,6 @@ export function AppShell() {
         </button>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
         {items.map((item) => (
           <NavLink
@@ -71,7 +69,6 @@ export function AppShell() {
         ))}
       </nav>
 
-      {/* User + actions */}
       <div className="px-3 py-4 border-t border-[var(--color-border)] flex flex-col gap-3">
         <div className="flex items-center gap-3 px-2">
           <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white text-xs font-semibold flex items-center justify-center flex-shrink-0">
@@ -100,7 +97,6 @@ export function AppShell() {
   return (
     <div className="flex min-h-screen bg-[var(--color-background)]">
 
-      {/* ── Desktop sidebar ── */}
       <aside
         className="hidden lg:flex flex-col w-[240px] flex-shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface)] sticky top-0 h-screen"
         aria-label="Navegação principal"
@@ -108,7 +104,6 @@ export function AppShell() {
         <SidebarContent />
       </aside>
 
-      {/* ── Mobile: backdrop + drawer ── */}
       {drawerOpen && (
         <button
           type="button"
@@ -128,10 +123,7 @@ export function AppShell() {
         <SidebarContent />
       </aside>
 
-      {/* ── Main area ── */}
       <div className="flex flex-col flex-1 min-w-0">
-
-        {/* Mobile top bar */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-20">
           <button
             type="button"
@@ -160,7 +152,6 @@ export function AppShell() {
           </button>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 flex flex-col min-h-0">
           <Outlet />
         </main>

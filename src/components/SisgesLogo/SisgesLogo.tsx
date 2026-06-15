@@ -70,9 +70,6 @@ function MarkSvg() {
   )
 }
 
-/**
- * SISGES — símbolo de rede / inteligência (cérebro em grafo, estilo aplicação de gestão).
- */
 export function SisgesLogo({
   variant = 'mark',
   className = '',
