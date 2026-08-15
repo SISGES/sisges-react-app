@@ -47,7 +47,7 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-[#FCE7F3] px-4 py-12">
       {/* Theme toggle — top right */}
       <div className="fixed top-4 right-4">
         <ThemeToggle />
