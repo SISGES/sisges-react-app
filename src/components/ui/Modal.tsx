@@ -1,26 +1,33 @@
-import { useEffect, type ReactNode } from 'react'
-import { IoClose } from 'react-icons/io5'
+import { useEffect, type ReactNode } from "react";
+import { IoClose } from "react-icons/io5";
 
 interface ModalProps {
-  open: boolean
-  onClose: () => void
-  title: string
-  children: ReactNode
-  maxWidth?: string
-  footer?: ReactNode
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+  maxWidth?: string;
+  footer?: ReactNode;
 }
 
-export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg', footer }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  maxWidth = "max-w-lg",
+  footer,
+}: ModalProps) {
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, onClose])
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -38,14 +45,17 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg', f
         aria-modal="true"
         aria-labelledby="modal-title"
         className={[
-          'relative z-10 w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-xl flex flex-col',
+          "relative z-10 flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl",
           maxWidth,
-        ].join(' ')}
+        ].join(" ")}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 id="modal-title" className="text-base font-semibold text-[var(--color-text-primary)]">
+          <h2
+            id="modal-title"
+            className="text-base font-semibold text-[var(--color-text-primary)]"
+          >
             {title}
           </h2>
           <button
@@ -59,7 +69,7 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg', f
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 overflow-y-auto px-6 py-5">
           {children}
         </div>
 
@@ -71,18 +81,18 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg', f
         )}
       </div>
     </div>
-  )
+  );
 }
 
 interface ConfirmModalProps {
-  open: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title: string
-  message: ReactNode
-  confirmLabel?: string
-  confirmVariant?: 'danger' | 'primary'
-  loading?: boolean
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: ReactNode;
+  confirmLabel?: string;
+  confirmVariant?: "danger" | "primary";
+  loading?: boolean;
 }
 
 export function ConfirmModal({
@@ -91,7 +101,7 @@ export function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmLabel = 'Confirmar',
+  confirmLabel = "Confirmar",
   loading = false,
 }: ConfirmModalProps) {
   return (
@@ -119,7 +129,7 @@ export function ConfirmModal({
             {loading && (
               <span
                 className="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full"
-                style={{ animation: 'spin 0.8s linear infinite' }}
+                style={{ animation: "spin 0.8s linear infinite" }}
               />
             )}
             {confirmLabel}
@@ -127,7 +137,9 @@ export function ConfirmModal({
         </>
       }
     >
-      <p className="text-[var(--color-text-primary)] text-sm leading-relaxed">{message}</p>
+      <p className="text-[var(--color-text-primary)] text-sm leading-relaxed">
+        {message}
+      </p>
     </Modal>
-  )
+  );
 }

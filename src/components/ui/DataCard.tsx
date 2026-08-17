@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react'
-import { Spinner } from './FormField'
+import type { ReactNode } from "react";
+import { Spinner } from "./FormField";
 
 const stateShellClass =
-  'flex w-full min-h-[min(50vh,22rem)] flex-col items-center justify-center gap-3 py-12 text-center'
+  "flex w-full min-h-[min(50vh,22rem)] flex-col items-center justify-center gap-3 py-12 text-center";
 
 /** Consistent card with a section header and body */
 export function DataCard({
@@ -12,21 +12,23 @@ export function DataCard({
   action,
   children,
 }: {
-  title: string
-  count?: number
-  countLabel?: string
-  action?: ReactNode
-  children: ReactNode
+  title: string;
+  count?: number;
+  countLabel?: string;
+  action?: ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <div className="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
+    <div className="surface-panel mx-auto w-full max-w-[1280px] overflow-hidden">
       {/* Card header */}
-      <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-[var(--color-border)] flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</h2>
+          <h2 className="text-base font-bold text-[var(--color-text-primary)]">
+            {title}
+          </h2>
           {count !== undefined && (
-            <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-background)] border border-[var(--color-border)] text-[var(--color-text-muted)]">
-              {count} {countLabel ?? ''}
+            <span className="rounded-full bg-[var(--color-surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--color-text-secondary)]">
+              {count} {countLabel ?? ""}
             </span>
           )}
         </div>
@@ -34,7 +36,7 @@ export function DataCard({
       </div>
       {children}
     </div>
-  )
+  );
 }
 
 /** Standard loading / error / empty state block */
@@ -47,13 +49,13 @@ export function StateBlock({
   emptyText,
   children,
 }: {
-  loading?: boolean
-  loadingText?: string
-  error?: string | null
-  onRetry?: () => void
-  empty?: boolean
-  emptyText?: string
-  children: ReactNode
+  loading?: boolean;
+  loadingText?: string;
+  error?: string | null;
+  onRetry?: () => void;
+  empty?: boolean;
+  emptyText?: string;
+  children: ReactNode;
 }) {
   if (loading) {
     return (
@@ -63,9 +65,9 @@ export function StateBlock({
         aria-live="polite"
       >
         <Spinner size="md" />
-        <span className="text-sm">{loadingText ?? 'Carregando...'}</span>
+        <span className="text-sm">{loadingText ?? "Carregando..."}</span>
       </div>
-    )
+    );
   }
   if (error) {
     return (
@@ -80,24 +82,26 @@ export function StateBlock({
           </button>
         )}
       </div>
-    )
+    );
   }
   if (empty) {
     return (
       <div className={stateShellClass}>
-        <p className="text-sm text-[var(--color-text-muted)]">{emptyText ?? 'Nenhum resultado.'}</p>
+        <p className="text-sm text-[var(--color-text-muted)]">
+          {emptyText ?? "Nenhum resultado."}
+        </p>
       </div>
-    )
+    );
   }
-  return <div className="content-reveal w-full min-w-0">{children}</div>
+  return <div className="content-reveal w-full min-w-0">{children}</div>;
 }
 
 /** Standard data table with consistent th/td styling */
 export const tableStyles = {
-  wrapper: 'overflow-x-auto',
-  table: 'w-full text-sm border-collapse',
-  th: 'px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] border-b border-[var(--color-border)] bg-[var(--color-background)] whitespace-nowrap',
-  td: 'px-6 py-3.5 text-[var(--color-text-primary)] border-b border-[var(--color-border)]',
-  trHover: 'hover:bg-[var(--color-background)] transition-colors',
-  actionsCell: 'px-6 py-3 text-right',
-}
+  wrapper: "overflow-x-auto",
+  table: "w-full text-sm border-collapse",
+  th: "px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-[var(--color-text-muted)] border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)] whitespace-nowrap",
+  td: "px-6 py-4 text-[var(--color-text-primary)] border-b border-[var(--color-border)]",
+  trHover: "hover:bg-[var(--color-surface-subtle)] transition-colors",
+  actionsCell: "px-6 py-3.5 text-right border-b border-[var(--color-border)]",
+};

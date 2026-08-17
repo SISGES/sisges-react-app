@@ -1,79 +1,143 @@
-import { useState, useEffect, useCallback } from 'react'
-import { FiPlus, FiTrash2 } from 'react-icons/fi'
-import { BackButton } from '../../components/BackButton/BackButton'
-import { getMaterials, createMaterial, deleteMaterial } from '../../services/materialService'
-import { searchClasses, getDisciplines } from '../../services/userService'
-import { uploadFile } from '../../services/uploadService'
-import type { DisciplineMaterial, CreateDisciplineMaterialRequest } from '../../services/materialService'
-import type { ClassSearchResponse, DisciplineResponse } from '../../types/auth'
-import { ApiError } from '../../services/api'
-import { PageHeader, Button, Modal, StateBlock, FormField, Select, Input, Textarea, Alert } from '../../components/ui'
+import { useState, useEffect, useCallback } from "react";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { BackButton } from "../../components/BackButton/BackButton";
+import {
+  getMaterials,
+  createMaterial,
+  deleteMaterial,
+} from "../../services/materialService";
+import { searchClasses, getDisciplines } from "../../services/userService";
+import { uploadFile } from "../../services/uploadService";
+import { ProtectedDownloadButton } from "../../components/ProtectedFile/ProtectedFile";
+import type {
+  DisciplineMaterial,
+  CreateDisciplineMaterialRequest,
+} from "../../services/materialService";
+import type { ClassSearchResponse, DisciplineResponse } from "../../types/auth";
+import { ApiError } from "../../services/api";
+import {
+  PageHeader,
+  Button,
+  Modal,
+  StateBlock,
+  FormField,
+  Select,
+  Input,
+  Textarea,
+  Alert,
+} from "../../components/ui";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
-const UPLOAD_BASE = API_BASE.replace('/api', '')
-
-const selectCls = 'px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors'
+const selectCls =
+  "px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors";
 
 export function Materials() {
-  const [materials, setMaterials] = useState<DisciplineMaterial[]>([])
-  const [classes, setClasses] = useState<ClassSearchResponse[]>([])
-  const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([])
-  const [selectedClassId, setSelectedClassId] = useState<number | null>(null)
-  const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [materialFile, setMaterialFile] = useState<File | null>(null)
-  const [modalDisciplineId, setModalDisciplineId] = useState<number | null>(null)
+  const [materials, setMaterials] = useState<DisciplineMaterial[]>([]);
+  const [classes, setClasses] = useState<ClassSearchResponse[]>([]);
+  const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [selectedDisciplineId, setSelectedDisciplineId] = useState<
+    number | null
+  >(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [materialFile, setMaterialFile] = useState<File | null>(null);
+  const [modalDisciplineId, setModalDisciplineId] = useState<number | null>(
+    null,
+  );
 
   const fetchMaterials = useCallback(async () => {
-    if (!selectedClassId) { setMaterials([]); return }
-    setIsLoading(true); setError(null)
-    try { setMaterials(await getMaterials({ classId: selectedClassId, disciplineId: selectedDisciplineId ?? undefined })) }
-    catch (err) { setError(err instanceof ApiError ? err.message : 'Erro ao carregar materiais.') }
-    finally { setIsLoading(false) }
-  }, [selectedClassId, selectedDisciplineId])
+    if (!selectedClassId) {
+      setMaterials([]);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      setMaterials(
+        await getMaterials({
+          classId: selectedClassId,
+          disciplineId: selectedDisciplineId ?? undefined,
+        }),
+      );
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Erro ao carregar materiais.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedClassId, selectedDisciplineId]);
 
-  useEffect(() => { fetchMaterials() }, [fetchMaterials])
+  useEffect(() => {
+    fetchMaterials();
+  }, [fetchMaterials]);
   useEffect(() => {
     async function load() {
-      try { const [c, d] = await Promise.all([searchClasses(), getDisciplines()]); setClasses(c); setDisciplines(d) }
-      catch { void 0 }
+      try {
+        const [c, d] = await Promise.all([searchClasses(), getDisciplines()]);
+        setClasses(c);
+        setDisciplines(d);
+      } catch {
+        void 0;
+      }
     }
-    load()
-  }, [])
+    load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedClassId || !title.trim()) return
-    const discId = modalDisciplineId ?? selectedDisciplineId ?? disciplines[0]?.id
-    if (!discId) { setSubmitError('Selecione uma disciplina.'); return }
-    setIsSubmitting(true); setSubmitError(null)
-    try {
-      let filePath: string | undefined
-      if (materialFile) { const { path } = await uploadFile(materialFile, 'materials'); filePath = path }
-      const data: CreateDisciplineMaterialRequest = { classId: selectedClassId, disciplineId: discId as number, title: title.trim(), description: description.trim() || undefined, filePath }
-      await createMaterial(data)
-      setTitle(''); setDescription(''); setMaterialFile(null); setModalDisciplineId(null); setShowModal(false)
-      fetchMaterials()
-    } catch (err) {
-      setSubmitError(err instanceof ApiError ? err.message : 'Erro ao criar material.')
-    } finally {
-      setIsSubmitting(false)
+    e.preventDefault();
+    if (!selectedClassId || !title.trim()) return;
+    const discId =
+      modalDisciplineId ?? selectedDisciplineId ?? disciplines[0]?.id;
+    if (!discId) {
+      setSubmitError("Selecione uma disciplina.");
+      return;
     }
-  }
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      let filePath: string | undefined;
+      if (materialFile) {
+        const { path } = await uploadFile(materialFile, "materials");
+        filePath = path;
+      }
+      const data: CreateDisciplineMaterialRequest = {
+        classId: selectedClassId,
+        disciplineId: discId as number,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        filePath,
+      };
+      await createMaterial(data);
+      setTitle("");
+      setDescription("");
+      setMaterialFile(null);
+      setModalDisciplineId(null);
+      setShowModal(false);
+      fetchMaterials();
+    } catch (err) {
+      setSubmitError(
+        err instanceof ApiError ? err.message : "Erro ao criar material.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Excluir este material?')) return
-    try { await deleteMaterial(id); fetchMaterials() }
-    catch (err) { alert(err instanceof ApiError ? err.message : 'Erro ao excluir.') }
-  }
-
-  const getFileUrl = (path: string | null) => path ? (path.startsWith('http') ? path : `${UPLOAD_BASE}${path}`) : null
+    if (!window.confirm("Excluir este material?")) return;
+    try {
+      await deleteMaterial(id);
+      fetchMaterials();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Erro ao excluir.");
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -82,21 +146,58 @@ export function Materials() {
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-3 px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-[var(--color-text-muted)]">Turma</label>
-          <select value={selectedClassId ?? ''} onChange={(e) => setSelectedClassId(e.target.value ? Number(e.target.value) : null)} className={selectCls}>
+          <label className="text-xs font-medium text-[var(--color-text-muted)]">
+            Turma
+          </label>
+          <select
+            value={selectedClassId ?? ""}
+            onChange={(e) =>
+              setSelectedClassId(e.target.value ? Number(e.target.value) : null)
+            }
+            className={selectCls}
+          >
             <option value="">Selecione a turma</option>
-            {classes.map((c) => <option key={c.id} value={c.id}>{c.name} – {c.academicYear}</option>)}
+            {classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} – {c.academicYear}
+              </option>
+            ))}
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-[var(--color-text-muted)]">Disciplina</label>
-          <select value={selectedDisciplineId ?? ''} onChange={(e) => setSelectedDisciplineId(e.target.value ? Number(e.target.value) : null)} className={selectCls}>
+          <label className="text-xs font-medium text-[var(--color-text-muted)]">
+            Disciplina
+          </label>
+          <select
+            value={selectedDisciplineId ?? ""}
+            onChange={(e) =>
+              setSelectedDisciplineId(
+                e.target.value ? Number(e.target.value) : null,
+              )
+            }
+            className={selectCls}
+          >
             <option value="">Todas</option>
-            {disciplines.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {disciplines.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
           </select>
         </div>
         {selectedClassId && (
-          <Button size="sm" icon={<FiPlus size={14} />} onClick={() => { setTitle(''); setDescription(''); setMaterialFile(null); setModalDisciplineId(null); setSubmitError(null); setShowModal(true) }}>
+          <Button
+            size="sm"
+            icon={<FiPlus size={14} />}
+            onClick={() => {
+              setTitle("");
+              setDescription("");
+              setMaterialFile(null);
+              setModalDisciplineId(null);
+              setSubmitError(null);
+              setShowModal(true);
+            }}
+          >
             Novo material
           </Button>
         )}
@@ -105,21 +206,44 @@ export function Materials() {
       <div className="flex-1 p-6">
         {!selectedClassId ? (
           <div className="flex items-center justify-center py-16">
-            <p className="text-sm text-[var(--color-text-muted)]">Selecione uma turma para ver os materiais.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Selecione uma turma para ver os materiais.
+            </p>
           </div>
         ) : (
-          <StateBlock loading={isLoading} loadingText="Carregando materiais..." error={error} onRetry={fetchMaterials} empty={materials.length === 0} emptyText="Nenhum material cadastrado para esta turma.">
+          <StateBlock
+            loading={isLoading}
+            loadingText="Carregando materiais..."
+            error={error}
+            onRetry={fetchMaterials}
+            empty={materials.length === 0}
+            emptyText="Nenhum material cadastrado para esta turma."
+          >
             <div className="flex flex-col gap-3">
               {materials.map((m) => (
-                <div key={m.id} className="flex items-start justify-between gap-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
+                <div
+                  key={m.id}
+                  className="flex items-start justify-between gap-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4"
+                >
                   <div className="flex flex-col gap-1 min-w-0">
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)]">{m.title}</span>
-                    <span className="text-xs text-[var(--color-text-muted)]">{m.disciplineName}</span>
-                    {m.description && <p className="text-sm text-[var(--color-text-secondary)]">{m.description}</p>}
+                    <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+                      {m.title}
+                    </span>
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {m.disciplineName}
+                    </span>
+                    {m.description && (
+                      <p className="text-sm text-[var(--color-text-secondary)]">
+                        {m.description}
+                      </p>
+                    )}
                     {m.filePath && (
-                      <a href={getFileUrl(m.filePath) ?? '#'} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-primary)] hover:underline mt-1">
+                      <ProtectedDownloadButton
+                        path={m.filePath}
+                        className="cursor-pointer border-none bg-transparent p-0 text-xs text-[var(--color-primary)] hover:underline mt-1"
+                      >
                         Baixar documento
-                      </a>
+                      </ProtectedDownloadButton>
                     )}
                   </div>
                   <button
@@ -143,24 +267,60 @@ export function Materials() {
         title="Novo Material"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Cancelar</Button>
-            <Button type="submit" form="material-form" loading={isSubmitting}>Criar</Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" form="material-form" loading={isSubmitting}>
+              Criar
+            </Button>
           </>
         }
       >
-        <form id="material-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          id="material-form"
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
           {submitError && <Alert type="error">{submitError}</Alert>}
           <FormField label="Disciplina" required>
-            <Select value={modalDisciplineId ?? selectedDisciplineId ?? ''} onChange={(e) => setModalDisciplineId(e.target.value ? Number(e.target.value) : null)} required disabled={isSubmitting}>
+            <Select
+              value={modalDisciplineId ?? selectedDisciplineId ?? ""}
+              onChange={(e) =>
+                setModalDisciplineId(
+                  e.target.value ? Number(e.target.value) : null,
+                )
+              }
+              required
+              disabled={isSubmitting}
+            >
               <option value="">Selecione</option>
-              {disciplines.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              {disciplines.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
             </Select>
           </FormField>
           <FormField label="Título" required>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={255} disabled={isSubmitting} />
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              maxLength={255}
+              disabled={isSubmitting}
+            />
           </FormField>
           <FormField label="Descrição">
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} disabled={isSubmitting} />
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              disabled={isSubmitting}
+            />
           </FormField>
           <FormField label="Arquivo (PDF, TXT, DOCX)">
             <input
@@ -174,5 +334,5 @@ export function Materials() {
         </form>
       </Modal>
     </div>
-  )
+  );
 }

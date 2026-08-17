@@ -1,13 +1,13 @@
-import { ReactNode } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import { ReactNode } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 interface AdminRouteProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function AdminRoute({ children }: AdminRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth()
-  const location = useLocation()
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -15,16 +15,16 @@ export function AdminRoute({ children }: AdminRouteProps) {
         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         <p className="text-sm text-text-secondary">Carregando...</p>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user?.role !== 'ADMIN') {
-    return <Navigate to="/" replace />
+  if (user?.role?.toUpperCase() !== "ADMIN") {
+    return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

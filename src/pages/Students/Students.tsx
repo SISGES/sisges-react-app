@@ -1,32 +1,45 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { FiInfo, FiPlus } from 'react-icons/fi'
-import { BackButton } from '../../components/BackButton/BackButton'
-import { searchUsers } from '../../services/userService'
-import { ApiError } from '../../services/api'
-import type { UserSearchResponse } from '../../types/auth'
-import { PageHeader, Button, DataCard, StateBlock, tableStyles } from '../../components/ui'
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { FiInfo, FiPlus } from "react-icons/fi";
+import { BackButton } from "../../components/BackButton/BackButton";
+import { searchStudents } from "../../services/userService";
+import { ApiError } from "../../services/api";
+import type { StudentSearchResponse } from "../../types/auth";
+import {
+  PageHeader,
+  Button,
+  DataCard,
+  StateBlock,
+  tableStyles,
+} from "../../components/ui";
 
 export function Students() {
-  const navigate = useNavigate()
-  const [students, setStudents] = useState<UserSearchResponse[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [students, setStudents] = useState<StudentSearchResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStudents = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
-      const data = await searchUsers()
-      setStudents(data.filter((u) => u.role === 'STUDENT'))
+      setStudents(await searchStudents());
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Erro ao carregar alunos.')
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Erro ao carregar alunos.",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
-  useEffect(() => { fetchStudents() }, [fetchStudents])
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -34,7 +47,11 @@ export function Students() {
         title="Alunos"
         back={<BackButton to="/" />}
         action={
-          <Button size="sm" icon={<FiPlus size={14} />} onClick={() => navigate('/admin/register?role=STUDENT')}>
+          <Button
+            size="sm"
+            icon={<FiPlus size={14} />}
+            onClick={() => navigate("/admin/register?role=STUDENT")}
+          >
             Novo aluno
           </Button>
         }
@@ -44,7 +61,7 @@ export function Students() {
         <DataCard
           title="Alunos Cadastrados"
           count={!isLoading && !error ? students.length : undefined}
-          countLabel={students.length === 1 ? 'aluno' : 'alunos'}
+          countLabel={students.length === 1 ? "aluno" : "alunos"}
         >
           <StateBlock
             loading={isLoading}
@@ -58,8 +75,10 @@ export function Students() {
               <table className={tableStyles.table}>
                 <thead>
                   <tr>
-                    {['Nome', 'E-mail', 'Ações'].map((h) => (
-                      <th key={h} className={tableStyles.th}>{h}</th>
+                    {["Nome", "E-mail", "Ações"].map((h) => (
+                      <th key={h} className={tableStyles.th}>
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -88,5 +107,5 @@ export function Students() {
         </DataCard>
       </div>
     </div>
-  )
+  );
 }

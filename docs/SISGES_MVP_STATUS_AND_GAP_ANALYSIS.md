@@ -7,9 +7,9 @@
 
 ## 1. Project Overview
 
-| Project | Stack | Purpose |
-|---------|-------|---------|
-| **sisges-react-app** | React 18, TypeScript, Vite 5, React Router 6 | SPA frontend |
+| Project              | Stack                                          | Purpose          |
+| -------------------- | ---------------------------------------------- | ---------------- |
+| **sisges-react-app** | React 18, TypeScript, Vite 5, React Router 6   | SPA frontend     |
 | **sisges-sboot-app** | Spring Boot 3.5.4, Java 21, PostgreSQL, Flyway | REST API backend |
 
 **Base API URL:** `http://localhost:8080/api` (configurable via `VITE_API_BASE_URL`)
@@ -22,22 +22,22 @@
 
 #### Routes and Pages
 
-| Path | Component | Access |
-|------|------------|--------|
-| `/login` | Login | Public (redirects to `/` if authenticated) |
-| `/` | Home | Protected (any authenticated user) |
-| `/admin/register` | RegisterUser | Admin only |
-| `/admin/classes` | Classes | Admin only |
-| `/admin/classes/:id/edit` | EditClass | Admin only |
-| `/admin/students` | Students | Admin only |
-| `/admin/disciplines` | Disciplines | Admin only |
-| `/admin/users/:id` | UserDetail | Admin only |
-| `/aulas` | Aulas | Teacher or Admin |
-| `/aulas/new` | CreateAula | Teacher or Admin |
-| `/aulas/:id` | AulaDetail | Teacher or Admin |
-| `/aulas/:id/edit` | EditAula | Teacher or Admin |
-| `/users/:id` | UserDetail | Teacher or Admin |
-| `*` | Redirect to `/` | Catch-all |
+| Path                      | Component       | Access                                     |
+| ------------------------- | --------------- | ------------------------------------------ |
+| `/login`                  | Login           | Public (redirects to `/` if authenticated) |
+| `/`                       | Home            | Protected (any authenticated user)         |
+| `/admin/register`         | RegisterUser    | Admin only                                 |
+| `/admin/classes`          | Classes         | Admin only                                 |
+| `/admin/classes/:id/edit` | EditClass       | Admin only                                 |
+| `/admin/students`         | Students        | Admin only                                 |
+| `/admin/disciplines`      | Disciplines     | Admin only                                 |
+| `/admin/users/:id`        | UserDetail      | Admin only                                 |
+| `/aulas`                  | Aulas           | Teacher or Admin                           |
+| `/aulas/new`              | CreateAula      | Teacher or Admin                           |
+| `/aulas/:id`              | AulaDetail      | Teacher or Admin                           |
+| `/aulas/:id/edit`         | EditAula        | Teacher or Admin                           |
+| `/users/:id`              | UserDetail      | Teacher or Admin                           |
+| `*`                       | Redirect to `/` | Catch-all                                  |
 
 #### Key Components
 
@@ -62,35 +62,35 @@ No Redux/Zustand; state via React Context.
 
 #### Controllers and Endpoints
 
-| Controller | Base Path | Endpoints |
-|------------|-----------|-----------|
-| **AuthController** | `/api/auth` | `POST /login`, `POST /register`, `GET /validate` |
-| **UserController** | `/api/users` | `POST /search`, `GET /{id}` |
-| **TeacherController** | `/api/teachers` | `GET /me`, `POST /search`, `GET /{id}` |
-| **StudentController** | `/api/students` | `POST /search`, `GET /{id}` |
-| **DisciplineController** | `/api/disciplines` | `GET`, `POST`, `GET /{id}`, `PUT /update/{id}` |
-| **SchoolClassController** | `/api/classes` | CRUD, search, add/remove teachers/students/disciplines |
-| **ClassMeetingController** | `/api/class` | CRUD, `POST /{id}/frequency` (attendance) |
+| Controller                 | Base Path          | Endpoints                                              |
+| -------------------------- | ------------------ | ------------------------------------------------------ |
+| **AuthController**         | `/api/auth`        | `POST /login`, `POST /register`, `GET /validate`       |
+| **UserController**         | `/api/users`       | `POST /search`, `GET /{id}`                            |
+| **TeacherController**      | `/api/teachers`    | `GET /me`, `POST /search`, `GET /{id}`                 |
+| **StudentController**      | `/api/students`    | `POST /search`, `GET /{id}`                            |
+| **DisciplineController**   | `/api/disciplines` | `GET`, `POST`, `GET /{id}`, `PUT /update/{id}`         |
+| **SchoolClassController**  | `/api/classes`     | CRUD, search, add/remove teachers/students/disciplines |
+| **ClassMeetingController** | `/api/class`       | CRUD, `POST /{id}/frequency` (attendance)              |
 
 **Public (no auth):** `/api/auth/login`, `/api/auth/register`, Swagger UI
 
 #### Entities (JPA)
 
-| Entity | Table | Purpose |
-|--------|-------|---------|
-| User | `users` | Base for Teacher, Student, Admin |
-| Teacher | `teacher` | 1:1 User; N:N SchoolClass |
-| Student | `student` | 1:1 User; N:1 SchoolClass; N:N StudentResponsible |
-| StudentResponsible | `student_responsible` | Legal guardian data |
-| SchoolClass | `school_class` | Turma (cohort); N:N Teacher, Student, Discipline |
-| Discipline | `discipline` | Subject; N:N SchoolClass, Teacher |
-| ClassMeeting | `class_meeting` | Aula (one meeting instance); N:1 SchoolClass, Discipline, Teacher |
-| Attendance | `attendance` | Presence per student per ClassMeeting |
-| StudentDocument | `student_document` | Student docs (RG, certidão, etc.) – metadata only, no file |
-| DocumentType | `document_type` | Catalog (RG, Certidão, etc.) |
-| DisciplineMaterial | `discipline_material` | Study materials – metadata only, no file |
-| Lesson | `lesson` | Syllabus content per discipline |
-| UserLog | `user_logs` | Audit log |
+| Entity             | Table                 | Purpose                                                           |
+| ------------------ | --------------------- | ----------------------------------------------------------------- |
+| User               | `users`               | Base for Teacher, Student, Admin                                  |
+| Teacher            | `teacher`             | 1:1 User; N:N SchoolClass                                         |
+| Student            | `student`             | 1:1 User; N:1 SchoolClass; N:N StudentResponsible                 |
+| StudentResponsible | `student_responsible` | Legal guardian data                                               |
+| SchoolClass        | `school_class`        | Turma (cohort); N:N Teacher, Student, Discipline                  |
+| Discipline         | `discipline`          | Subject; N:N SchoolClass, Teacher                                 |
+| ClassMeeting       | `class_meeting`       | Aula (one meeting instance); N:1 SchoolClass, Discipline, Teacher |
+| Attendance         | `attendance`          | Presence per student per ClassMeeting                             |
+| StudentDocument    | `student_document`    | Student docs (RG, certidão, etc.) – metadata only, no file        |
+| DocumentType       | `document_type`       | Catalog (RG, Certidão, etc.)                                      |
+| DisciplineMaterial | `discipline_material` | Study materials – metadata only, no file                          |
+| Lesson             | `lesson`              | Syllabus content per discipline                                   |
+| UserLog            | `user_logs`           | Audit log                                                         |
 
 ---
 
@@ -112,10 +112,10 @@ No Redux/Zustand; state via React Context.
 
 ### 3.3 Registration Security Gap
 
-| Layer | Status |
-|-------|--------|
-| **Frontend** | `/admin/register` protected by `AdminRoute` – only admins see the page |
-| **Backend** | `POST /api/auth/register` is **public** – no `@PreAuthorize`; anyone can register |
+| Layer        | Status                                                                            |
+| ------------ | --------------------------------------------------------------------------------- |
+| **Frontend** | `/admin/register` protected by `AdminRoute` – only admins see the page            |
+| **Backend**  | `POST /api/auth/register` is **public** – no `@PreAuthorize`; anyone can register |
 
 **MVP requirement:** Only admins should register users. Backend must restrict `POST /api/auth/register` to `ADMIN` role.
 
@@ -125,38 +125,38 @@ No Redux/Zustand; state via React Context.
 
 ### 4.1 User Registration (Students, Teachers, Admins – Only Admins Register)
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Frontend registration page | Implemented | Admin-only route, supports TEACHER, STUDENT, ADMIN |
-| Role selection | Implemented | TEACHER, STUDENT, ADMIN |
-| Student-specific fields | Implemented | Class, responsible (new or existing) |
-| Backend registration logic | Implemented | `RegistrationService` (register, email generation) |
-| **Backend auth restriction** | Missing | API is public; must add `@PreAuthorize("hasRole('ADMIN')")` |
+| Aspect                       | Status      | Notes                                                       |
+| ---------------------------- | ----------- | ----------------------------------------------------------- |
+| Frontend registration page   | Implemented | Admin-only route, supports TEACHER, STUDENT, ADMIN          |
+| Role selection               | Implemented | TEACHER, STUDENT, ADMIN                                     |
+| Student-specific fields      | Implemented | Class, responsible (new or existing)                        |
+| Backend registration logic   | Implemented | `RegistrationService` (register, email generation)          |
+| **Backend auth restriction** | Missing     | API is public; must add `@PreAuthorize("hasRole('ADMIN')")` |
 
 ---
 
 ### 4.2 Class Creation with Attendance
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| SchoolClass CRUD | Implemented | Admin creates classes (name, academicYear) |
-| Class–Discipline association | Implemented | Add/remove disciplines per class |
-| Class–Teacher association | Implemented | Add/remove teachers per class |
-| Class–Student association | Implemented | Add/remove students per class |
+| Aspect                       | Status      | Notes                                            |
+| ---------------------------- | ----------- | ------------------------------------------------ |
+| SchoolClass CRUD             | Implemented | Admin creates classes (name, academicYear)       |
+| Class–Discipline association | Implemented | Add/remove disciplines per class                 |
+| Class–Teacher association    | Implemented | Add/remove teachers per class                    |
+| Class–Student association    | Implemented | Add/remove students per class                    |
 | ClassMeeting (aula) creation | Implemented | Teacher creates aulas linked to class/discipline |
-| Attendance (frequency) | Implemented | `POST /class/{id}/frequency`; UI in AulaDetail |
-| Student home for classes | Missing | Students have no view of their classes |
+| Attendance (frequency)       | Implemented | `POST /class/{id}/frequency`; UI in AulaDetail   |
+| Student home for classes     | Missing     | Students have no view of their classes           |
 
 ---
 
 ### 4.3 Evaluative Activities (Linked to Classes/Cohorts with Document Uploads)
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Evaluative activity entity | Missing | No `EvaluativeActivity` or similar |
-| Link to class/cohort | N/A | Entity does not exist |
-| Document upload (pdf, txt, docx) | Missing | No file upload anywhere |
-| Backend file storage | Missing | `file_path` removed from `student_document` and `discipline_material` (V3 migration) |
+| Aspect                           | Status  | Notes                                                                                |
+| -------------------------------- | ------- | ------------------------------------------------------------------------------------ |
+| Evaluative activity entity       | Missing | No `EvaluativeActivity` or similar                                                   |
+| Link to class/cohort             | N/A     | Entity does not exist                                                                |
+| Document upload (pdf, txt, docx) | Missing | No file upload anywhere                                                              |
+| Backend file storage             | Missing | `file_path` removed from `student_document` and `discipline_material` (V3 migration) |
 
 **Needed:** New entity (e.g. `EvaluativeActivity`) linked to `SchoolClass` and/or `Discipline`, with file upload support.
 
@@ -164,13 +164,13 @@ No Redux/Zustand; state via React Context.
 
 ### 4.4 Study Materials (PDF, TXT, DOCX) by Teachers for Cohort/Subject
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| DisciplineMaterial entity | Exists | `discipline_material` table; title, description, materialType |
-| File storage | Missing | `file_path` dropped in V3; "inserção de arquivos será reintroduzida depois" |
-| API for materials | Missing | No controller, service, or repository for DisciplineMaterial |
-| Link to cohort/subject | Partial | DisciplineMaterial → Discipline; Discipline ↔ SchoolClass via class_discipline |
-| Teacher-only creation | N/A | No API yet |
+| Aspect                    | Status  | Notes                                                                          |
+| ------------------------- | ------- | ------------------------------------------------------------------------------ |
+| DisciplineMaterial entity | Exists  | `discipline_material` table; title, description, materialType                  |
+| File storage              | Missing | `file_path` dropped in V3; "inserção de arquivos será reintroduzida depois"    |
+| API for materials         | Missing | No controller, service, or repository for DisciplineMaterial                   |
+| Link to cohort/subject    | Partial | DisciplineMaterial → Discipline; Discipline ↔ SchoolClass via class_discipline |
+| Teacher-only creation     | N/A     | No API yet                                                                     |
 
 **Needed:**
 
@@ -183,12 +183,12 @@ No Redux/Zustand; state via React Context.
 
 ### 4.5 Announcement Banners Feed (Admin Creates, Filter by Role, Home Screen)
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Announcement entity | Missing | No table or entity |
-| Admin creation | Missing | No UI or API |
-| Role-based filtering | Missing | No concept of target roles |
-| Home screen feed | Missing | Home shows AdminDashboard (admin), teacher hub (teacher), nothing (student) |
+| Aspect               | Status  | Notes                                                                       |
+| -------------------- | ------- | --------------------------------------------------------------------------- |
+| Announcement entity  | Missing | No table or entity                                                          |
+| Admin creation       | Missing | No UI or API                                                                |
+| Role-based filtering | Missing | No concept of target roles                                                  |
+| Home screen feed     | Missing | Home shows AdminDashboard (admin), teacher hub (teacher), nothing (student) |
 
 **Needed:**
 
@@ -224,30 +224,30 @@ No Redux/Zustand; state via React Context.
 
 ### Implemented
 
-| Feature | Frontend | Backend |
-|---------|----------|---------|
-| Login | Yes | Yes |
-| JWT auth | Yes | Yes |
-| User registration (admin UI) | Yes | Yes (but API not restricted) |
-| Class (turma) CRUD | Yes | Yes |
-| Class–teachers/students/disciplines | Yes | Yes |
-| Aula (ClassMeeting) CRUD | Yes | Yes |
-| Attendance (frequency) | Yes | Yes |
-| Disciplines CRUD | Yes | Yes |
-| User/Teacher/Student search | Yes | Yes |
-| Admin dashboard | Yes | N/A |
-| Teacher hub (aulas) | Yes | N/A |
+| Feature                             | Frontend | Backend                      |
+| ----------------------------------- | -------- | ---------------------------- |
+| Login                               | Yes      | Yes                          |
+| JWT auth                            | Yes      | Yes                          |
+| User registration (admin UI)        | Yes      | Yes (but API not restricted) |
+| Class (turma) CRUD                  | Yes      | Yes                          |
+| Class–teachers/students/disciplines | Yes      | Yes                          |
+| Aula (ClassMeeting) CRUD            | Yes      | Yes                          |
+| Attendance (frequency)              | Yes      | Yes                          |
+| Disciplines CRUD                    | Yes      | Yes                          |
+| User/Teacher/Student search         | Yes      | Yes                          |
+| Admin dashboard                     | Yes      | N/A                          |
+| Teacher hub (aulas)                 | Yes      | N/A                          |
 
 ### Missing for MVP
 
-| Feature | Work Required |
-|---------|---------------|
+| Feature                               | Work Required                                                        |
+| ------------------------------------- | -------------------------------------------------------------------- |
 | **Registration restricted to admins** | Add `@PreAuthorize("hasRole('ADMIN')")` on `POST /api/auth/register` |
-| **Evaluative activities** | New entity, API, file upload, frontend |
-| **Study materials with files** | Restore file storage, DisciplineMaterial API, upload UI |
-| **Announcement banners** | New entity, API, admin UI, home feed component |
-| **Student home** | Student-specific home content and routes |
-| **File upload (pdf, txt, docx)** | Backend storage + upload endpoints; frontend upload UI |
+| **Evaluative activities**             | New entity, API, file upload, frontend                               |
+| **Study materials with files**        | Restore file storage, DisciplineMaterial API, upload UI              |
+| **Announcement banners**              | New entity, API, admin UI, home feed component                       |
+| **Student home**                      | Student-specific home content and routes                             |
+| **File upload (pdf, txt, docx)**      | Backend storage + upload endpoints; frontend upload UI               |
 
 ---
 
@@ -261,4 +261,4 @@ No Redux/Zustand; state via React Context.
 
 ---
 
-*Generated from exploration of `sisges-react-app` and `sisges-sboot-app`.*
+_Generated from exploration of `sisges-react-app` and `sisges-sboot-app`._

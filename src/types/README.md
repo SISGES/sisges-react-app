@@ -15,7 +15,7 @@ src/types/
 ### Roles de Usuário
 
 ```typescript
-type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT'
+type UserRole = "ADMIN" | "TEACHER" | "STUDENT";
 ```
 
 ### Login
@@ -46,18 +46,18 @@ type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT'
 ### Login
 
 ```typescript
-import { login } from '../services/authService'
-import type { LoginRequest } from '../types/auth'
+import { login } from "../services/authService";
+import type { LoginRequest } from "../types/auth";
 
 const credentials: LoginRequest = {
-  email: 'usuario@exemplo.com',
-  password: 'senha123'
-}
+  email: "usuario@exemplo.com",
+  password: "senha123",
+};
 
 try {
-  const response = await login(credentials)
-  console.log('Token:', response.accessToken)
-  console.log('Usuário:', response.user)
+  const response = await login(credentials);
+  console.log("Token:", response.accessToken);
+  console.log("Usuário:", response.user);
 } catch (error) {
   // Tratar erro
 }
@@ -66,28 +66,28 @@ try {
 ### Registro
 
 ```typescript
-import { register } from '../services/authService'
-import type { RegisterUserRequest } from '../types/auth'
+import { register } from "../services/authService";
+import type { RegisterUserRequest } from "../types/auth";
 
 const userData: RegisterUserRequest = {
-  name: 'Maria Santos',
-  email: 'maria@exemplo.com',
-  register: '2024002',
-  password: 'senha123',
-  birthDate: '2010-05-15',
-  gender: 'Feminino',
-  role: 'STUDENT',
+  name: "Maria Santos",
+  email: "maria@exemplo.com",
+  register: "2024002",
+  password: "senha123",
+  birthDate: "2010-05-15",
+  gender: "Feminino",
+  role: "STUDENT",
   classId: 1,
   responsibleData: {
-    name: 'José Santos',
-    phone: '71999999999',
-    email: 'jose@exemplo.com'
-  }
-}
+    name: "José Santos",
+    phone: "71999999999",
+    email: "jose@exemplo.com",
+  },
+};
 
 try {
-  const newUser = await register(userData)
-  console.log('Usuário criado:', newUser)
+  const newUser = await register(userData);
+  console.log("Usuário criado:", newUser);
 } catch (error) {
   // Tratar erro
 }
@@ -96,20 +96,20 @@ try {
 ### Tratamento de Erros
 
 ```typescript
-import { isValidationError, getErrorMessage } from '../services/authService'
-import type { ApiValidationError } from '../types/auth'
+import { isValidationError, getErrorMessage } from "../services/authService";
+import type { ApiValidationError } from "../types/auth";
 
 try {
-  await login(credentials)
+  await login(credentials);
 } catch (error) {
   if (isValidationError(error)) {
     // Erro de validação - mostrar erros por campo
     error.errors.forEach(({ field, message }) => {
-      console.log(`${field}: ${message}`)
-    })
+      console.log(`${field}: ${message}`);
+    });
   } else {
     // Erro simples - mostrar mensagem única
-    console.error(getErrorMessage(error))
+    console.error(getErrorMessage(error));
   }
 }
 ```

@@ -1,35 +1,51 @@
+import type { IconType } from "react-icons";
+import {
+  FiBookOpen,
+  FiCalendar,
+  FiClipboard,
+  FiFileText,
+  FiHome,
+  FiLayers,
+  FiUsers,
+  FiUserCheck,
+  FiAward,
+} from "react-icons/fi";
+
 export interface NavItem {
-  label: string
-  to: string
-  end?: boolean
+  label: string;
+  to: string;
+  end?: boolean;
+  icon: IconType;
 }
 
 export function getNavItemsForRole(role: string | undefined): NavItem[] {
-  if (!role) return []
-  const r = role.toUpperCase()
-  if (r === 'ADMIN') {
+  if (!role) return [];
+  const r = role.toUpperCase();
+  if (r === "ADMIN") {
     return [
-      { label: 'AVISOS', to: '/', end: true },
-      { label: 'ALUNOS', to: '/admin/students' },
-      { label: 'CLASSES', to: '/admin/classes' },
-      { label: 'DISCIPLINAS', to: '/admin/disciplines' },
-      { label: 'NOTAS', to: '/admin/notas' },
-      { label: 'AULAS', to: '/aulas' },
-    ]
+      { label: "Início", to: "/", end: true, icon: FiHome },
+      { label: "Alunos", to: "/admin/students", icon: FiUsers },
+      { label: "Professores", to: "/admin/teachers", icon: FiUserCheck },
+      { label: "Turmas", to: "/admin/classes", icon: FiLayers },
+      { label: "Disciplinas", to: "/admin/disciplines", icon: FiBookOpen },
+      { label: "Notas", to: "/admin/notas", icon: FiClipboard },
+      { label: "Aulas", to: "/aulas", icon: FiCalendar },
+    ];
   }
-  if (r === 'TEACHER') {
+  if (r === "TEACHER") {
     return [
-      { label: 'AVISOS', to: '/', end: true },
-      { label: 'AULAS', to: '/aulas' },
-      { label: 'MATERIAIS', to: '/materiais' },
-    ]
+      { label: "Início", to: "/", end: true, icon: FiHome },
+      { label: "Aulas", to: "/aulas", icon: FiCalendar },
+      { label: "Materiais", to: "/materiais", icon: FiFileText },
+    ];
   }
-  if (r === 'STUDENT') {
+  if (r === "STUDENT") {
     return [
-      { label: 'AVISOS', to: '/', end: true },
-      { label: 'MINHA TURMA', to: '/minha-turma' },
-      { label: 'FALTAS', to: '/faltas' },
-    ]
+      { label: "Início", to: "/", end: true, icon: FiHome },
+      { label: "Minha turma", to: "/minha-turma", icon: FiUsers },
+      { label: "Faltas", to: "/faltas", icon: FiClipboard },
+      { label: "Boletim", to: "/boletim", icon: FiAward },
+    ];
   }
-  return []
+  return [];
 }

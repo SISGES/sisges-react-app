@@ -1,38 +1,41 @@
 /// <reference types="cypress" />
 
-import { createTestJwt } from './testJwt'
+import { createTestJwt } from "./testJwt";
 
-export {}
+export {};
 
 type TestUser = {
-  id: number
-  name: string
-  email: string
-  register: string
-  role: 'STUDENT' | 'TEACHER' | 'ADMIN'
-}
+  id: number;
+  name: string;
+  email: string;
+  register: string;
+  role: "STUDENT" | "TEACHER" | "ADMIN";
+};
 
 const defaultTeacher: TestUser = {
   id: 1,
-  name: 'Professor Cypress',
-  email: 'teacher-cypress@test.local',
-  register: '',
-  role: 'TEACHER',
-}
+  name: "Professor Cypress",
+  email: "teacher-cypress@test.local",
+  register: "",
+  role: "TEACHER",
+};
 
 declare global {
   namespace Cypress {
     interface Chainable {
-      visitHomeAuthenticated(user?: TestUser): Chainable<void>
+      visitHomeAuthenticated(user?: TestUser): Chainable<void>;
     }
   }
 }
 
-Cypress.Commands.add('visitHomeAuthenticated', (user: TestUser = defaultTeacher) => {
-  cy.visit('/', {
-    onBeforeLoad(win) {
-      win.localStorage.setItem('token', createTestJwt())
-      win.localStorage.setItem('user', JSON.stringify(user))
-    },
-  })
-})
+Cypress.Commands.add(
+  "visitHomeAuthenticated",
+  (user: TestUser = defaultTeacher) => {
+    cy.visit("/", {
+      onBeforeLoad(win) {
+        win.localStorage.setItem("token", createTestJwt());
+        win.localStorage.setItem("user", JSON.stringify(user));
+      },
+    });
+  },
+);

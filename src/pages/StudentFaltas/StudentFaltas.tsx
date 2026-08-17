@@ -1,6 +1,6 @@
-import { BackButton } from '../../components/BackButton/BackButton'
-import { StudentHomeSection } from '../../components/StudentHomeSection/StudentHomeSection'
-import { PageHeader } from '../../components/ui'
+import { BackButton } from "../../components/BackButton/BackButton";
+import { StudentHomeSection } from "../../components/StudentHomeSection/StudentHomeSection";
+import { PageHeader } from "../../components/ui";
 
 export function StudentFaltas() {
   return (
@@ -10,5 +10,5 @@ export function StudentFaltas() {
         <StudentHomeSection variant="absences" />
       </div>
     </div>
-  )
+  );
 }

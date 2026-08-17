@@ -1,37 +1,38 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { Login } from './components/Login/Login'
-import { Home } from './pages/Home/Home'
-import { RegisterUser } from './pages/RegisterUser/RegisterUser'
-import { Classes } from './pages/Classes/Classes'
-import { EditClass } from './pages/EditClass/EditClass'
-import { Students } from './pages/Students/Students'
-import { Disciplines } from './pages/Disciplines/Disciplines'
-import { Materials } from './pages/Materials/Materials'
-import { Aulas } from './pages/Aulas/Aulas'
-import { AulaDetail } from './pages/AulaDetail/AulaDetail'
-import { CreateAula } from './pages/CreateAula/CreateAula'
-import { EditAula } from './pages/EditAula/EditAula'
-import { UserDetail } from './pages/UserDetail/UserDetail'
-import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
-import { AdminRoute } from './components/AdminRoute/AdminRoute'
-import { TeacherRoute } from './components/TeacherRoute/TeacherRoute'
-import { StudentRoute } from './components/StudentRoute/StudentRoute'
-import { AppShell } from './components/AppShell/AppShell'
-import { StudentMyClass } from './pages/StudentMyClass/StudentMyClass'
-import { StudentFaltas } from './pages/StudentFaltas/StudentFaltas'
-import { GradingConfig } from './pages/GradingConfig/GradingConfig'
-import { useAuth } from './contexts/AuthContext'
+import { Routes, Route, Navigate } from "react-router-dom";
+import { Login } from "./components/Login/Login";
+import { Home } from "./pages/Home/Home";
+import { RegisterUser } from "./pages/RegisterUser/RegisterUser";
+import { Classes } from "./pages/Classes/Classes";
+import { EditClass } from "./pages/EditClass/EditClass";
+import { Students } from "./pages/Students/Students";
+import { Disciplines } from "./pages/Disciplines/Disciplines";
+import { Materials } from "./pages/Materials/Materials";
+import { Aulas } from "./pages/Aulas/Aulas";
+import { AulaDetail } from "./pages/AulaDetail/AulaDetail";
+import { CreateAula } from "./pages/CreateAula/CreateAula";
+import { EditAula } from "./pages/EditAula/EditAula";
+import { UserDetail } from "./pages/UserDetail/UserDetail";
+import { ProtectedRoute } from "./components/ProtectedRoute/ProtectedRoute";
+import { AdminRoute } from "./components/AdminRoute/AdminRoute";
+import { TeacherRoute } from "./components/TeacherRoute/TeacherRoute";
+import { StudentRoute } from "./components/StudentRoute/StudentRoute";
+import { AppShell } from "./components/AppShell/AppShell";
+import { StudentMyClass } from "./pages/StudentMyClass/StudentMyClass";
+import { StudentFaltas } from "./pages/StudentFaltas/StudentFaltas";
+import { GradingConfig } from "./pages/GradingConfig/GradingConfig";
+import { Teachers } from "./pages/Teachers/Teachers";
+import { StudentBoletim } from "./pages/StudentBoletim/StudentBoletim";
+import { ActivityGradebook } from "./pages/ActivityGradebook/ActivityGradebook";
+import { useAuth } from "./contexts/AuthContext";
 
 function App() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth();
 
   return (
     <Routes>
       <Route
         path="/login"
-        element={
-          isAuthenticated ? <Navigate to="/" replace /> : <Login />
-        }
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
       <Route
         element={
@@ -74,6 +75,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/teachers"
+          element={
+            <AdminRoute>
+              <Teachers />
+            </AdminRoute>
+          }
+        />
+        <Route
           path="/admin/disciplines"
           element={
             <AdminRoute>
@@ -89,7 +98,10 @@ function App() {
             </AdminRoute>
           }
         />
-        <Route path="/admin/announcements" element={<Navigate to="/" replace />} />
+        <Route
+          path="/admin/announcements"
+          element={<Navigate to="/" replace />}
+        />
         <Route
           path="/admin/users/:id"
           element={
@@ -139,6 +151,14 @@ function App() {
           }
         />
         <Route
+          path="/atividades/:id/notas"
+          element={
+            <TeacherRoute>
+              <ActivityGradebook />
+            </TeacherRoute>
+          }
+        />
+        <Route
           path="/users/:id"
           element={
             <TeacherRoute>
@@ -162,10 +182,18 @@ function App() {
             </StudentRoute>
           }
         />
+        <Route
+          path="/boletim"
+          element={
+            <StudentRoute>
+              <StudentBoletim />
+            </StudentRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

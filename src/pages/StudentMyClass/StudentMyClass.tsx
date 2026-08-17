@@ -1,6 +1,6 @@
-import { BackButton } from '../../components/BackButton/BackButton'
-import { StudentHomeSection } from '../../components/StudentHomeSection/StudentHomeSection'
-import { PageHeader } from '../../components/ui'
+import { BackButton } from "../../components/BackButton/BackButton";
+import { StudentHomeSection } from "../../components/StudentHomeSection/StudentHomeSection";
+import { PageHeader } from "../../components/ui";
 
 export function StudentMyClass() {
   return (
@@ -10,5 +10,5 @@ export function StudentMyClass() {
         <StudentHomeSection variant="class" />
       </div>
     </div>
-  )
+  );
 }

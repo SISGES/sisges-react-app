@@ -67,9 +67,7 @@ As cores estão disponíveis como variáveis CSS:
 Classes utilitárias estão disponíveis em `theme.css`:
 
 ```tsx
-<div className="bg-surface text-primary border">
-  Conteúdo aqui
-</div>
+<div className="bg-surface text-primary border">Conteúdo aqui</div>
 ```
 
 ### 3. Usando o Hook useTheme
@@ -77,18 +75,16 @@ Classes utilitárias estão disponíveis em `theme.css`:
 Para acessar o tema programaticamente:
 
 ```tsx
-import { useTheme } from '../contexts/ThemeContext'
+import { useTheme } from "../contexts/ThemeContext";
 
 function MeuComponente() {
-  const { theme, mode, toggleTheme } = useTheme()
-  
+  const { theme, mode, toggleTheme } = useTheme();
+
   return (
     <div style={{ backgroundColor: theme.background }}>
-      <button onClick={toggleTheme}>
-        Modo atual: {mode}
-      </button>
+      <button onClick={toggleTheme}>Modo atual: {mode}</button>
     </div>
-  )
+  );
 }
 ```
 
@@ -97,7 +93,7 @@ function MeuComponente() {
 O componente `ThemeToggle` já está disponível e pode ser usado em qualquer lugar:
 
 ```tsx
-import { ThemeToggle } from './components/ThemeToggle/ThemeToggle'
+import { ThemeToggle } from "./components/ThemeToggle/ThemeToggle";
 
 function App() {
   return (
@@ -105,13 +101,14 @@ function App() {
       <ThemeToggle />
       {/* resto do app */}
     </div>
-  )
+  );
 }
 ```
 
 ## 🎯 Classes Utilitárias Disponíveis
 
 ### Backgrounds
+
 - `.bg-background` - Cor de fundo principal
 - `.bg-surface` - Cor de superfície
 - `.bg-primary` - Cor primária
@@ -121,6 +118,7 @@ function App() {
 - `.bg-success` - Cor de sucesso
 
 ### Textos
+
 - `.text-primary` - Texto principal
 - `.text-secondary` - Texto secundário
 - `.text-muted` - Texto muted
@@ -131,12 +129,14 @@ function App() {
 - `.text-success` - Cor de sucesso aplicada ao texto
 
 ### Bordas
+
 - `.border` - Borda padrão
 - `.border-primary` - Borda primária
 - `.border-error` - Borda de erro
 - `.border-success` - Borda de sucesso
 
 ### Componentes
+
 - `.btn-primary` - Botão primário
 - `.btn-accent` - Botão accent
 - `.card` - Card com estilo padrão
