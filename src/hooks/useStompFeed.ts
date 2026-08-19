@@ -1,27 +1,28 @@
-import { useEffect, useRef, useCallback } from 'react'
-import { Client } from '@stomp/stompjs'
+import { useEffect, useRef, useCallback } from "react";
+import { Client } from "@stomp/stompjs";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 function buildWsUrl(): string {
-  const base = API_BASE.replace(/\/api\/?$/, '')
-  const protocol = base.startsWith('https') ? 'wss' : 'ws'
-  const host = base.replace(/^https?:\/\//, '')
-  return `${protocol}://${host}/ws`
+  const base = API_BASE.replace(/\/api\/?$/, "");
+  const protocol = base.startsWith("https") ? "wss" : "ws";
+  const host = base.replace(/^https?:\/\//, "");
+  return `${protocol}://${host}/ws`;
 }
 
 export function useStompFeed(onFeedEvent: () => void) {
-  const clientRef = useRef<Client | null>(null)
-  const callbackRef = useRef(onFeedEvent)
-  callbackRef.current = onFeedEvent
+  const clientRef = useRef<Client | null>(null);
+  const callbackRef = useRef(onFeedEvent);
+  callbackRef.current = onFeedEvent;
 
   const connect = useCallback(() => {
-    const token = localStorage.getItem('token')
-    if (!token) return
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-    if (clientRef.current?.active) return
+    if (clientRef.current?.active) return;
 
-    const wsUrl = `${buildWsUrl()}?token=${encodeURIComponent(token)}`
+    const wsUrl = `${buildWsUrl()}?token=${encodeURIComponent(token)}`;
 
     const client = new Client({
       brokerURL: wsUrl,
@@ -29,23 +30,23 @@ export function useStompFeed(onFeedEvent: () => void) {
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
       onConnect: () => {
-        client.subscribe('/topic/feed', () => {
-          callbackRef.current()
-        })
+        client.subscribe("/topic/feed", () => {
+          callbackRef.current();
+        });
       },
-    })
+    });
 
-    client.activate()
-    clientRef.current = client
-  }, [])
+    client.activate();
+    clientRef.current = client;
+  }, []);
 
   useEffect(() => {
-    connect()
+    connect();
     return () => {
       if (clientRef.current?.active) {
-        clientRef.current.deactivate()
-        clientRef.current = null
+        clientRef.current.deactivate();
+        clientRef.current = null;
       }
-    }
-  }, [connect])
+    };
+  }, [connect]);
 }

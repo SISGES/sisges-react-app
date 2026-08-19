@@ -1,23 +1,24 @@
-import type { HTMLAttributes, ReactNode } from 'react'
+import type { HTMLAttributes, ReactNode } from "react";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  children: ReactNode
-  padding?: boolean
+  children: ReactNode;
+  padding?: boolean;
 }
 
-export function Card({ children, padding = true, className = '', ...props }: CardProps) {
+export function Card({
+  children,
+  padding = true,
+  className = "",
+  ...props
+}: CardProps) {
   return (
     <div
-      className={[
-        'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg',
-        padding ? 'p-6' : '',
-        className,
-      ]
+      className={["surface-panel", padding ? "p-6" : "", className]
         .filter(Boolean)
-        .join(' ')}
+        .join(" ")}
       {...props}
     >
       {children}
     </div>
-  )
+  );
 }

@@ -26,6 +26,7 @@ src/services/
 ## 📡 API Service (`api.ts`)
 
 Cliente HTTP centralizado que:
+
 - Adiciona automaticamente o token JWT em todas as requisições
 - Trata erros 401 (não autorizado) automaticamente
 - Redireciona para login quando o token é inválido
@@ -33,19 +34,22 @@ Cliente HTTP centralizado que:
 ### Uso
 
 ```typescript
-import api from './services/api'
+import api from "./services/api";
 
 // GET request
-const data = await api.get<User[]>('/users')
+const data = await api.get<User[]>("/users");
 
 // POST request
-const newUser = await api.post<User>('/users', { name: 'João', email: 'joao@email.com' })
+const newUser = await api.post<User>("/users", {
+  name: "João",
+  email: "joao@email.com",
+});
 
 // PUT request
-const updated = await api.put<User>('/users/1', { name: 'João Silva' })
+const updated = await api.put<User>("/users/1", { name: "João Silva" });
 
 // DELETE request
-await api.delete('/users/1')
+await api.delete("/users/1");
 ```
 
 ## 🔑 Auth Service (`authService.ts`)
@@ -53,54 +57,62 @@ await api.delete('/users/1')
 Funções para gerenciar autenticação:
 
 ### `login(credentials: LoginCredentials): Promise<LoginResponse>`
+
 Faz login e salva token no localStorage.
 
 ```typescript
-import { login } from './services/authService'
+import { login } from "./services/authService";
 
 try {
-  const response = await login({ email: 'user@email.com', password: 'senha123' })
-  console.log('Usuário logado:', response.user)
+  const response = await login({
+    email: "user@email.com",
+    password: "senha123",
+  });
+  console.log("Usuário logado:", response.user);
 } catch (error) {
-  console.error('Erro no login:', error)
+  console.error("Erro no login:", error);
 }
 ```
 
 ### `logout(): void`
+
 Remove token e dados do usuário do localStorage.
 
 ```typescript
-import { logout } from './services/authService'
-logout()
+import { logout } from "./services/authService";
+logout();
 ```
 
 ### `isAuthenticated(): boolean`
+
 Verifica se há um token válido (não expirado).
 
 ```typescript
-import { isAuthenticated } from './services/authService'
+import { isAuthenticated } from "./services/authService";
 if (isAuthenticated()) {
   // Usuário está autenticado
 }
 ```
 
 ### `getCurrentUser(): User | null`
+
 Retorna os dados do usuário atual do localStorage.
 
 ```typescript
-import { getCurrentUser } from './services/authService'
-const user = getCurrentUser()
+import { getCurrentUser } from "./services/authService";
+const user = getCurrentUser();
 if (user) {
-  console.log('Usuário atual:', user.name)
+  console.log("Usuário atual:", user.name);
 }
 ```
 
 ### `validateToken(): Promise<boolean>`
+
 Valida o token com o backend.
 
 ```typescript
-import { validateToken } from './services/authService'
-const isValid = await validateToken()
+import { validateToken } from "./services/authService";
+const isValid = await validateToken();
 ```
 
 ## 🌐 Configuração da API
@@ -116,9 +128,11 @@ Por padrão, se não configurada, usa `http://localhost:8080/api`.
 ## 📋 Endpoints Esperados do Backend
 
 ### POST `/api/auth/login`
+
 Faz login do usuário.
 
 **Request:**
+
 ```json
 {
   "email": "user@email.com",
@@ -127,6 +141,7 @@ Faz login do usuário.
 ```
 
 **Response:**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -140,14 +155,17 @@ Faz login do usuário.
 ```
 
 ### GET `/api/auth/validate`
+
 Valida o token JWT atual.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "valid": true,

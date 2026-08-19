@@ -1,12 +1,12 @@
-import { ReactNode } from 'react'
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 interface StudentRouteProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function StudentRoute({ children }: StudentRouteProps) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -14,12 +14,12 @@ export function StudentRoute({ children }: StudentRouteProps) {
         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         <p className="text-sm text-text-secondary">Carregando...</p>
       </div>
-    )
+    );
   }
 
-  if (user?.role?.toUpperCase() !== 'STUDENT') {
-    return <Navigate to="/" replace />
+  if (user?.role?.toUpperCase() !== "STUDENT") {
+    return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

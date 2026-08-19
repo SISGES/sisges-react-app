@@ -1,6 +1,17 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { FiEdit2, FiHeart, FiMessageCircle, FiMaximize2, FiMoreVertical, FiTrash2, FiPlus, FiX } from 'react-icons/fi'
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
+import {
+  FiBell,
+  FiChevronRight,
+  FiEdit2,
+  FiHeart,
+  FiMaximize2,
+  FiMessageCircle,
+  FiMoreVertical,
+  FiPlus,
+  FiTrash2,
+  FiX,
+} from "react-icons/fi";
 import {
   getAnnouncementFeed,
   toggleAnnouncementLike,
@@ -9,59 +20,70 @@ import {
   updateAnnouncementComment,
   deleteAnnouncementComment,
   deleteAnnouncement,
-} from '../../services/announcementService'
-import type { Announcement, AnnouncementComment } from '../../services/announcementService'
-import { useAuth } from '../../contexts/AuthContext'
-import { useStompFeed } from '../../hooks/useStompFeed'
-import { CharCounter } from '../CharCounter/CharCounter'
-import { AnnouncementEditorModal } from '../AnnouncementEditorModal/AnnouncementEditorModal'
-import { Button } from '../ui/Button'
-import { Spinner } from '../ui/FormField'
-import { ConfirmModal } from '../ui/Modal'
-import { getBackendOrigin } from '../../config/apiBase'
+} from "../../services/announcementService";
+import type {
+  Announcement,
+  AnnouncementComment,
+} from "../../services/announcementService";
+import { useAuth } from "../../contexts/AuthContext";
+import { useStompFeed } from "../../hooks/useStompFeed";
+import { CharCounter } from "../CharCounter/CharCounter";
+import { AnnouncementEditorModal } from "../AnnouncementEditorModal/AnnouncementEditorModal";
+import { Button } from "../ui/Button";
+import { Spinner } from "../ui/FormField";
+import { useProtectedFileUrl } from "../ProtectedFile/ProtectedFile";
+import { UserAvatar } from "../UserAvatar/UserAvatar";
+import { Modal } from "../ui/Modal";
+import { EventsPanel } from "../EventsPanel/EventsPanel";
+import { useDialog } from "../../contexts/DialogContext";
 
-const COMMENT_MAX_CHARS = 250
-const FEED_POLL_FALLBACK_MS = 60000
+const COMMENT_MAX_CHARS = 250;
 
-function getImageUrl(imagePath: string | null): string | null {
-  if (!imagePath) return null
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath
-  const origin = getBackendOrigin()
-  return `${origin}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`
-}
+const FEED_POLL_FALLBACK_MS = 60000;
 
 function formatRelativeTime(iso: string): string {
-  const d = new Date(iso)
-  const diff = Math.floor((Date.now() - d.getTime()) / 1000)
-  if (diff < 60) return 'agora'
-  if (diff < 3600) return `há ${Math.floor(diff / 60)} min`
-  if (diff < 86400) return `há ${Math.floor(diff / 3600)} h`
-  if (diff < 604800) return `há ${Math.floor(diff / 86400)} d`
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  const d = new Date(iso);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60) return "agora";
+  if (diff < 3600) return `há ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)} h`;
+  if (diff < 604800) return `há ${Math.floor(diff / 86400)} d`;
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
 
-const FEED_IMAGE_PREVIEW_H = 'h-72 sm:h-80'
+function formatCompactDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
-function FeedImage({ src, title }: { src: string; title: string }) {
-  const [lightbox, setLightbox] = useState(false)
+/** Fixed preview height so all image posts align; image scales down inside the box. */
+const FEED_IMAGE_PREVIEW_H = "h-72 sm:h-80"; // 18rem / 20rem
+
+function FeedImage({ path, title }: { path: string; title: string }) {
+  const [lightbox, setLightbox] = useState(false);
+  const src = useProtectedFileUrl(path);
 
   useEffect(() => {
-    if (!lightbox) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    if (!lightbox) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(false)
-    }
-    window.addEventListener('keydown', onKey)
+      if (e.key === "Escape") setLightbox(false);
+    };
+    window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [lightbox])
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [lightbox]);
 
+  if (!src) return null;
   return (
     <>
-      <div className="w-full border-t border-b border-[var(--color-border)]/60 bg-[var(--color-background)]">
+      <div className="mr-6 border-t border-b border-[var(--color-border)]/60 bg-[var(--color-background)]">
         <div className="mx-auto w-full max-w-full px-2 py-2 sm:px-3 sm:py-2.5">
           <div className="mx-auto w-full max-w-3xl sm:max-w-4xl">
             <button
@@ -72,9 +94,9 @@ function FeedImage({ src, title }: { src: string; title: string }) {
             >
               <div
                 className={[
-                  'flex w-full items-center justify-center overflow-hidden',
+                  "flex w-full items-center justify-center overflow-hidden",
                   FEED_IMAGE_PREVIEW_H,
-                ].join(' ')}
+                ].join(" ")}
               >
                 <img
                   src={src}
@@ -95,8 +117,8 @@ function FeedImage({ src, title }: { src: string; title: string }) {
         </div>
       </div>
 
-      {lightbox
-        && createPortal(
+      {lightbox &&
+        createPortal(
           <div
             className="fixed inset-0 z-[200] flex items-center justify-center p-0"
             role="dialog"
@@ -107,6 +129,10 @@ function FeedImage({ src, title }: { src: string; title: string }) {
               className="absolute inset-0 box-border flex items-center justify-center bg-black/92 p-0"
               onClick={() => setLightbox(false)}
             >
+              {/*
+                Fixed viewport box + img fill + object-contain: wide images use the full width of the box
+                (w-auto/max-w on img was keeping horizontal shots small in some browsers).
+              */}
               <div
                 className="box-border h-[min(88dvh,calc(100dvh-3rem))] w-[min(98dvw,100dvw-0.5rem)] min-w-0 shrink-0"
                 onClick={(e) => e.stopPropagation()}
@@ -131,7 +157,7 @@ function FeedImage({ src, title }: { src: string; title: string }) {
           document.body,
         )}
     </>
-  )
+  );
 }
 
 function AnnouncementCard({
@@ -143,115 +169,132 @@ function AnnouncementCard({
   onEditAnnouncement,
   onDeleteAnnouncement,
 }: {
-  a: Announcement
-  onLike: (id: number) => void
-  onRefresh: () => void
-  feedRefreshVersion: number
-  isAdmin: boolean
-  onEditAnnouncement: (announcement: Announcement) => void
-  onDeleteAnnouncement: (id: number) => void
+  a: Announcement;
+  onLike: (id: number) => void;
+  onRefresh: () => void;
+  feedRefreshVersion: number;
+  isAdmin: boolean;
+  onEditAnnouncement: (announcement: Announcement) => void;
+  onDeleteAnnouncement: (id: number) => void;
 }) {
-  const [showComments, setShowComments] = useState(false)
-  const [comments, setComments] = useState<AnnouncementComment[]>([])
-  const [newComment, setNewComment] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
-  const [editContent, setEditContent] = useState('')
-  const [postMenuOpen, setPostMenuOpen] = useState(false)
-  const [commentMenuId, setCommentMenuId] = useState<number | null>(null)
-  const postMenuRef = useRef<HTMLDivElement | null>(null)
-  const commentMenuRef = useRef<HTMLDivElement | null>(null)
-  const { user } = useAuth()
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<AnnouncementComment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [postMenuOpen, setPostMenuOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [commentMenuId, setCommentMenuId] = useState<number | null>(null);
+  const postMenuRef = useRef<HTMLDivElement | null>(null);
+  const commentMenuRef = useRef<HTMLDivElement | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!postMenuOpen) return
+    if (!postMenuOpen) return;
     const close = (e: MouseEvent) => {
-      if (postMenuRef.current && !postMenuRef.current.contains(e.target as Node)) {
-        setPostMenuOpen(false)
+      if (
+        postMenuRef.current &&
+        !postMenuRef.current.contains(e.target as Node)
+      ) {
+        setPostMenuOpen(false);
       }
-    }
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [postMenuOpen])
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [postMenuOpen]);
 
   useEffect(() => {
-    if (commentMenuId === null) return
+    if (commentMenuId === null) return;
     const close = (e: MouseEvent) => {
-      if (commentMenuRef.current && !commentMenuRef.current.contains(e.target as Node)) {
-        setCommentMenuId(null)
+      if (
+        commentMenuRef.current &&
+        !commentMenuRef.current.contains(e.target as Node)
+      ) {
+        setCommentMenuId(null);
       }
-    }
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [commentMenuId])
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [commentMenuId]);
 
   const loadComments = useCallback(async () => {
-    if (!showComments) return
+    if (!showComments) return;
     try {
-      const list = await getAnnouncementComments(a.id)
-      setComments(list)
+      const list = await getAnnouncementComments(a.id);
+      setComments(list);
     } catch {
-      setComments([])
+      setComments([]);
     }
-  }, [a.id, showComments])
+  }, [a.id, showComments]);
 
   useEffect(() => {
-    if (!showComments) return
-    void loadComments()
-  }, [showComments, feedRefreshVersion, loadComments])
+    if (!showComments) return;
+    void loadComments();
+  }, [showComments, feedRefreshVersion, loadComments]);
 
   const handleAddComment = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newComment.trim() || isSubmitting) return
-    setIsSubmitting(true)
+    e.preventDefault();
+    if (!newComment.trim() || isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      await addAnnouncementComment(a.id, newComment.trim())
-      setNewComment('')
-      loadComments()
-      onRefresh()
+      await addAnnouncementComment(a.id, newComment.trim());
+      setNewComment("");
+      loadComments();
+      onRefresh();
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const startEditing = (c: AnnouncementComment) => {
-    setEditingCommentId(c.id)
-    setEditContent(c.content)
-  }
+    setEditingCommentId(c.id);
+    setEditContent(c.content);
+  };
 
   const cancelEditing = () => {
-    setEditingCommentId(null)
-    setEditContent('')
-  }
+    setEditingCommentId(null);
+    setEditContent("");
+  };
 
   const handleUpdateComment = async (commentId: number) => {
-    if (!editContent.trim() || isSubmitting) return
-    setIsSubmitting(true)
+    if (!editContent.trim() || isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      await updateAnnouncementComment(a.id, commentId, editContent.trim())
-      setEditingCommentId(null)
-      setEditContent('')
-      loadComments()
-      onRefresh()
+      await updateAnnouncementComment(a.id, commentId, editContent.trim());
+      setEditingCommentId(null);
+      setEditContent("");
+      loadComments();
+      onRefresh();
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleDeleteComment = async (commentId: number) => {
     try {
-      await deleteAnnouncementComment(a.id, commentId)
-      loadComments()
-      onRefresh()
+      await deleteAnnouncementComment(a.id, commentId);
+      loadComments();
+      onRefresh();
     } catch {
-      void 0
+      void 0;
     }
-  }
+  };
 
   return (
-    <article className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] overflow-visible">
-      <header className="flex items-start justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)]">
-        <span className="font-semibold text-[var(--color-text-primary)] text-sm leading-snug">{a.title}</span>
+    <article className="relative overflow-visible border-b border-[var(--color-border)] bg-[var(--color-surface)] pl-[5.25rem] last:border-b-0">
+      <div className="absolute left-6 top-6">
+        <UserAvatar
+          path={a.authorProfileImagePath}
+          name={a.authorName || undefined}
+          className="h-11 w-11"
+        />
+      </div>
+      {/* Header */}
+      <header className="flex items-start justify-between gap-3 pb-1 pr-6 pt-6">
+        <h3 className="text-base font-bold leading-snug text-[var(--color-primary)]">
+          {a.title}
+        </h3>
         {isAdmin && (
           <div className="relative flex-shrink-0" ref={postMenuRef}>
             <button
@@ -272,7 +315,10 @@ function AnnouncementCard({
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={() => { onEditAnnouncement(a); setPostMenuOpen(false) }}
+                  onClick={() => {
+                    onEditAnnouncement(a);
+                    setPostMenuOpen(false);
+                  }}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-background)] transition-colors border-none bg-transparent cursor-pointer text-left"
                 >
                   <FiEdit2 size={13} />
@@ -281,7 +327,10 @@ function AnnouncementCard({
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={() => { onDeleteAnnouncement(a.id); setPostMenuOpen(false) }}
+                  onClick={() => {
+                    onDeleteAnnouncement(a.id);
+                    setPostMenuOpen(false);
+                  }}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-error)] hover:bg-[var(--color-background)] transition-colors border-none bg-transparent cursor-pointer text-left"
                 >
                   <FiTrash2 size={13} />
@@ -293,33 +342,44 @@ function AnnouncementCard({
         )}
       </header>
 
+      {/* Content */}
       {a.content && (
-        <p className="px-4 py-3 text-sm text-[var(--color-text-secondary)] leading-relaxed">{a.content}</p>
+        <p className="max-w-3xl py-2 pr-6 text-sm leading-6 text-[var(--color-text-secondary)]">
+          {a.content}
+        </p>
       )}
 
-      {a.type === 'IMAGE' && a.imagePath && (
-        <FeedImage
-          src={getImageUrl(a.imagePath) ?? ''}
-          title={a.title}
-        />
+      {/* Image */}
+      {a.type === "IMAGE" && a.imagePath && (
+        <FeedImage path={a.imagePath} title={a.title} />
       )}
 
-      <div className="flex items-center justify-between px-4 py-2.5">
-        <div className="flex items-center gap-3">
+      {/* Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-5 pr-6 pt-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <time
+            className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]"
+            dateTime={a.createdAt}
+          >
+            {formatCompactDate(a.createdAt)}
+          </time>
           <button
             type="button"
             onClick={() => user && onLike(a.id)}
             disabled={!user}
-            title={a.likedByCurrentUser ? 'Descurtir' : 'Curtir'}
+            title={a.likedByCurrentUser ? "Descurtir" : "Curtir"}
             className={[
-              'flex items-center gap-1.5 text-sm border-none bg-transparent cursor-pointer transition-colors px-0 py-1',
+              "flex items-center gap-1.5 text-sm border-none bg-transparent cursor-pointer transition-colors px-0 py-1",
               a.likedByCurrentUser
-                ? 'text-[var(--color-error)]'
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-error)]',
-              !user ? 'cursor-default' : '',
-            ].join(' ')}
+                ? "text-[var(--color-error)]"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-error)]",
+              !user ? "cursor-default" : "",
+            ].join(" ")}
           >
-            <FiHeart size={19} fill={a.likedByCurrentUser ? 'currentColor' : 'none'} />
+            <FiHeart
+              size={19}
+              fill={a.likedByCurrentUser ? "currentColor" : "none"}
+            />
             <span>{a.likeCount}</span>
           </button>
           <button
@@ -332,15 +392,56 @@ function AnnouncementCard({
             <span>{a.commentCount}</span>
           </button>
         </div>
-        <time className="text-xs text-[var(--color-text-muted)]" dateTime={a.createdAt}>
-          {formatRelativeTime(a.createdAt)}
-        </time>
+        <button
+          type="button"
+          onClick={() => isAdmin && setDetailsOpen(true)}
+          disabled={!isAdmin}
+          className="flex items-center gap-3 border-none bg-transparent p-0 text-xs font-medium text-[var(--color-accent)] disabled:cursor-default"
+        >
+          <span className="flex items-center gap-1.5">
+            <span
+              className="h-2 w-2 rounded-full bg-[var(--color-accent)]"
+              aria-hidden
+            />
+            Publicado
+          </span>
+          {isAdmin && (
+            <FiChevronRight
+              size={16}
+              className="text-[var(--color-text-muted)]"
+              aria-hidden
+            />
+          )}
+        </button>
       </div>
 
+      <Modal
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        title="Detalhes do aviso"
+      >
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-sm text-[var(--color-text-primary)]">
+          <dt className="font-semibold">Autor</dt>
+          <dd>{a.authorName || "Não informado"}</dd>
+          <dt className="font-semibold">Data e hora</dt>
+          <dd>{new Date(a.createdAt).toLocaleString("pt-BR")}</dd>
+          <dt className="font-semibold">Expira em</dt>
+          <dd>
+            {a.activeUntil
+              ? new Date(a.activeUntil).toLocaleString("pt-BR")
+              : "Não informado"}
+          </dd>
+        </dl>
+      </Modal>
+
+      {/* Comments */}
       {showComments && (
-        <div className="border-t border-[var(--color-border)] px-4 pt-3 pb-4 flex flex-col gap-3">
+        <div className="mr-6 flex flex-col gap-3 border-t border-[var(--color-border)] pb-5 pt-4">
           {user && (
-            <form onSubmit={handleAddComment} className="flex items-center gap-2">
+            <form
+              onSubmit={handleAddComment}
+              className="flex items-center gap-2"
+            >
               <input
                 type="text"
                 value={newComment}
@@ -351,11 +452,19 @@ function AnnouncementCard({
                 className="flex-1 px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
               />
               {newComment.length > 0 && (
-                <CharCounter current={newComment.length} max={COMMENT_MAX_CHARS} size={22} />
+                <CharCounter
+                  current={newComment.length}
+                  max={COMMENT_MAX_CHARS}
+                  size={22}
+                />
               )}
               <button
                 type="submit"
-                disabled={isSubmitting || !newComment.trim() || newComment.length > COMMENT_MAX_CHARS}
+                disabled={
+                  isSubmitting ||
+                  !newComment.trim() ||
+                  newComment.length > COMMENT_MAX_CHARS
+                }
                 className="px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] border border-[var(--color-primary)] rounded-md bg-transparent hover:bg-[var(--color-primary)] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Publicar
@@ -363,13 +472,18 @@ function AnnouncementCard({
             </form>
           )}
           <ul className="flex flex-col gap-2 overflow-visible">
-              {comments.map((c) => (
+            {comments.map((c) => (
               <li key={c.id} className="flex flex-col gap-1 overflow-visible">
                 <div className="flex items-start gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-[var(--color-text-primary)]">{c.user.name}</span>
-                      <time className="text-xs text-[var(--color-text-muted)]" dateTime={c.createdAt}>
+                      <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                        {c.user.name}
+                      </span>
+                      <time
+                        className="text-xs text-[var(--color-text-muted)]"
+                        dateTime={c.createdAt}
+                      >
                         {formatRelativeTime(c.createdAt)}
                       </time>
                     </div>
@@ -384,13 +498,21 @@ function AnnouncementCard({
                             maxLength={COMMENT_MAX_CHARS}
                             className="flex-1 px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                           />
-                          <CharCounter current={editContent.length} max={COMMENT_MAX_CHARS} size={22} />
+                          <CharCounter
+                            current={editContent.length}
+                            max={COMMENT_MAX_CHARS}
+                            size={22}
+                          />
                         </div>
                         <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={() => handleUpdateComment(c.id)}
-                            disabled={isSubmitting || !editContent.trim() || editContent.length > COMMENT_MAX_CHARS}
+                            disabled={
+                              isSubmitting ||
+                              !editContent.trim() ||
+                              editContent.length > COMMENT_MAX_CHARS
+                            }
                             className="px-2.5 py-1 text-xs font-semibold text-white bg-[var(--color-primary)] rounded-md border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Salvar
@@ -406,15 +528,25 @@ function AnnouncementCard({
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">{c.content}</p>
+                      <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+                        {c.content}
+                      </p>
                     )}
                   </div>
 
+                  {/* 3-dot menu — only visible to comment owner, not while editing */}
                   {user?.id === c.user.id && editingCommentId !== c.id && (
-                    <div className="relative flex-shrink-0" ref={commentMenuId === c.id ? commentMenuRef : null}>
+                    <div
+                      className="relative flex-shrink-0"
+                      ref={commentMenuId === c.id ? commentMenuRef : null}
+                    >
                       <button
                         type="button"
-                        onClick={() => setCommentMenuId((prev) => prev === c.id ? null : c.id)}
+                        onClick={() =>
+                          setCommentMenuId((prev) =>
+                            prev === c.id ? null : c.id,
+                          )
+                        }
                         aria-expanded={commentMenuId === c.id}
                         aria-haspopup="true"
                         aria-label="Opções do comentário"
@@ -430,7 +562,10 @@ function AnnouncementCard({
                           <button
                             type="button"
                             role="menuitem"
-                            onClick={() => { startEditing(c); setCommentMenuId(null) }}
+                            onClick={() => {
+                              startEditing(c);
+                              setCommentMenuId(null);
+                            }}
                             className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-background)] transition-colors border-none bg-transparent cursor-pointer text-left"
                           >
                             <FiEdit2 size={13} />
@@ -439,7 +574,10 @@ function AnnouncementCard({
                           <button
                             type="button"
                             role="menuitem"
-                            onClick={() => { handleDeleteComment(c.id); setCommentMenuId(null) }}
+                            onClick={() => {
+                              handleDeleteComment(c.id);
+                              setCommentMenuId(null);
+                            }}
                             className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-error)] hover:bg-[var(--color-background)] transition-colors border-none bg-transparent cursor-pointer text-left"
                           >
                             <FiTrash2 size={13} />
@@ -456,78 +594,121 @@ function AnnouncementCard({
         </div>
       )}
     </article>
-  )
+  );
 }
 
-export function AnnouncementFeed() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [feedRefreshVersion, setFeedRefreshVersion] = useState(0)
-  const [editorOpen, setEditorOpen] = useState(false)
-  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
-  const { user } = useAuth()
-  const isAdmin = user?.role === 'ADMIN'
-  const canPostAnnouncements = user?.role === 'ADMIN' || user?.role === 'TEACHER'
+export function AnnouncementFeed({
+  dashboard = false,
+}: {
+  dashboard?: boolean;
+}) {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [feedRefreshVersion, setFeedRefreshVersion] = useState(0);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] =
+    useState<Announcement | null>(null);
+  const { user } = useAuth();
+  const dialog = useDialog();
+  const isAdmin = user?.role === "ADMIN";
+  const canPostAnnouncements =
+    user?.role === "ADMIN" || user?.role === "TEACHER";
+  const firstName = user?.name?.trim().split(" ")[0] || "você";
 
-  const openCreate = () => { setEditingAnnouncement(null); setEditorOpen(true) }
-  const openEdit = (a: Announcement) => { setEditingAnnouncement(a); setEditorOpen(true) }
-  const closeEditor = () => { setEditorOpen(false); setEditingAnnouncement(null) }
+  const todayLabel = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
+  const openCreate = () => {
+    setEditingAnnouncement(null);
+    setEditorOpen(true);
+  };
+  const openEdit = (a: Announcement) => {
+    setEditingAnnouncement(a);
+    setEditorOpen(true);
+  };
+  const closeEditor = () => {
+    setEditorOpen(false);
+    setEditingAnnouncement(null);
+  };
 
   const fetchFeed = useCallback(async (options?: { silent?: boolean }) => {
-    const silent = options?.silent === true
-    if (!silent) { setIsLoading(true); setError(null) }
+    const silent = options?.silent === true;
+    if (!silent) {
+      setIsLoading(true);
+      setError(null);
+    }
     try {
-      const data = await getAnnouncementFeed()
-      setAnnouncements(data)
-      setFeedRefreshVersion((v) => v + 1)
-      if (!silent) setError(null)
+      const data = await getAnnouncementFeed();
+      setAnnouncements(data);
+      setFeedRefreshVersion((v) => v + 1);
+      if (!silent) setError(null);
     } catch (err) {
-      if (!silent) setError(err instanceof Error ? err.message : 'Erro ao carregar avisos.')
+      if (!silent)
+        setError(
+          err instanceof Error ? err.message : "Erro ao carregar avisos.",
+        );
     } finally {
-      if (!silent) setIsLoading(false)
+      if (!silent) setIsLoading(false);
     }
-  }, [])
+  }, []);
 
-  const handleConfirmDelete = async () => {
-    if (deleteId === null) return
-    try {
-      await deleteAnnouncement(deleteId)
-      fetchFeed({ silent: true })
-    } catch { void 0 } finally {
-      setDeleteId(null)
-    }
-  }
+  const handleDeleteAnnouncement = useCallback(
+    async (id: number) => {
+      if (!(await dialog.confirm("Excluir este aviso?"))) return;
+      try {
+        await deleteAnnouncement(id);
+        fetchFeed({ silent: true });
+      } catch {
+        void 0;
+      }
+    },
+    [dialog, fetchFeed],
+  );
 
-  const handleDeleteAnnouncement = useCallback((id: number) => {
-    setDeleteId(id)
-  }, [])
+  const handleLike = useCallback(
+    async (id: number) => {
+      try {
+        await toggleAnnouncementLike(id);
+        fetchFeed({ silent: true });
+      } catch {
+        void 0;
+      }
+    },
+    [fetchFeed],
+  );
 
-  const handleLike = useCallback(async (id: number) => {
-    try {
-      await toggleAnnouncementLike(id)
-      fetchFeed({ silent: true })
-    } catch { void 0 }
-  }, [fetchFeed])
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debouncedRefresh = useCallback(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => fetchFeed({ silent: true }), 300)
-  }, [fetchFeed])
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchFeed({ silent: true }), 300);
+  }, [fetchFeed]);
 
-  useStompFeed(debouncedRefresh)
+  useStompFeed(debouncedRefresh);
 
-  useEffect(() => { fetchFeed() }, [fetchFeed])
   useEffect(() => {
-    const tick = () => { if (document.visibilityState === 'visible') fetchFeed({ silent: true }) }
-    const id = window.setInterval(tick, FEED_POLL_FALLBACK_MS)
-    return () => window.clearInterval(id)
-  }, [fetchFeed])
+    fetchFeed();
+  }, [fetchFeed]);
+  useEffect(() => {
+    const tick = () => {
+      if (document.visibilityState === "visible") fetchFeed({ silent: true });
+    };
+    const id = window.setInterval(tick, FEED_POLL_FALLBACK_MS);
+    return () => window.clearInterval(id);
+  }, [fetchFeed]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div
+      className={
+        dashboard
+          ? "page-canvas flex flex-1 flex-col"
+          : "flex flex-1 flex-col p-5 sm:p-6"
+      }
+    >
       <AnnouncementEditorModal
         open={editorOpen}
         onClose={closeEditor}
@@ -535,63 +716,125 @@ export function AnnouncementFeed() {
         editingAnnouncement={editingAnnouncement}
       />
 
-      {canPostAnnouncements && (
-        <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Avisos</h2>
-          <Button size="sm" onClick={openCreate} icon={<FiPlus size={14} />}>
-            Criar aviso
-          </Button>
-        </div>
+      {dashboard && (
+        <>
+          <header className="mb-8 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+            <div>
+              <h1 className="text-3xl font-bold tracking-[-0.035em] text-[var(--color-text-primary)] sm:text-[2rem]">
+                Bom dia, {firstName}
+              </h1>
+              <p className="mt-1.5 text-sm capitalize text-[var(--color-text-secondary)]">
+                {todayLabel}
+              </p>
+            </div>
+            {canPostAnnouncements && (
+              <Button
+                className="min-h-14 px-5"
+                onClick={openCreate}
+                icon={<FiPlus size={18} />}
+              >
+                Criar aviso
+              </Button>
+            )}
+          </header>
+          <h2 className="mb-6 text-xl font-bold text-[var(--color-text-primary)]">
+            Visão geral da escola
+          </h2>
+        </>
       )}
 
-      {isLoading ? (
-        <div
-          className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-3 py-12 text-[var(--color-text-muted)]"
-          aria-busy="true"
-          aria-live="polite"
+      <div
+        className={
+          dashboard
+            ? "grid min-h-0 flex-1 gap-6 xl:grid-cols-[minmax(0,1fr)_280px]"
+            : "flex min-h-0 flex-1 flex-col"
+        }
+      >
+        <section
+          className="surface-panel min-h-0 overflow-hidden"
+          aria-labelledby="announcements-title"
         >
-          <Spinner size="md" />
-          <span className="text-sm">Carregando avisos...</span>
-        </div>
-      ) : error ? (
-        <div className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-3 py-12 text-center text-[var(--color-error)]">
-          <p className="text-sm">{error}</p>
-          <button
-            onClick={() => fetchFeed()}
-            className="text-sm px-3 py-1.5 border border-[var(--color-border)] rounded-md bg-transparent text-[var(--color-text-primary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] cursor-pointer transition-colors"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      ) : announcements.length === 0 ? (
-        <div className="flex min-h-[min(50vh,22rem)] w-full items-center justify-center py-12">
-          <p className="text-sm text-[var(--color-text-muted)]">Nenhum aviso no momento.</p>
-        </div>
-      ) : (
-        <section className="content-reveal flex flex-col gap-4 p-6">
-          {announcements.map((a) => (
-            <AnnouncementCard
-              key={a.id}
-              a={a}
-              onLike={handleLike}
-              onRefresh={() => fetchFeed({ silent: true })}
-              feedRefreshVersion={feedRefreshVersion}
-              isAdmin={isAdmin}
-              onEditAnnouncement={openEdit}
-              onDeleteAnnouncement={handleDeleteAnnouncement}
-            />
-          ))}
-        </section>
-      )}
+          <div className="flex min-h-16 items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <h2
+                id="announcements-title"
+                className="text-base font-bold text-[var(--color-text-primary)]"
+              >
+                {dashboard ? "Avisos importantes" : "Avisos"}
+              </h2>
+              {!isLoading && !error && (
+                <span className="rounded-full bg-[var(--color-surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                  {announcements.length}
+                </span>
+              )}
+            </div>
+            {!dashboard && canPostAnnouncements && (
+              <Button
+                size="sm"
+                onClick={openCreate}
+                icon={<FiPlus size={14} />}
+              >
+                Criar aviso
+              </Button>
+            )}
+          </div>
 
-      <ConfirmModal
-        open={deleteId !== null}
-        onClose={() => setDeleteId(null)}
-        onConfirm={handleConfirmDelete}
-        title="Excluir aviso"
-        message="Tem certeza que deseja excluir este aviso? Esta ação não pode ser desfeita."
-        confirmLabel="Excluir"
-      />
+          {/* States */}
+          {isLoading ? (
+            <div
+              className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-3 py-12 text-[var(--color-text-muted)]"
+              aria-busy="true"
+              aria-live="polite"
+            >
+              <Spinner size="md" />
+              <span className="text-sm">Carregando avisos...</span>
+            </div>
+          ) : error ? (
+            <div className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-3 py-12 text-center text-[var(--color-error)]">
+              <p className="text-sm">{error}</p>
+              <button
+                onClick={() => fetchFeed()}
+                className="cursor-pointer rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                Tentar novamente
+              </button>
+            </div>
+          ) : announcements.length === 0 ? (
+            <div className="flex min-h-[min(50vh,22rem)] w-full flex-col items-center justify-center gap-2 px-6 py-12 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-surface-subtle)] text-[var(--color-primary)]">
+                <FiBell size={20} aria-hidden />
+              </div>
+              <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                Nenhum aviso no momento
+              </p>
+              <p className="max-w-sm text-sm text-[var(--color-text-muted)]">
+                Novos comunicados da escola aparecerão aqui.
+              </p>
+            </div>
+          ) : (
+            <div className="content-reveal">
+              {announcements.map((a) => (
+                <AnnouncementCard
+                  key={a.id}
+                  a={a}
+                  onLike={handleLike}
+                  onRefresh={() => fetchFeed({ silent: true })}
+                  feedRefreshVersion={feedRefreshVersion}
+                  isAdmin={isAdmin}
+                  onEditAnnouncement={openEdit}
+                  onDeleteAnnouncement={handleDeleteAnnouncement}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {dashboard && (
+          <aside>
+            <EventsPanel compact />
+          </aside>
+        )}
+      </div>
     </div>
-  )
+  );
 }

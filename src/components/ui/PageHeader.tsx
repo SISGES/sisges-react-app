@@ -1,23 +1,29 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 interface PageHeaderProps {
-  title: string
-  subtitle?: string
-  action?: ReactNode
-  back?: ReactNode
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+  back?: ReactNode;
 }
 
 export function PageHeader({ title, subtitle, action, back }: PageHeaderProps) {
   return (
-    <div className="flex items-center gap-3 px-6 py-4 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
-      {back}
-      <div className="flex-1 min-w-0">
-        <h1 className="text-xl font-semibold text-[var(--color-text-primary)] truncate">{title}</h1>
-        {subtitle && (
-          <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>
-        )}
+    <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="mx-auto flex w-full max-w-[1280px] items-center gap-3 px-5 py-5 sm:px-6 lg:px-8">
+        {back}
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-2xl font-bold tracking-[-0.025em] text-[var(--color-text-primary)] sm:text-[1.75rem]">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+              {subtitle}
+            </p>
+          )}
+        </div>
+        {action && <div className="flex-shrink-0">{action}</div>}
       </div>
-      {action && <div className="flex-shrink-0">{action}</div>}
     </div>
-  )
+  );
 }

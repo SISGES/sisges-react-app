@@ -1,13 +1,17 @@
-import { Button, Alert, Input, FormField } from '../ui'
+import { Button, Alert, Input, FormField } from "../ui";
 
 export function ExampleComponents() {
   return (
     <div className="p-6 space-y-6 max-w-2xl">
-      <h2 className="text-xl font-semibold text-text-primary">Componentes de Exemplo</h2>
+      <h2 className="text-xl font-semibold text-text-primary">
+        Componentes de Exemplo
+      </h2>
 
       <div className="grid gap-6">
         <div className="bg-surface border border-border rounded-xl p-4">
-          <h3 className="font-medium text-text-primary mb-2">Card de Exemplo</h3>
+          <h3 className="font-medium text-text-primary mb-2">
+            Card de Exemplo
+          </h3>
           <p className="text-sm text-text-secondary">
             Este é um exemplo de card usando as cores do tema. O background usa
             a cor surface e a borda usa a cor border.
@@ -28,7 +32,9 @@ export function ExampleComponents() {
           <h3 className="font-medium text-text-primary">Alertas</h3>
           <div className="space-y-2">
             <Alert type="success">Operação realizada com sucesso!</Alert>
-            <Alert type="warning">Atenção: Verifique os dados informados.</Alert>
+            <Alert type="warning">
+              Atenção: Verifique os dados informados.
+            </Alert>
             <Alert type="error">Erro ao processar a solicitação.</Alert>
           </div>
         </div>
@@ -44,5 +50,5 @@ export function ExampleComponents() {
         </div>
       </div>
     </div>
-  )
+  );
 }
