@@ -18,9 +18,10 @@
   --color-error: #dc3f4f;
   --color-warning: #d68a0c;
   --color-success: #0b9b7f;
-  --color-sidebar: #061b31;
-  --color-sidebar-muted: #a9bbcf;
-  --color-sidebar-border: #17324d;
+  --color-sidebar: #ffffff;
+  --color-sidebar-text: #10213f;
+  --color-sidebar-muted: #52627a;
+  --color-sidebar-border: #e1e7ef;
 
   /* ── Typography ── */
   --font-sans:
@@ -70,6 +71,7 @@
   --color-warning: #f5b84b;
   --color-success: #43d6b2;
   --color-sidebar: #041426;
+  --color-sidebar-text: #f3f7fb;
   --color-sidebar-muted: #a9bbcf;
   --color-sidebar-border: #17324d;
 }
@@ -93,12 +95,53 @@
     color: var(--color-text-primary);
     margin: 0;
     transition:
-      background-color 0.2s ease,
-      color 0.2s ease;
+      background-color 0.35s ease,
+      color 0.35s ease;
   }
 
   #root {
     min-height: 100vh;
+  }
+
+  body,
+  aside,
+  main,
+  header,
+  nav,
+  section,
+  article,
+  .surface-panel {
+    transition:
+      background-color 0.35s ease,
+      border-color 0.35s ease,
+      color 0.25s ease,
+      box-shadow 0.35s ease;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+
+::view-transition-old(root) {
+  animation-name: theme-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-fade-in;
+}
+
+@keyframes theme-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes theme-fade-in {
+  from {
+    opacity: 0;
   }
 }
 
@@ -168,5 +211,19 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  body,
+  aside,
+  main,
+  header,
+  nav,
+  section,
+  article,
+  .surface-panel {
+    animation: none;
+    transition: none;
   }
 }

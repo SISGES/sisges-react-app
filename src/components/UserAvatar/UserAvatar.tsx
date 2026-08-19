@@ -15,7 +15,13 @@ export function UserAvatar({
   const protectedUrl = useProtectedFileUrl(
     path?.startsWith("/api/files/") ? path : null,
   );
-  const src = path?.startsWith("http") ? path : protectedUrl || DEFAULT_AVATAR;
+  const directUrl =
+    path?.startsWith("http") ||
+    path?.startsWith("blob:") ||
+    path?.startsWith("data:");
+  const src = directUrl
+    ? (path ?? DEFAULT_AVATAR)
+    : protectedUrl || DEFAULT_AVATAR;
   return (
     <img
       src={src}

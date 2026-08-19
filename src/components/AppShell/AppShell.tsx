@@ -47,11 +47,11 @@ export function AppShell() {
       "group flex min-h-12 items-center gap-3 rounded-lg px-3.5 py-2.5 text-base font-medium transition-all duration-150",
       isActive
         ? "bg-[var(--color-primary)] text-white shadow-md"
-        : "text-[var(--color-sidebar-muted)] hover:bg-white/8 hover:text-white",
+        : "text-[var(--color-sidebar-muted)] hover:bg-[var(--color-surface-subtle)] hover:text-[var(--color-sidebar-text)]",
     ].join(" ");
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-[var(--color-sidebar)] text-white">
+    <div className="flex h-full flex-col bg-[var(--color-sidebar)] text-[var(--color-sidebar-text)]">
       {/* Brand */}
       <div className="border-b border-[var(--color-sidebar-border)] px-5 py-6">
         <button
@@ -60,12 +60,12 @@ export function AppShell() {
             navigate("/");
             closeDrawer();
           }}
-          className="flex w-full min-w-0 cursor-pointer items-center border-none bg-transparent p-0 text-left font-bold tracking-tight text-white transition-opacity hover:opacity-90"
+          className="flex w-full min-w-0 cursor-pointer items-center border-none bg-transparent p-0 text-left font-bold tracking-tight text-[var(--color-sidebar-text)] transition-opacity hover:opacity-90"
         >
           <SisgesLogo
             variant="lockup"
             className="min-w-0"
-            textClassName="text-2xl font-bold tracking-tight text-white"
+            textClassName="text-2xl font-bold tracking-tight text-[var(--color-sidebar-text)]"
           />
         </button>
       </div>
@@ -106,7 +106,7 @@ export function AppShell() {
         >
           <UserAvatar path={user?.profileImagePath} name={user?.name} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
+            <p className="truncate text-sm font-semibold text-[var(--color-sidebar-text)]">
               {user?.name || user?.email}
             </p>
             <p className="mt-0.5 truncate text-xs text-[var(--color-sidebar-muted)]">
@@ -114,14 +114,14 @@ export function AppShell() {
             </p>
           </div>
         </button>
-        <div className="flex items-center gap-2 border-t border-[var(--color-sidebar-border)] pt-4 text-white">
+        <div className="flex items-center gap-2 border-t border-[var(--color-sidebar-border)] pt-4 text-[var(--color-sidebar-text)]">
           <ThemeToggle />
           <button
             type="button"
             onClick={handleLogout}
             title="Sair"
             aria-label="Sair"
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-white/15 bg-transparent text-white/75 transition-colors hover:border-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-[var(--color-sidebar-border)] bg-transparent text-[var(--color-sidebar-muted)] transition-colors hover:border-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white"
           >
             <FiLogOut size={18} />
           </button>

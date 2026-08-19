@@ -27,6 +27,7 @@ import {
   Select,
   Alert,
 } from "../../components/ui";
+import { PASSWORD_HELP, PASSWORD_PATTERN } from "../../utils/password";
 
 type ResponsibleMode = "existing" | "new";
 
@@ -291,14 +292,21 @@ export function RegisterUser() {
                 />
               </FormField>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField label="Senha" required error={fieldErrors.password}>
+                <FormField
+                  label="Senha"
+                  required
+                  error={fieldErrors.password}
+                  hint={PASSWORD_HELP}
+                >
                   <Input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     required
-                    minLength={6}
+                    minLength={8}
+                    pattern={PASSWORD_PATTERN.source}
+                    title={PASSWORD_HELP}
                     disabled={isLoading}
                   />
                 </FormField>

@@ -64,7 +64,7 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
             : "surface-panel overflow-hidden"
         }
       >
-        <div className="flex min-h-16 items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
+        <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[var(--color-border)] px-5 py-4">
           <div className="flex items-center gap-2">
             <FiCalendar className="text-[var(--color-primary)]" />
             <h2 className="font-bold text-[var(--color-text-primary)]">
@@ -72,13 +72,14 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
             </h2>
           </div>
           {user?.role === "ADMIN" && (
-            <Button
-              size="sm"
+            <button
+              type="button"
               onClick={() => setCreating(true)}
-              icon={<FiPlus />}
+              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-transparent px-2.5 text-xs font-semibold text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 sm:px-3"
             >
+              <FiPlus size={14} />
               Criar
-            </Button>
+            </button>
           )}
         </div>
         <div className="px-5">

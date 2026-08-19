@@ -291,10 +291,15 @@ function AnnouncementCard({
         />
       </div>
       {/* Header */}
-      <header className="flex items-start justify-between gap-3 pb-1 pr-6 pt-6">
-        <h3 className="text-base font-bold leading-snug text-[var(--color-primary)]">
-          {a.title}
-        </h3>
+      <header className="flex items-start justify-between gap-3 pb-1 pr-6 pt-5">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+            {a.authorName || "Usuário"}
+          </p>
+          <h3 className="mt-0.5 text-base font-bold leading-snug text-[var(--color-primary)]">
+            {a.title}
+          </h3>
+        </div>
         {isAdmin && (
           <div className="relative flex-shrink-0" ref={postMenuRef}>
             <button

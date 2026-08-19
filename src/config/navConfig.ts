@@ -9,6 +9,7 @@ import {
   FiUsers,
   FiUserCheck,
   FiAward,
+  FiClock,
 } from "react-icons/fi";
 
 export interface NavItem {
@@ -29,14 +30,14 @@ export function getNavItemsForRole(role: string | undefined): NavItem[] {
       { label: "Turmas", to: "/admin/classes", icon: FiLayers },
       { label: "Disciplinas", to: "/admin/disciplines", icon: FiBookOpen },
       { label: "Notas", to: "/admin/notas", icon: FiClipboard },
-      { label: "Aulas", to: "/aulas", icon: FiCalendar },
+      { label: "Aulas", to: "/aulas", icon: FiClock },
       { label: "Eventos", to: "/events", icon: FiCalendar },
     ];
   }
   if (r === "TEACHER") {
     return [
       { label: "Início", to: "/", end: true, icon: FiHome },
-      { label: "Aulas", to: "/aulas", icon: FiCalendar },
+      { label: "Aulas", to: "/aulas", icon: FiClock },
       { label: "Materiais", to: "/materiais", icon: FiFileText },
     ];
   }

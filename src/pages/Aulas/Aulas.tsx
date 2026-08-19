@@ -110,7 +110,7 @@ export function Aulas() {
       />
 
       {isAdmin && (
-        <div className="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="flex flex-wrap items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3 sm:px-6 lg:px-8">
           <input
             type="date"
             value={filters.date || ""}

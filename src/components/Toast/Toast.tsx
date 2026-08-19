@@ -2,12 +2,14 @@ import type { ReactNode } from "react";
 import { FiCheck, FiAlertTriangle, FiInfo } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import { useToast, Toast as ToastType } from "../../contexts/ToastContext";
+import { Spinner } from "../ui/FormField";
 
 const TOAST_ICONS: Record<ToastType["type"], ReactNode> = {
   success: <FiCheck size={16} />,
   error: <IoClose size={16} />,
   warning: <FiAlertTriangle size={16} />,
   info: <FiInfo size={16} />,
+  loading: <Spinner size="sm" />,
 };
 
 const TOAST_STYLES: Record<ToastType["type"], string> = {
@@ -15,6 +17,8 @@ const TOAST_STYLES: Record<ToastType["type"], string> = {
   error: "bg-[var(--color-error)] text-white",
   warning: "bg-[var(--color-warning)] text-white",
   info: "bg-[var(--color-primary)] text-white",
+  loading:
+    "bg-[var(--color-surface)] text-[var(--color-text-primary)] border border-[var(--color-border)]",
 };
 
 export function ToastContainer() {

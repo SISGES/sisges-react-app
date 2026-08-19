@@ -2,7 +2,7 @@ export const lightTheme = {
   background: "#F7F8FA",
   surface: "#FFFFFF",
   surfaceSubtle: "#F2F5F9",
-  inputBackground: "#FFFFFF",
+  inputBg: "#FFFFFF",
   border: "#E1E7EF",
   textPrimary: "#10213F",
   textSecondary: "#52627A",
@@ -13,16 +13,17 @@ export const lightTheme = {
   error: "#DC3F4F",
   warning: "#D68A0C",
   success: "#0B9B7F",
-  sidebar: "#061B31",
-  sidebarMuted: "#A9BBCF",
-  sidebarBorder: "#17324D",
+  sidebar: "#FFFFFF",
+  sidebarText: "#10213F",
+  sidebarMuted: "#52627A",
+  sidebarBorder: "#E1E7EF",
 } as const;
 
 export const darkTheme = {
   background: "#07111F",
   surface: "#0E1C2E",
   surfaceSubtle: "#14243A",
-  inputBackground: "#14243A",
+  inputBg: "#14243A",
   border: "#24364D",
   textPrimary: "#F3F7FB",
   textSecondary: "#C5D1DF",
@@ -34,6 +35,7 @@ export const darkTheme = {
   warning: "#F5B84B",
   success: "#43D6B2",
   sidebar: "#041426",
+  sidebarText: "#F3F7FB",
   sidebarMuted: "#A9BBCF",
   sidebarBorder: "#17324D",
 } as const;

@@ -42,7 +42,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [mode, theme]);
 
   const toggleTheme = () => {
-    setMode((prev) => (prev === "light" ? "dark" : "light"));
+    const update = () =>
+      setMode((prev) => (prev === "light" ? "dark" : "light"));
+    const documentWithTransition = document as Document & {
+      startViewTransition?: (callback: () => void) => void;
+    };
+    if (
+      documentWithTransition.startViewTransition &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      documentWithTransition.startViewTransition(update);
+      return;
+    }
+    update();
   };
 
   const setTheme = (newMode: ThemeMode) => {

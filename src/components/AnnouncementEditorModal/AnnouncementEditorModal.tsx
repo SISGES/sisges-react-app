@@ -15,6 +15,7 @@ import type {
 } from "../../services/announcementService";
 import { ApiError } from "../../services/api";
 import { uploadFile } from "../../services/uploadService";
+import { useToast } from "../../contexts/ToastContext";
 
 const ROLES = [
   { value: "ADMIN", label: "Administrador" },
@@ -59,6 +60,7 @@ export function AnnouncementEditorModal({
   const [isDragOver, setIsDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast, removeToast } = useToast();
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -119,6 +121,11 @@ export function AnnouncementEditorModal({
     setSubmitError(null);
     setSubmitSuccess(null);
     setIsSubmitting(true);
+    const publishingToastId = showToast(
+      editingAnnouncement ? "Salvando..." : "Publicando...",
+      "loading",
+      null,
+    );
     try {
       let finalImagePath = imagePath.trim() || undefined;
       if (imageFile) {
@@ -153,12 +160,17 @@ export function AnnouncementEditorModal({
         setSubmitSuccess("Aviso criado com sucesso!");
       }
       onSuccess();
-      setTimeout(handleClose, 1200);
+      handleClose();
+      showToast(
+        editingAnnouncement ? "Aviso atualizado." : "Aviso publicado.",
+        "success",
+      );
     } catch (err) {
       setSubmitError(
         err instanceof ApiError ? err.message : "Erro ao salvar aviso.",
       );
     } finally {
+      removeToast(publishingToastId);
       setIsSubmitting(false);
     }
   };
