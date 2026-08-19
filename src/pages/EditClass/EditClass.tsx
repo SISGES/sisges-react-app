@@ -34,11 +34,13 @@ import {
   Input,
   Textarea,
 } from "../../components/ui";
+import { useDialog } from "../../contexts/DialogContext";
 
 const selectCls =
   "flex-1 px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
 
 export function EditClass() {
+  const dialog = useDialog();
   const { id } = useParams<{ id: string }>();
   const classId = id ? parseInt(id, 10) : null;
 
@@ -117,7 +119,7 @@ export function EditClass() {
       try {
         setSchoolClass(await removeDisciplineFromClass(classId, discipline.id));
       } catch (err) {
-        alert(err instanceof Error ? err.message : "Erro");
+        void dialog.alert(err instanceof Error ? err.message : "Erro");
       } finally {
         setActionLoading(null);
       }
@@ -137,7 +139,7 @@ export function EditClass() {
           : removeTeacherFromClass(classId, person.id)),
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro");
+      void dialog.alert(err instanceof Error ? err.message : "Erro");
     } finally {
       setActionLoading(null);
     }
@@ -151,7 +153,7 @@ export function EditClass() {
     try {
       setSchoolClass(await action());
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro");
+      void dialog.alert(err instanceof Error ? err.message : "Erro");
     } finally {
       setActionLoading(null);
     }
@@ -171,7 +173,7 @@ export function EditClass() {
       setShowCreateDisciplineModal(false);
       setSchoolClass(await addDisciplineToClass(classId, created.id));
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro");
+      void dialog.alert(err instanceof Error ? err.message : "Erro");
     } finally {
       setActionLoading(null);
     }

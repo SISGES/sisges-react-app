@@ -6,6 +6,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ToastContainer } from "./components/Toast/Toast";
+import { DialogProvider } from "./contexts/DialogContext";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -14,8 +15,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ThemeProvider>
         <ToastProvider>
           <AuthProvider>
-            <App />
-            <ToastContainer />
+            <DialogProvider>
+              <App />
+              <ToastContainer />
+            </DialogProvider>
           </AuthProvider>
         </ToastProvider>
       </ThemeProvider>

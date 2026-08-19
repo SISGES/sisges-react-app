@@ -71,6 +71,7 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
       email: response.user.email,
       register: response.user.register,
       role: response.user.role,
+      profileImagePath: response.user.profileImagePath,
     };
     localStorage.setItem("user", JSON.stringify(user));
   }
@@ -94,6 +95,7 @@ export function getCurrentUser(): User | null {
       email: parsed.email,
       register: parsed.register || "",
       role: parsed.role || "STUDENT",
+      profileImagePath: parsed.profileImagePath || null,
     } as User;
   } catch {
     return null;

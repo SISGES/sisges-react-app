@@ -11,6 +11,7 @@ export interface LoginResponseUserInfo {
   email: string;
   register: string;
   role: UserRole;
+  profileImagePath?: string | null;
 }
 
 export interface LoginResponse {
@@ -53,6 +54,7 @@ export interface UserDetailResponse {
   role: UserRole;
   birthDate: string;
   gender: string;
+  profileImagePath?: string | null;
 }
 
 export type UserResponse = UserSearchResponse;
@@ -107,6 +109,7 @@ export interface User {
   email: string;
   register: string;
   role: UserRole;
+  profileImagePath?: string | null;
 }
 
 export type LoginCredentials = LoginRequest;

@@ -29,8 +29,10 @@ import {
   Textarea,
   Alert,
 } from "../../components/ui";
+import { useDialog } from "../../contexts/DialogContext";
 
 export function AulaDetail() {
+  const dialog = useDialog();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -107,7 +109,9 @@ export function AulaDetail() {
       setDeleteConfirm(false);
       navigate("/aulas");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao excluir aula.");
+      void dialog.alert(
+        err instanceof Error ? err.message : "Erro ao excluir aula.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -127,7 +131,7 @@ export function AulaDetail() {
       });
     } catch (err) {
       setAttendance((prev) => ({ ...prev, [studentId]: prevStatus }));
-      alert(
+      void dialog.alert(
         err instanceof ApiError ? err.message : "Erro ao atualizar frequência.",
       );
     } finally {
@@ -167,12 +171,14 @@ export function AulaDetail() {
   };
 
   const handleDeleteActivity = async (id: number) => {
-    if (!window.confirm("Excluir esta atividade?")) return;
+    if (!(await dialog.confirm("Excluir esta atividade?"))) return;
     try {
       await deleteActivity(id);
       fetchActivities();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao excluir.");
+      void dialog.alert(
+        err instanceof Error ? err.message : "Erro ao excluir.",
+      );
     }
   };
 

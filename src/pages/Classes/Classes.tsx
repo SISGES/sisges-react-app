@@ -22,6 +22,7 @@ import {
   Select,
   Alert,
 } from "../../components/ui";
+import { useDialog } from "../../contexts/DialogContext";
 
 const ACADEMIC_YEAR_OPTIONS = [
   "1º ano - Fundamental",
@@ -39,6 +40,7 @@ const ACADEMIC_YEAR_OPTIONS = [
 ];
 
 export function Classes() {
+  const dialog = useDialog();
   const navigate = useNavigate();
   const [classes, setClasses] = useState<ClassSearchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,7 +94,9 @@ export function Classes() {
       setDeleteTarget(null);
       fetchClasses();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao excluir turma.");
+      void dialog.alert(
+        err instanceof Error ? err.message : "Erro ao excluir turma.",
+      );
     } finally {
       setIsDeleting(false);
     }

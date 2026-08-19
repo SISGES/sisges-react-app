@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   FiBell,
-  FiCalendar,
   FiChevronRight,
   FiEdit2,
   FiHeart,
@@ -11,7 +10,6 @@ import {
   FiMoreVertical,
   FiPlus,
   FiTrash2,
-  FiUsers,
   FiX,
 } from "react-icons/fi";
 import {
@@ -34,6 +32,10 @@ import { AnnouncementEditorModal } from "../AnnouncementEditorModal/Announcement
 import { Button } from "../ui/Button";
 import { Spinner } from "../ui/FormField";
 import { useProtectedFileUrl } from "../ProtectedFile/ProtectedFile";
+import { UserAvatar } from "../UserAvatar/UserAvatar";
+import { Modal } from "../ui/Modal";
+import { EventsPanel } from "../EventsPanel/EventsPanel";
+import { useDialog } from "../../contexts/DialogContext";
 
 const COMMENT_MAX_CHARS = 250;
 
@@ -81,7 +83,7 @@ function FeedImage({ path, title }: { path: string; title: string }) {
   if (!src) return null;
   return (
     <>
-      <div className="w-full border-t border-b border-[var(--color-border)]/60 bg-[var(--color-background)]">
+      <div className="mr-6 border-t border-b border-[var(--color-border)]/60 bg-[var(--color-background)]">
         <div className="mx-auto w-full max-w-full px-2 py-2 sm:px-3 sm:py-2.5">
           <div className="mx-auto w-full max-w-3xl sm:max-w-4xl">
             <button
@@ -182,11 +184,11 @@ function AnnouncementCard({
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
   const [postMenuOpen, setPostMenuOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [commentMenuId, setCommentMenuId] = useState<number | null>(null);
   const postMenuRef = useRef<HTMLDivElement | null>(null);
   const commentMenuRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
-  const isPeopleAnnouncement = /reuni|respons|família|familia/i.test(a.title);
 
   useEffect(() => {
     if (!postMenuOpen) return;
@@ -281,16 +283,12 @@ function AnnouncementCard({
 
   return (
     <article className="relative overflow-visible border-b border-[var(--color-border)] bg-[var(--color-surface)] pl-[5.25rem] last:border-b-0">
-      <div
-        className={[
-          "absolute left-6 top-6 flex h-11 w-11 items-center justify-center rounded-full border bg-[var(--color-surface)]",
-          isPeopleAnnouncement
-            ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-            : "border-[var(--color-primary)] text-[var(--color-primary)]",
-        ].join(" ")}
-        aria-hidden
-      >
-        {isPeopleAnnouncement ? <FiUsers size={20} /> : <FiBell size={20} />}
+      <div className="absolute left-6 top-6">
+        <UserAvatar
+          path={a.authorProfileImagePath}
+          name={a.authorName || undefined}
+          className="h-11 w-11"
+        />
       </div>
       {/* Header */}
       <header className="flex items-start justify-between gap-3 pb-1 pr-6 pt-6">
@@ -394,7 +392,12 @@ function AnnouncementCard({
             <span>{a.commentCount}</span>
           </button>
         </div>
-        <div className="flex items-center gap-3 text-xs font-medium text-[var(--color-accent)]">
+        <button
+          type="button"
+          onClick={() => isAdmin && setDetailsOpen(true)}
+          disabled={!isAdmin}
+          className="flex items-center gap-3 border-none bg-transparent p-0 text-xs font-medium text-[var(--color-accent)] disabled:cursor-default"
+        >
           <span className="flex items-center gap-1.5">
             <span
               className="h-2 w-2 rounded-full bg-[var(--color-accent)]"
@@ -402,13 +405,34 @@ function AnnouncementCard({
             />
             Publicado
           </span>
-          <FiChevronRight
-            size={16}
-            className="text-[var(--color-text-muted)]"
-            aria-hidden
-          />
-        </div>
+          {isAdmin && (
+            <FiChevronRight
+              size={16}
+              className="text-[var(--color-text-muted)]"
+              aria-hidden
+            />
+          )}
+        </button>
       </div>
+
+      <Modal
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        title="Detalhes do aviso"
+      >
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-sm text-[var(--color-text-primary)]">
+          <dt className="font-semibold">Autor</dt>
+          <dd>{a.authorName || "Não informado"}</dd>
+          <dt className="font-semibold">Data e hora</dt>
+          <dd>{new Date(a.createdAt).toLocaleString("pt-BR")}</dd>
+          <dt className="font-semibold">Expira em</dt>
+          <dd>
+            {a.activeUntil
+              ? new Date(a.activeUntil).toLocaleString("pt-BR")
+              : "Não informado"}
+          </dd>
+        </dl>
+      </Modal>
 
       {/* Comments */}
       {showComments && (
@@ -586,6 +610,7 @@ export function AnnouncementFeed({
   const [editingAnnouncement, setEditingAnnouncement] =
     useState<Announcement | null>(null);
   const { user } = useAuth();
+  const dialog = useDialog();
   const isAdmin = user?.role === "ADMIN";
   const canPostAnnouncements =
     user?.role === "ADMIN" || user?.role === "TEACHER";
@@ -597,22 +622,6 @@ export function AnnouncementFeed({
     month: "long",
     year: "numeric",
   }).format(new Date());
-
-  const events = [
-    {
-      day: 18,
-      month: "AGO",
-      title: "Conselho de classe",
-      detail: "14h00 · Sala dos Professores",
-    },
-    { day: 20, month: "AGO", title: "Entrega de notas", detail: "Até 12h00" },
-    {
-      day: 25,
-      month: "AGO",
-      title: "Reunião pedagógica",
-      detail: "15h00 · Auditório Principal",
-    },
-  ];
 
   const openCreate = () => {
     setEditingAnnouncement(null);
@@ -650,7 +659,7 @@ export function AnnouncementFeed({
 
   const handleDeleteAnnouncement = useCallback(
     async (id: number) => {
-      if (!window.confirm("Excluir este aviso?")) return;
+      if (!(await dialog.confirm("Excluir este aviso?"))) return;
       try {
         await deleteAnnouncement(id);
         fetchFeed({ silent: true });
@@ -658,7 +667,7 @@ export function AnnouncementFeed({
         void 0;
       }
     },
-    [fetchFeed],
+    [dialog, fetchFeed],
   );
 
   const handleLike = useCallback(
@@ -821,48 +830,8 @@ export function AnnouncementFeed({
         </section>
 
         {dashboard && (
-          <aside
-            className="surface-panel overflow-hidden"
-            aria-labelledby="events-title"
-          >
-            <div className="flex min-h-16 items-center gap-2 border-b border-[var(--color-border)] px-5 py-4">
-              <FiCalendar
-                size={18}
-                className="text-[var(--color-primary)]"
-                aria-hidden
-              />
-              <h2
-                id="events-title"
-                className="text-base font-bold text-[var(--color-text-primary)]"
-              >
-                Próximos eventos
-              </h2>
-            </div>
-            <div className="px-5">
-              {events.map((event) => (
-                <div
-                  key={`${event.day}-${event.title}`}
-                  className="flex gap-4 border-b border-[var(--color-border)] py-5 last:border-b-0"
-                >
-                  <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-[var(--color-surface-subtle)] text-[var(--color-text-primary)]">
-                    <span className="text-lg font-bold leading-none">
-                      {event.day}
-                    </span>
-                    <span className="mt-1 text-[0.65rem] font-bold tracking-wide text-[var(--color-primary)]">
-                      {event.month}
-                    </span>
-                  </div>
-                  <div className="min-w-0 pt-0.5">
-                    <h3 className="text-sm font-bold leading-5 text-[var(--color-text-primary)]">
-                      {event.title}
-                    </h3>
-                    <p className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)]">
-                      {event.detail}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <aside>
+            <EventsPanel compact />
           </aside>
         )}
       </div>

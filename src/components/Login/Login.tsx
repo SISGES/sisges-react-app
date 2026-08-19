@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { FiArrowRight, FiCheckCircle, FiLock, FiMail } from "react-icons/fi";
+import { FiArrowRight, FiLock, FiMail } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ApiError } from "../../services/authService";
@@ -52,68 +52,23 @@ export function Login() {
   };
 
   return (
-    <div className="grid min-h-screen bg-[var(--color-background)] lg:grid-cols-[minmax(320px,0.82fr)_1.18fr]">
-      <section className="relative hidden overflow-hidden bg-[var(--color-sidebar)] px-12 py-10 text-white lg:flex lg:flex-col">
-        <SisgesLogo
-          variant="lockup"
-          className="relative z-10"
-          textClassName="text-2xl font-bold tracking-tight text-white"
-        />
-        <div className="relative z-10 my-auto max-w-md py-16">
-          <p className="mb-5 text-sm font-bold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-            Gestão escolar integrada
-          </p>
-          <h1 className="text-4xl font-bold leading-tight tracking-[-0.04em] xl:text-5xl">
-            Tudo o que a escola precisa, em um só lugar.
-          </h1>
-          <p className="mt-6 max-w-sm text-base leading-7 text-[var(--color-sidebar-muted)]">
-            Acompanhe alunos, turmas, notas, aulas e comunicados com clareza e
-            segurança.
-          </p>
-          <div className="mt-10 flex flex-col gap-4 text-sm text-white/90">
-            {[
-              "Rotinas organizadas",
-              "Informações sempre acessíveis",
-              "Experiência simples para toda a comunidade",
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <FiCheckCircle
-                  size={18}
-                  className="shrink-0 text-[var(--color-accent)]"
-                  aria-hidden
-                />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="relative z-10 text-xs text-[var(--color-sidebar-muted)]">
-          Sistema de Gestão Escolar
-        </p>
-      </section>
-
-      <section className="relative flex items-center justify-center px-5 py-12 sm:px-10">
+    <div className="min-h-screen bg-[var(--color-background)]">
+      <section className="relative flex min-h-screen items-center justify-center px-5 py-12 sm:px-10">
         <div className="absolute right-5 top-5 text-[var(--color-text-primary)] sm:right-8 sm:top-8">
           <ThemeToggle />
         </div>
 
         <div className="w-full max-w-md">
-          <div className="mb-9 lg:hidden">
+          <div className="mb-9">
             <SisgesLogo
               variant="lockup"
               textClassName="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]"
             />
           </div>
           <div className="mb-8">
-            <p className="text-sm font-semibold text-[var(--color-primary)]">
-              Bem-vindo de volta
-            </p>
             <h2 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-[var(--color-text-primary)]">
               Acesse sua conta
             </h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-              Entre com as credenciais fornecidas pela sua instituição.
-            </p>
           </div>
 
           <div className="surface-panel p-6 sm:p-8">

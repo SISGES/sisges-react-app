@@ -30,6 +30,7 @@ export function getNavItemsForRole(role: string | undefined): NavItem[] {
       { label: "Disciplinas", to: "/admin/disciplines", icon: FiBookOpen },
       { label: "Notas", to: "/admin/notas", icon: FiClipboard },
       { label: "Aulas", to: "/aulas", icon: FiCalendar },
+      { label: "Eventos", to: "/events", icon: FiCalendar },
     ];
   }
   if (r === "TEACHER") {

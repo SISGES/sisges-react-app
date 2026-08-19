@@ -24,6 +24,8 @@ import { Teachers } from "./pages/Teachers/Teachers";
 import { StudentBoletim } from "./pages/StudentBoletim/StudentBoletim";
 import { ActivityGradebook } from "./pages/ActivityGradebook/ActivityGradebook";
 import { useAuth } from "./contexts/AuthContext";
+import { Account } from "./pages/Account/Account";
+import { Events } from "./pages/Events/Events";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -42,6 +44,15 @@ function App() {
         }
       >
         <Route path="/" element={<Home />} />
+        <Route path="/account" element={<Account />} />
+        <Route
+          path="/events"
+          element={
+            <AdminRoute>
+              <Events />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/admin/register"
           element={

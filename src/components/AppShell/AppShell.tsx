@@ -1,20 +1,11 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
-import { FiChevronDown, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import { FiLogOut, FiMenu, FiX } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { ThemeToggle } from "../ThemeToggle/ThemeToggle";
 import { getNavItemsForRole } from "../../config/navConfig";
 import { SisgesLogo } from "../SisgesLogo/SisgesLogo";
-
-function getInitials(name?: string, email?: string): string {
-  if (name) {
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2)
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return parts[0][0].toUpperCase();
-  }
-  return email?.[0]?.toUpperCase() ?? "?";
-}
+import { UserAvatar } from "../UserAvatar/UserAvatar";
 
 function getRoleLabel(role?: string): string {
   switch (role?.toUpperCase()) {
@@ -105,10 +96,15 @@ export function AppShell() {
 
       {/* User + actions */}
       <div className="flex flex-col gap-4 border-t border-[var(--color-sidebar-border)] px-4 py-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-semibold text-white shadow-sm">
-            {getInitials(user?.name, user?.email)}
-          </div>
+        <button
+          type="button"
+          onClick={() => {
+            navigate("/account");
+            closeDrawer();
+          }}
+          className="flex w-full cursor-pointer items-center gap-3 rounded-lg border-none bg-transparent p-0 text-left hover:opacity-90"
+        >
+          <UserAvatar path={user?.profileImagePath} name={user?.name} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white">
               {user?.name || user?.email}
@@ -117,12 +113,7 @@ export function AppShell() {
               {getRoleLabel(user?.role)}
             </p>
           </div>
-          <FiChevronDown
-            size={16}
-            className="text-[var(--color-sidebar-muted)]"
-            aria-hidden
-          />
-        </div>
+        </button>
         <div className="flex items-center gap-2 border-t border-[var(--color-sidebar-border)] pt-4 text-white">
           <ThemeToggle />
           <button

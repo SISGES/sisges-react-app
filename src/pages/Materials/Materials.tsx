@@ -26,11 +26,13 @@ import {
   Textarea,
   Alert,
 } from "../../components/ui";
+import { useDialog } from "../../contexts/DialogContext";
 
 const selectCls =
   "px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors";
 
 export function Materials() {
+  const dialog = useDialog();
   const [materials, setMaterials] = useState<DisciplineMaterial[]>([]);
   const [classes, setClasses] = useState<ClassSearchResponse[]>([]);
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([]);
@@ -130,12 +132,14 @@ export function Materials() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Excluir este material?")) return;
+    if (!(await dialog.confirm("Excluir este material?"))) return;
     try {
       await deleteMaterial(id);
       fetchMaterials();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Erro ao excluir.");
+      void dialog.alert(
+        err instanceof ApiError ? err.message : "Erro ao excluir.",
+      );
     }
   };
 

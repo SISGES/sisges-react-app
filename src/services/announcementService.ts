@@ -14,6 +14,9 @@ export interface Announcement {
   likeCount: number;
   likedByCurrentUser: boolean;
   commentCount: number;
+  authorId?: number | null;
+  authorName?: string | null;
+  authorProfileImagePath?: string | null;
 }
 
 export interface AnnouncementComment {

@@ -63,6 +63,18 @@ export async function getUserById(id: number): Promise<UserDetailResponse> {
   return response;
 }
 
+export async function getMyProfile(): Promise<UserDetailResponse> {
+  return api.get<UserDetailResponse>("/users/me");
+}
+
+export async function updateMyProfile(data: {
+  name?: string;
+  password?: string;
+  profileImagePath?: string;
+}): Promise<UserDetailResponse> {
+  return api.patch<UserDetailResponse>("/users/me", data);
+}
+
 export async function getUsers(): Promise<UserSearchResponse[]> {
   return searchUsers();
 }

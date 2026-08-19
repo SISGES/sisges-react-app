@@ -14,6 +14,7 @@ import {
   User,
   LoginRequest,
 } from "../services/authService";
+import { getMyProfile } from "../services/userService";
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -71,12 +73,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const fresh = await getMyProfile();
+    const updated = { ...fresh, role: fresh.role as User["role"] };
+    localStorage.setItem("user", JSON.stringify(updated));
+    setUser(updated);
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

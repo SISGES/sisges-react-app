@@ -30,7 +30,13 @@ export async function uploadFile(
 }
 
 function privateFileUrl(path: string): string {
-  const prefixes = ["announcements/", "materials/", "activities/", "general/"];
+  const prefixes = [
+    "announcements/",
+    "profiles/",
+    "materials/",
+    "activities/",
+    "general/",
+  ];
   const prefix = prefixes.find((candidate) => path.includes(candidate));
   if (!prefix) throw new Error("Caminho de arquivo inválido");
   const key = path.slice(path.indexOf(prefix));

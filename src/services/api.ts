@@ -140,6 +140,17 @@ export const api = {
     return JSON.parse(text) as T;
   },
 
+  patch: async <T>(endpoint: string, data?: unknown): Promise<T> => {
+    const response = await fetchWithAuth(endpoint, {
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    if (!response.ok) await handleErrorResponse(response);
+    const text = await response.text();
+    if (!text.trim()) return undefined as T;
+    return JSON.parse(text) as T;
+  },
+
   delete: async <T>(endpoint: string): Promise<T> => {
     const response = await fetchWithAuth(endpoint, { method: "DELETE" });
     if (!response.ok) {
