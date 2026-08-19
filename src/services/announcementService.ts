@@ -31,6 +31,7 @@ export interface CreateAnnouncementRequest {
   hiddenForRoles?: string[];
   activeFrom?: string | null;
   activeUntil?: string | null;
+  ttlHours: 1 | 4 | 10 | 24 | 48 | 168;
 }
 
 export interface UpdateAnnouncementRequest {

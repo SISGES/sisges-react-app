@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { CharCounter } from "../CharCounter/CharCounter";
 import { Modal } from "../ui/Modal";
-import { Alert, Input, Textarea } from "../ui/FormField";
+import { Alert, Input, Select, Textarea } from "../ui/FormField";
 import { Button } from "../ui/Button";
 import { FiUploadCloud, FiX, FiImage } from "react-icons/fi";
 import {
@@ -23,6 +23,16 @@ const ROLES = [
 ];
 
 const ANNOUNCEMENT_CONTENT_MAX_CHARS = 320;
+const TTL_OPTIONS = [
+  { value: 1, label: "1 hora" },
+  { value: 4, label: "4 horas" },
+  { value: 10, label: "10 horas" },
+  { value: 24, label: "24 horas" },
+  { value: 48, label: "48 horas" },
+  { value: 168, label: "7 dias" },
+] as const;
+
+type AnnouncementTtl = (typeof TTL_OPTIONS)[number]["value"];
 
 type Props = {
   open: boolean;
@@ -42,6 +52,7 @@ export function AnnouncementEditorModal({
   const [imagePath, setImagePath] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [hiddenForRoles, setHiddenForRoles] = useState<string[]>([]);
+  const [ttlHours, setTtlHours] = useState<AnnouncementTtl>(24);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
@@ -55,6 +66,7 @@ export function AnnouncementEditorModal({
     setImagePath("");
     setImageFile(null);
     setHiddenForRoles([]);
+    setTtlHours(24);
     setSubmitError(null);
     setSubmitSuccess(null);
     setImagePreview(null);
@@ -135,6 +147,7 @@ export function AnnouncementEditorModal({
           imagePath: finalImagePath,
           hiddenForRoles:
             hiddenForRoles.length > 0 ? hiddenForRoles : undefined,
+          ttlHours,
         };
         await createAnnouncement(data);
         setSubmitSuccess("Aviso criado com sucesso!");
@@ -202,6 +215,37 @@ export function AnnouncementEditorModal({
             disabled={isSubmitting}
           />
         </div>
+
+        {!editingAnnouncement && (
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="announcementEditorTtl"
+              className="text-sm font-medium text-[var(--color-text-primary)]"
+            >
+              Tempo de exibição{" "}
+              <span className="text-[var(--color-error)]">*</span>
+            </label>
+            <Select
+              id="announcementEditorTtl"
+              value={ttlHours}
+              onChange={(event) =>
+                setTtlHours(Number(event.target.value) as AnnouncementTtl)
+              }
+              disabled={isSubmitting}
+              required
+            >
+              {TTL_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              O aviso e sua imagem serão excluídos automaticamente após esse
+              período.
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <label
