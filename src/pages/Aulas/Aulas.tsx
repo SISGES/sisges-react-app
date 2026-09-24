@@ -23,10 +23,15 @@ import {
   DataCard,
   StateBlock,
   tableStyles,
+  Pagination,
+  Input,
+  Select,
 } from "../../components/ui";
+import { formatBrDateInput, brDateToIso } from "../../utils/brDate";
 
 const selectCls =
   "px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors";
+const PAGE_SIZE = 10;
 
 export function Aulas() {
   const navigate = useNavigate();
@@ -35,9 +40,15 @@ export function Aulas() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<AulaSearchFilters>({});
+  const [dateFilter, setDateFilter] = useState("");
   const [schoolClasses, setSchoolClasses] = useState<ClassSearchResponse[]>([]);
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([]);
   const [teachers, setTeachers] = useState<TeacherSearchResponse[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleAulas = aulas.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const isAdmin = user?.role === "ADMIN";
   const isTeacher = user?.role === "TEACHER";
@@ -47,6 +58,7 @@ export function Aulas() {
     setError(null);
     try {
       setAulas(await searchAulas(filters));
+      setCurrentPage(1);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -112,15 +124,19 @@ export function Aulas() {
       {/* Admin filters */}
       {isAdmin && (
         <div className="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-          <input
-            type="date"
-            value={filters.date || ""}
-            onChange={(e) =>
-              setFilters((p) => ({ ...p, date: e.target.value || undefined }))
-            }
+          <Input
+            type="text"
+            inputMode="numeric"
+            placeholder="dd/mm/aaaa"
+            value={dateFilter}
+            onChange={(e) => {
+              const next = formatBrDateInput(e.target.value);
+              setDateFilter(next);
+              setFilters((p) => ({ ...p, date: brDateToIso(next) || undefined }));
+            }}
             className={selectCls}
           />
-          <select
+          <Select
             value={filters.disciplineId ?? ""}
             onChange={(e) =>
               setFilters((p) => ({
@@ -138,8 +154,8 @@ export function Aulas() {
                 {d.name}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={filters.schoolClassId ?? ""}
             onChange={(e) =>
               setFilters((p) => ({
@@ -157,8 +173,8 @@ export function Aulas() {
                 {c.name}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={filters.teacherId ?? ""}
             onChange={(e) =>
               setFilters((p) => ({
@@ -176,9 +192,12 @@ export function Aulas() {
                 {t.name}
               </option>
             ))}
-          </select>
+          </Select>
           <button
-            onClick={() => setFilters({})}
+            onClick={() => {
+              setDateFilter("");
+              setFilters({});
+            }}
             className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] bg-transparent border-none cursor-pointer transition-colors px-1"
           >
             Limpar
@@ -219,11 +238,11 @@ export function Aulas() {
                   </tr>
                 </thead>
                 <tbody>
-                  {aulas.map((a) => (
+                  {visibleAulas.map((a) => (
                     <tr key={a.id} className={tableStyles.trHover}>
                       <td className={tableStyles.td}>{formatDate(a.date)}</td>
                       <td className={tableStyles.td}>
-                        {a.startTime} – {a.endTime}
+                        {a.startTime.slice(0, 5)} – {a.endTime.slice(0, 5)}
                       </td>
                       <td className={tableStyles.td}>{a.disciplineName}</td>
                       <td className={tableStyles.td}>{a.schoolClassName}</td>
@@ -243,6 +262,12 @@ export function Aulas() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={aulas.length}
+              onPageChange={setCurrentPage}
+            />
           </StateBlock>
         </DataCard>
       </div>

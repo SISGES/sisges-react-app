@@ -31,6 +31,7 @@ import { CharCounter } from "../CharCounter/CharCounter";
 import { AnnouncementEditorModal } from "../AnnouncementEditorModal/AnnouncementEditorModal";
 import { Button } from "../ui/Button";
 import { Spinner } from "../ui/FormField";
+import { Pagination } from "../ui/Pagination";
 import { useProtectedFileUrl } from "../ProtectedFile/ProtectedFile";
 import { UserAvatar } from "../UserAvatar/UserAvatar";
 import { Modal } from "../ui/Modal";
@@ -57,6 +58,13 @@ function formatCompactDate(iso: string): string {
     month: "short",
     year: "numeric",
   });
+}
+
+function formatDateTime(iso: string): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(iso));
 }
 
 /** Fixed preview height so all image posts align; image scales down inside the box. */
@@ -282,7 +290,7 @@ function AnnouncementCard({
   };
 
   return (
-    <article className="relative overflow-visible border-b border-[var(--color-border)] bg-[var(--color-surface)] pl-[5.25rem] last:border-b-0">
+    <article className="relative overflow-visible border-b border-[var(--color-border)] bg-[var(--color-surface)] pl-[5.25rem] last:mb-6 last:border-b-0">
       <div className="absolute left-6 top-6">
         <UserAvatar
           path={a.authorProfileImagePath}
@@ -424,11 +432,11 @@ function AnnouncementCard({
           <dt className="font-semibold">Autor</dt>
           <dd>{a.authorName || "Não informado"}</dd>
           <dt className="font-semibold">Data e hora</dt>
-          <dd>{new Date(a.createdAt).toLocaleString("pt-BR")}</dd>
+          <dd>{formatDateTime(a.createdAt)}</dd>
           <dt className="font-semibold">Expira em</dt>
           <dd>
             {a.activeUntil
-              ? new Date(a.activeUntil).toLocaleString("pt-BR")
+              ? formatDateTime(a.activeUntil)
               : "Não informado"}
           </dd>
         </dl>
@@ -603,6 +611,11 @@ export function AnnouncementFeed({
   dashboard?: boolean;
 }) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleAnnouncements = announcements.slice(
+    (currentPage - 1) * 10,
+    currentPage * 10,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedRefreshVersion, setFeedRefreshVersion] = useState(0);
@@ -645,6 +658,7 @@ export function AnnouncementFeed({
     try {
       const data = await getAnnouncementFeed();
       setAnnouncements(data);
+      setCurrentPage(1);
       setFeedRefreshVersion((v) => v + 1);
       if (!silent) setError(null);
     } catch (err) {
@@ -813,7 +827,7 @@ export function AnnouncementFeed({
             </div>
           ) : (
             <div className="content-reveal">
-              {announcements.map((a) => (
+              {visibleAnnouncements.map((a) => (
                 <AnnouncementCard
                   key={a.id}
                   a={a}
@@ -825,6 +839,14 @@ export function AnnouncementFeed({
                   onDeleteAnnouncement={handleDeleteAnnouncement}
                 />
               ))}
+              <div className="px-5 pb-5 sm:px-6">
+                <Pagination
+                  currentPage={currentPage}
+                  pageSize={10}
+                  totalItems={announcements.length}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
           )}
         </section>

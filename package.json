@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
+    "cypress:run:mock": "CYPRESS_MOCK_ONLY=true cypress run",
     "cypress:run:integration": "cypress run --spec cypress/e2e/announcement-create-api.cy.ts"
   },
   "dependencies": {

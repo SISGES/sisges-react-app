@@ -2,6 +2,7 @@ import type { IconType } from "react-icons";
 import {
   FiBookOpen,
   FiCalendar,
+  FiClock,
   FiClipboard,
   FiFileText,
   FiHome,
@@ -30,7 +31,7 @@ export function getNavItemsForRole(role: string | undefined): NavItem[] {
       { label: "Disciplinas", to: "/admin/disciplines", icon: FiBookOpen },
       { label: "Notas", to: "/admin/notas", icon: FiClipboard },
       { label: "Aulas", to: "/aulas", icon: FiCalendar },
-      { label: "Eventos", to: "/events", icon: FiCalendar },
+      { label: "Eventos", to: "/events", icon: FiClock },
     ];
   }
   if (r === "TEACHER") {

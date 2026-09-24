@@ -10,6 +10,7 @@ import {
 import type { DisciplineMaterial } from "../../services/materialService";
 import type { EvaluativeActivity } from "../../services/activityService";
 import { Spinner } from "../ui/FormField";
+import { Pagination } from "../ui/Pagination";
 import { ProtectedDownloadButton } from "../ProtectedFile/ProtectedFile";
 
 export type StudentHomeSectionVariant =
@@ -56,10 +57,25 @@ export function StudentHomeSection({
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [materialsPage, setMaterialsPage] = useState(1);
+  const [activitiesPage, setActivitiesPage] = useState(1);
+  const [classmatesPage, setClassmatesPage] = useState(1);
+  const [teachersPage, setTeachersPage] = useState(1);
+  const [absencesPage, setAbsencesPage] = useState(1);
+  const visibleMaterials = materials.slice((materialsPage - 1) * 10, materialsPage * 10);
+  const visibleActivities = activities.slice((activitiesPage - 1) * 10, activitiesPage * 10);
+  const visibleClassmates = (myClass?.classmates ?? []).slice((classmatesPage - 1) * 10, classmatesPage * 10);
+  const visibleTeachers = (myClass?.teachers ?? []).slice((teachersPage - 1) * 10, teachersPage * 10);
+  const visibleAbsences = absencesByDiscipline.slice((absencesPage - 1) * 10, absencesPage * 10);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setMaterialsPage(1);
+    setActivitiesPage(1);
+    setClassmatesPage(1);
+    setTeachersPage(1);
+    setAbsencesPage(1);
     try {
       if (variant === "class") {
         setMyClass(await getMyClass());
@@ -143,7 +159,7 @@ export function StudentHomeSection({
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {materials.map((m) => (
+                {visibleMaterials.map((m) => (
                   <li key={m.id} className="flex flex-col gap-0.5">
                     <span className="text-sm font-medium text-[var(--color-text-primary)]">
                       {m.title}
@@ -163,6 +179,7 @@ export function StudentHomeSection({
                 ))}
               </ul>
             )}
+            <Pagination currentPage={materialsPage} pageSize={10} totalItems={materials.length} onPageChange={setMaterialsPage} />
           </SectionCard>
 
           <SectionCard title="Atividades Avaliativas">
@@ -172,7 +189,7 @@ export function StudentHomeSection({
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {activities.map((a) => (
+                {visibleActivities.map((a) => (
                   <li key={a.id} className="flex flex-col gap-0.5">
                     <span className="text-sm font-medium text-[var(--color-text-primary)]">
                       {a.title}
@@ -194,6 +211,7 @@ export function StudentHomeSection({
                 ))}
               </ul>
             )}
+            <Pagination currentPage={activitiesPage} pageSize={10} totalItems={activities.length} onPageChange={setActivitiesPage} />
           </SectionCard>
         </>
       )}
@@ -229,7 +247,7 @@ export function StudentHomeSection({
                         </tr>
                       </thead>
                       <tbody>
-                        {myClass.classmates.map((c) => (
+                        {visibleClassmates.map((c) => (
                           <tr key={c.id}>
                             <td className={tdClass}>{c.name}</td>
                             <td className={tdClass}>
@@ -246,6 +264,7 @@ export function StudentHomeSection({
                     </table>
                   </div>
                 )}
+                <Pagination currentPage={classmatesPage} pageSize={10} totalItems={myClass.classmates.length} onPageChange={setClassmatesPage} />
               </div>
 
               <div>
@@ -266,7 +285,7 @@ export function StudentHomeSection({
                         </tr>
                       </thead>
                       <tbody>
-                        {myClass.teachers.map((t) => (
+                        {visibleTeachers.map((t) => (
                           <tr key={t.id}>
                             <td className={tdClass}>{t.name}</td>
                             <td className={tdClass}>
@@ -283,6 +302,7 @@ export function StudentHomeSection({
                     </table>
                   </div>
                 )}
+                <Pagination currentPage={teachersPage} pageSize={10} totalItems={myClass.teachers.length} onPageChange={setTeachersPage} />
               </div>
             </div>
           )}
@@ -316,7 +336,7 @@ export function StudentHomeSection({
                   </tr>
                 </thead>
                 <tbody>
-                  {absencesByDiscipline.map((row, i) => (
+                  {visibleAbsences.map((row, i) => (
                     <tr key={`${row.disciplineName}-${i}`}>
                       <td className={tdClass}>{row.disciplineName}</td>
                       <td className={`${tdClass} text-right font-medium`}>
@@ -328,6 +348,7 @@ export function StudentHomeSection({
               </table>
             </div>
           )}
+          <Pagination currentPage={absencesPage} pageSize={10} totalItems={absencesByDiscipline.length} onPageChange={setAbsencesPage} />
         </SectionCard>
       )}
     </div>

@@ -23,13 +23,21 @@ import {
   Input,
   Textarea,
   Alert,
+  Pagination,
 } from "../../components/ui";
+
+const PAGE_SIZE = 10;
 
 export function Disciplines() {
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([]);
   const [teachers, setTeachers] = useState<TeacherSearchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleDisciplines = disciplines.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<DisciplineResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +52,7 @@ export function Disciplines() {
     setError(null);
     try {
       setDisciplines(await getDisciplines());
+      setCurrentPage(1);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -180,7 +189,7 @@ export function Disciplines() {
                   </tr>
                 </thead>
                 <tbody>
-                  {disciplines.map((d) => (
+                  {visibleDisciplines.map((d) => (
                     <tr key={d.id} className={tableStyles.trHover}>
                       <td className={tableStyles.td}>{d.name}</td>
                       <td
@@ -206,6 +215,12 @@ export function Disciplines() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={disciplines.length}
+              onPageChange={setCurrentPage}
+            />
           </StateBlock>
         </DataCard>
       </div>

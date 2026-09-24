@@ -3,7 +3,7 @@
 import { createTestJwt } from "../support/testJwt";
 
 describe("Admin — Turmas", () => {
-  beforeEach(() => {
+  function visitClasses() {
     cy.intercept("GET", "**/announcements/feed", []).as("feed");
     cy.visit("/admin/classes", {
       onBeforeLoad(win) {
@@ -20,7 +20,7 @@ describe("Admin — Turmas", () => {
         );
       },
     });
-  });
+  }
 
   it("lista turmas retornadas pela API", () => {
     cy.intercept("POST", "**/classes/search", {
@@ -36,6 +36,7 @@ describe("Admin — Turmas", () => {
       ],
     }).as("search");
 
+    visitClasses();
     cy.wait("@search");
     cy.contains("Turma 6A").should("be.visible");
     cy.contains("6º ano").should("be.visible");
@@ -43,6 +44,7 @@ describe("Admin — Turmas", () => {
 
   it("exibe estado vazio quando não há turmas", () => {
     cy.intercept("POST", "**/classes/search", []).as("search");
+    visitClasses();
     cy.wait("@search");
     cy.contains("Nenhuma turma cadastrada.").should("be.visible");
   });

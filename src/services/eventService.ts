@@ -20,7 +20,8 @@ export interface CreateSchoolEvent {
   audience: EventAudience;
   classId?: number;
 }
-export const getEvents = () => api.get<SchoolEvent[]>("/events");
+export const getEvents = (includePast = false) =>
+  api.get<SchoolEvent[]>(`/events${includePast ? "?includePast=true" : ""}`);
 export const createEvent = (data: CreateSchoolEvent) =>
   api.post<SchoolEvent>("/events", data);
 export const deleteEvent = (id: number) => api.delete<void>(`/events/${id}`);

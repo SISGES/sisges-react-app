@@ -23,7 +23,9 @@ import {
   Select,
   Input,
   Alert,
+  Pagination,
 } from "../../components/ui";
+import { brDateToIso, formatBrDateInput, isoDateToBr } from "../../utils/brDate";
 
 function timeToMins(t: string): number {
   const parts = t.split(":");
@@ -62,6 +64,11 @@ export function EditAula() {
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
   const [isSubmittingFreq, setIsSubmittingFreq] = useState(false);
   const [freqError, setFreqError] = useState<string | null>(null);
+  const [frequencyPage, setFrequencyPage] = useState(1);
+  const visibleFrequencyStudents = (aula?.students ?? []).slice(
+    (frequencyPage - 1) * 10,
+    frequencyPage * 10,
+  );
 
   const isAdmin = user?.role === "ADMIN";
 
@@ -72,9 +79,10 @@ export function EditAula() {
     try {
       const data = await getAulaById(aulaId);
       setAula(data);
-      if (data.date) setDate(data.date);
-      if (data.startTime) setStartTime(data.startTime);
-      if (data.endTime) setEndTime(data.endTime);
+      setFrequencyPage(1);
+      if (data.date) setDate(isoDateToBr(data.date));
+      if (data.startTime) setStartTime(data.startTime.slice(0, 5));
+      if (data.endTime) setEndTime(data.endTime.slice(0, 5));
       if (data.disciplineId != null) setDisciplineId(data.disciplineId);
       if (data.schoolClassId != null) setSchoolClassId(data.schoolClassId);
       const initial: Record<string, "P" | "F"> = {};
@@ -166,11 +174,12 @@ export function EditAula() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const isoDate = brDateToIso(date);
     if (
       !aulaId ||
       !disciplineId ||
       !schoolClassId ||
-      !date ||
+      !isoDate ||
       !startTime ||
       !endTime
     )
@@ -183,7 +192,7 @@ export function EditAula() {
     setIsSubmitting(true);
     try {
       const existing = await searchAulas({
-        date,
+        date: isoDate,
         schoolClassId: Number(schoolClassId),
       });
       if (
@@ -205,7 +214,7 @@ export function EditAula() {
         return;
       }
       await updateAula(aulaId, {
-        date,
+        date: isoDate,
         disciplineId: Number(disciplineId),
         classId: Number(schoolClassId),
         startTime,
@@ -284,9 +293,11 @@ export function EditAula() {
 
               <FormField label="Data" required>
                 <Input
-                  type="date"
+                  type="text"
+                  inputMode="numeric"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={(e) => setDate(formatBrDateInput(e.target.value))}
+                  placeholder="dd/mm/aaaa"
                   required
                   disabled={isSubmitting}
                 />
@@ -398,7 +409,7 @@ export function EditAula() {
         >
           <div className="flex flex-col gap-3">
             {freqError && <Alert type="error">{freqError}</Alert>}
-            {(aula.students ?? []).map((s) => (
+            {visibleFrequencyStudents.map((s) => (
               <div
                 key={s.id}
                 className="flex items-center justify-between gap-4 py-2 border-b border-[var(--color-border)] last:border-0"
@@ -428,6 +439,12 @@ export function EditAula() {
               </div>
             ))}
           </div>
+          <Pagination
+            currentPage={frequencyPage}
+            pageSize={10}
+            totalItems={(aula.students ?? []).length}
+            onPageChange={setFrequencyPage}
+          />
         </Modal>
       )}
     </div>

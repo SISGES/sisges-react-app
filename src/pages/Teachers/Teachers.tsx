@@ -11,19 +11,28 @@ import {
   DataCard,
   StateBlock,
   tableStyles,
+  Pagination,
 } from "../../components/ui";
+
+const PAGE_SIZE = 10;
 
 export function Teachers() {
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState<TeacherSearchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleTeachers = teachers.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const fetchTeachers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       setTeachers(await searchTeachers());
+      setCurrentPage(1);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -83,7 +92,7 @@ export function Teachers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {teachers.map((t) => (
+                  {visibleTeachers.map((t) => (
                     <tr key={t.id} className={tableStyles.trHover}>
                       <td className={tableStyles.td}>{t.name}</td>
                       <td className={tableStyles.td}>{t.email}</td>
@@ -103,6 +112,13 @@ export function Teachers() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={teachers.length}
+              onPageChange={setCurrentPage}
+              className="px-5 pb-5 sm:px-6"
+            />
           </StateBlock>
         </DataCard>
       </div>

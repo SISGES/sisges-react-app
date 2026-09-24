@@ -28,6 +28,7 @@ import {
   Input,
   Textarea,
   Alert,
+  Pagination,
 } from "../../components/ui";
 import { useDialog } from "../../contexts/DialogContext";
 
@@ -52,6 +53,16 @@ export function AulaDetail() {
   const [activityFile, setActivityFile] = useState<File | null>(null);
   const [isSubmittingActivity, setIsSubmittingActivity] = useState(false);
   const [activityError, setActivityError] = useState<string | null>(null);
+  const [activitiesPage, setActivitiesPage] = useState(1);
+  const [studentsPage, setStudentsPage] = useState(1);
+  const visibleActivities = activities.slice(
+    (activitiesPage - 1) * 10,
+    activitiesPage * 10,
+  );
+  const visibleStudents = (aula?.students ?? []).slice(
+    (studentsPage - 1) * 10,
+    studentsPage * 10,
+  );
 
   const isAdmin = user?.role === "ADMIN";
   const canEdit = user?.role === "TEACHER" || user?.role === "ADMIN";
@@ -60,6 +71,7 @@ export function AulaDetail() {
     if (!aulaId) return;
     try {
       setActivities(await getActivitiesByMeeting(aulaId));
+      setActivitiesPage(1);
     } catch {
       setActivities([]);
     }
@@ -75,6 +87,7 @@ export function AulaDetail() {
         const data = await getAulaById(aulaId!);
         if (!cancelled) {
           setAula(data);
+          setStudentsPage(1);
           fetchActivities();
           const initial: Record<number, "P" | "F"> = {};
           (data.students ?? []).forEach((s) => {
@@ -290,7 +303,7 @@ export function AulaDetail() {
                       </p>
                     ) : (
                       <ul className="flex flex-col gap-3">
-                        {activities.map((a) => (
+                        {visibleActivities.map((a) => (
                           <li
                             key={a.id}
                             className="flex items-start justify-between gap-4 py-2 border-b border-[var(--color-border)] last:border-0"
@@ -325,6 +338,12 @@ export function AulaDetail() {
                         ))}
                       </ul>
                     )}
+                    <Pagination
+                      currentPage={activitiesPage}
+                      pageSize={10}
+                      totalItems={activities.length}
+                      onPageChange={setActivitiesPage}
+                    />
                   </div>
                 </div>
               )}
@@ -337,7 +356,7 @@ export function AulaDetail() {
                   </h3>
                 </div>
                 <ul className="divide-y divide-[var(--color-border)]">
-                  {(aula.students ?? []).map((s) => {
+                  {visibleStudents.map((s) => {
                     const currentStatus = attendance[s.id] ?? "P";
                     const isPresent = currentStatus === "P";
                     const isUpdating = isSubmittingFreq === s.id;
@@ -399,8 +418,16 @@ export function AulaDetail() {
                         )}
                       </li>
                     );
-                  })}
+                })}
                 </ul>
+                <div className="px-5 py-4">
+                  <Pagination
+                    currentPage={studentsPage}
+                    pageSize={10}
+                    totalItems={(aula.students ?? []).length}
+                    onPageChange={setStudentsPage}
+                  />
+                </div>
               </div>
             </div>
           )}

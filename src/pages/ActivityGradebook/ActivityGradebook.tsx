@@ -8,6 +8,7 @@ import {
   tableStyles,
   Button,
   ConfirmModal,
+  Pagination,
 } from "../../components/ui";
 import {
   getActivityGradebook,
@@ -38,6 +39,11 @@ export function ActivityGradebook() {
   const [isSaving, setIsSaving] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
   const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleStudents = (gradebook?.students ?? []).slice(
+    (currentPage - 1) * 10,
+    currentPage * 10,
+  );
 
   const fetchGradebook = useCallback(async () => {
     if (!activityId || Number.isNaN(activityId)) return;
@@ -46,6 +52,7 @@ export function ActivityGradebook() {
     try {
       const data = await getActivityGradebook(activityId);
       setGradebook(data);
+      setCurrentPage(1);
       setScoreMap(
         Object.fromEntries(
           data.students.map((s) => [
@@ -195,7 +202,7 @@ export function ActivityGradebook() {
                       </tr>
                     </thead>
                     <tbody>
-                      {gradebook.students.map((student) => (
+                      {visibleStudents.map((student) => (
                         <tr
                           key={student.studentId}
                           className={tableStyles.trHover}
@@ -226,6 +233,12 @@ export function ActivityGradebook() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={currentPage}
+                  pageSize={10}
+                  totalItems={gradebook.students.length}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             )}
           </StateBlock>

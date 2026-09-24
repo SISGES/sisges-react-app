@@ -47,6 +47,9 @@ export default defineConfig({
   e2e: {
     baseUrl: "http://localhost:3000",
     supportFile: "cypress/support/e2e.ts",
+    ...(process.env.CYPRESS_MOCK_ONLY === "true" && {
+      excludeSpecPattern: "announcement-create-api.cy.ts",
+    }),
     video: false,
     setupNodeEvents(_on, config) {
       const root = config.projectRoot ?? process.cwd();

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiCalendar, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiCalendar, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDialog } from "../../contexts/DialogContext";
 import {
@@ -13,37 +13,70 @@ import type { ClassSearchResponse } from "../../types/auth";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input, Select, Textarea } from "../ui/FormField";
+import { Pagination } from "../ui/Pagination";
+import { brDateToIso, formatBrDateInput } from "../../utils/brDate";
 
-export function EventsPanel({ compact = false }: { compact?: boolean }) {
+function formatEventDateTime(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+export function EventsPanel({
+  compact = false,
+  showPast = false,
+}: {
+  compact?: boolean;
+  showPast?: boolean;
+}) {
   const { user } = useAuth();
   const dialog = useDialog();
   const [events, setEvents] = useState<SchoolEvent[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleEvents = events.slice((currentPage - 1) * 10, currentPage * 10);
   const [classes, setClasses] = useState<ClassSearchResponse[]>([]);
   const [selected, setSelected] = useState<SchoolEvent | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
-    eventAt: "",
+    date: "",
+    time: "",
     audience: "ALL" as EventAudience,
     classId: "",
   });
-  const load = () => void getEvents().then(setEvents);
-  useEffect(load, []);
+  const load = () => {
+    void getEvents(showPast).then((items) => {
+      setEvents(
+        showPast
+          ? items
+          : items.filter((event) => new Date(event.eventAt).getTime() >= Date.now()),
+      );
+      setCurrentPage(1);
+    });
+  };
+  useEffect(load, [showPast]);
   useEffect(() => {
     if (user?.role === "ADMIN") void searchClasses().then(setClasses);
   }, [user?.role]);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const date = brDateToIso(form.date);
+    if (!date || !form.time) return;
     await createEvent({
-      ...form,
+      title: form.title,
+      description: form.description || undefined,
+      eventAt: `${date}T${form.time}:00`,
+      audience: form.audience,
       classId: form.audience === "CLASS" ? Number(form.classId) : undefined,
     });
     setCreating(false);
     setForm({
       title: "",
       description: "",
-      eventAt: "",
+      date: "",
+      time: "",
       audience: "ALL",
       classId: "",
     });
@@ -75,9 +108,11 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
             <Button
               size="sm"
               onClick={() => setCreating(true)}
-              icon={<FiPlus />}
+              aria-label="Criar evento"
+              title="Criar evento"
+              className="min-w-9 px-0"
             >
-              Criar
+              +
             </Button>
           )}
         </div>
@@ -87,13 +122,17 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
               Nenhum evento agendado.
             </p>
           ) : (
-            events.map((event) => {
+            visibleEvents.map((event) => {
               const date = new Date(event.eventAt);
+              const isPast = date.getTime() < Date.now();
               return (
                 <button
                   key={event.id}
                   onClick={() => setSelected(event)}
-                  className="flex w-full cursor-pointer gap-4 border-x-0 border-t-0 border-b border-[var(--color-border)] bg-transparent py-5 text-left last:border-b-0"
+                  className={[
+                    "flex w-full cursor-pointer gap-4 border-x-0 border-t-0 border-b border-[var(--color-border)] bg-transparent py-5 text-left transition-all duration-150 hover:translate-x-1 hover:bg-[var(--color-surface-subtle)] focus-visible:translate-x-1 focus-visible:bg-[var(--color-surface-subtle)] last:border-b-0",
+                    isPast ? "grayscale opacity-60" : "",
+                  ].join(" ")}
                 >
                   <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-[var(--color-surface-subtle)]">
                     <b>{date.getDate()}</b>
@@ -106,9 +145,10 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
                   <div>
                     <h3 className="text-sm font-bold text-[var(--color-text-primary)]">
                       {event.title}
+                      {isPast && <span className="ml-2 text-xs font-medium">Encerrado</span>}
                     </h3>
                     <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-                      {date.toLocaleString("pt-BR")}
+                      {formatEventDateTime(event.eventAt)}
                       {event.className ? ` · ${event.className}` : ""}
                     </p>
                   </div>
@@ -116,6 +156,13 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
               );
             })
           )}
+          <Pagination
+            currentPage={currentPage}
+            pageSize={10}
+            totalItems={events.length}
+            onPageChange={setCurrentPage}
+            className="pb-5"
+          />
         </div>
       </section>
       <Modal
@@ -138,14 +185,14 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
           <div className="space-y-3 text-sm text-[var(--color-text-primary)]">
             <h3 className="font-bold">{selected.title}</h3>
             <p>{selected.description || "Sem descrição."}</p>
-            <p>{new Date(selected.eventAt).toLocaleString("pt-BR")}</p>
+            <p>{formatEventDateTime(selected.eventAt)}</p>
             {selected.className && <p>Turma: {selected.className}</p>}
             {user?.role === "ADMIN" && (
               <>
                 <p>Criado por: {selected.createdByName}</p>
                 <p>
                   Criado em:{" "}
-                  {new Date(selected.createdAt).toLocaleString("pt-BR")}
+                  {formatEventDateTime(selected.createdAt)}
                 </p>
               </>
             )}
@@ -174,12 +221,26 @@ export function EventsPanel({ compact = false }: { compact?: boolean }) {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
-          <Input
-            type="datetime-local"
-            required
-            value={form.eventAt}
-            onChange={(e) => setForm({ ...form, eventAt: e.target.value })}
-          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              type="text"
+              inputMode="numeric"
+              placeholder="Data (dd/mm/aaaa)"
+              required
+              value={form.date}
+              onChange={(e) =>
+                setForm({ ...form, date: formatBrDateInput(e.target.value) })
+              }
+            />
+            <Input
+              type="time"
+              step="60"
+              aria-label="Horário do evento"
+              required
+              value={form.time}
+              onChange={(e) => setForm({ ...form, time: e.target.value })}
+            />
+          </div>
           <Select
             value={form.audience}
             onChange={(e) =>

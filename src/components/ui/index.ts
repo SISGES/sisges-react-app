@@ -11,3 +11,4 @@ export {
   Spinner,
 } from "./FormField";
 export { DataCard, StateBlock, tableStyles } from "./DataCard";
+export { Pagination } from "./Pagination";

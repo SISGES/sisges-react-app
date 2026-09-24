@@ -33,6 +33,7 @@ import {
   FormField,
   Input,
   Textarea,
+  Pagination,
 } from "../../components/ui";
 import { useDialog } from "../../contexts/DialogContext";
 
@@ -242,7 +243,7 @@ export function EditClass() {
           onRetry={fetchClass}
         >
           {schoolClass && (
-            <div className="flex flex-col gap-6">
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
               {/* Alunos */}
               <SectionPanel
                 title={`Alunos (${schoolClass.students.length})`}
@@ -494,6 +495,8 @@ function SectionPanel<T extends { id: number }>({
   emptyText: string;
   children: React.ReactNode;
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleItems = items.slice((currentPage - 1) * 10, currentPage * 10);
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
       <div className="px-5 py-4 border-b border-[var(--color-border)]">
@@ -506,7 +509,7 @@ function SectionPanel<T extends { id: number }>({
           <p className="text-sm text-[var(--color-text-muted)]">{emptyText}</p>
         ) : (
           <ul className="flex flex-col divide-y divide-[var(--color-border)]">
-            {items.map((item) => (
+            {visibleItems.map((item) => (
               <li
                 key={item.id}
                 className="flex items-center justify-between gap-3 py-2.5"
@@ -523,6 +526,12 @@ function SectionPanel<T extends { id: number }>({
             ))}
           </ul>
         )}
+        <Pagination
+          currentPage={currentPage}
+          pageSize={10}
+          totalItems={items.length}
+          onPageChange={setCurrentPage}
+        />
         {children}
       </div>
     </div>

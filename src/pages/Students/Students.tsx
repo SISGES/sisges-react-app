@@ -11,19 +11,28 @@ import {
   DataCard,
   StateBlock,
   tableStyles,
+  Pagination,
 } from "../../components/ui";
+
+const PAGE_SIZE = 10;
 
 export function Students() {
   const navigate = useNavigate();
   const [students, setStudents] = useState<StudentSearchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleStudents = students.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       setStudents(await searchStudents());
+      setCurrentPage(1);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -83,7 +92,7 @@ export function Students() {
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((s) => (
+                  {visibleStudents.map((s) => (
                     <tr key={s.id} className={tableStyles.trHover}>
                       <td className={tableStyles.td}>{s.name}</td>
                       <td className={tableStyles.td}>{s.email}</td>
@@ -103,6 +112,13 @@ export function Students() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={students.length}
+              onPageChange={setCurrentPage}
+              className="px-5 pb-5 sm:px-6"
+            />
           </StateBlock>
         </DataCard>
       </div>

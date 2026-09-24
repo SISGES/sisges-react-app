@@ -60,11 +60,11 @@ export function AppShell() {
             navigate("/");
             closeDrawer();
           }}
-          className="flex w-full min-w-0 cursor-pointer items-center border-none bg-transparent p-0 text-left font-bold tracking-tight text-white transition-opacity hover:opacity-90"
+          className="group flex w-full min-w-0 cursor-pointer items-center border-none bg-transparent p-0 text-left font-bold tracking-tight text-white transition-opacity hover:opacity-90"
         >
           <SisgesLogo
             variant="lockup"
-            className="min-w-0"
+            className="min-w-0 transition-transform duration-200 ease-out group-hover:scale-[1.035] group-focus-visible:scale-[1.035]"
             textClassName="text-2xl font-bold tracking-tight text-white"
           />
         </button>

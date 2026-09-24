@@ -25,11 +25,13 @@ import {
   Input,
   Textarea,
   Alert,
+  Pagination,
 } from "../../components/ui";
 import { useDialog } from "../../contexts/DialogContext";
 
 const selectCls =
   "px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors";
+const PAGE_SIZE = 10;
 
 export function Materials() {
   const dialog = useDialog();
@@ -51,10 +53,16 @@ export function Materials() {
   const [modalDisciplineId, setModalDisciplineId] = useState<number | null>(
     null,
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleMaterials = materials.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const fetchMaterials = useCallback(async () => {
     if (!selectedClassId) {
       setMaterials([]);
+      setCurrentPage(1);
       return;
     }
     setIsLoading(true);
@@ -66,6 +74,7 @@ export function Materials() {
           disciplineId: selectedDisciplineId ?? undefined,
         }),
       );
+      setCurrentPage(1);
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Erro ao carregar materiais.",
@@ -224,7 +233,7 @@ export function Materials() {
             emptyText="Nenhum material cadastrado para esta turma."
           >
             <div className="flex flex-col gap-3">
-              {materials.map((m) => (
+              {visibleMaterials.map((m) => (
                 <div
                   key={m.id}
                   className="flex items-start justify-between gap-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4"
@@ -261,6 +270,12 @@ export function Materials() {
                 </div>
               ))}
             </div>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={materials.length}
+              onPageChange={setCurrentPage}
+            />
           </StateBlock>
         )}
       </div>

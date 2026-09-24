@@ -21,6 +21,7 @@ import {
   Input,
   Select,
   Alert,
+  Pagination,
 } from "../../components/ui";
 import { useDialog } from "../../contexts/DialogContext";
 
@@ -38,6 +39,7 @@ const ACADEMIC_YEAR_OPTIONS = [
   "2º ano - Médio",
   "3º ano - Médio",
 ];
+const PAGE_SIZE = 10;
 
 export function Classes() {
   const dialog = useDialog();
@@ -45,6 +47,11 @@ export function Classes() {
   const [classes, setClasses] = useState<ClassSearchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleClasses = classes.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +70,7 @@ export function Classes() {
     setError(null);
     try {
       setClasses(await searchClasses());
+      setCurrentPage(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar turmas.");
     } finally {
@@ -170,7 +178,7 @@ export function Classes() {
                   </tr>
                 </thead>
                 <tbody>
-                  {classes.map((c) => (
+                  {visibleClasses.map((c) => (
                     <tr key={c.id} className={tableStyles.trHover}>
                       <td className={tableStyles.td}>{c.name}</td>
                       <td className={tableStyles.td}>{c.academicYear}</td>
@@ -208,6 +216,12 @@ export function Classes() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={classes.length}
+              onPageChange={setCurrentPage}
+            />
           </StateBlock>
         </DataCard>
       </div>

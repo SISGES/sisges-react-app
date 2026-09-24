@@ -122,7 +122,7 @@ export function AnnouncementEditorModal({
     try {
       let finalImagePath = imagePath.trim() || undefined;
       if (imageFile) {
-        const { path } = await uploadFile(imageFile, "announcements");
+        const { path } = await uploadFile(imageFile, "post-img");
         finalImagePath = path;
       }
       const announcementType: "TEXT" | "IMAGE" = finalImagePath
