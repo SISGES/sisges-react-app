@@ -70,6 +70,7 @@ export async function getMyProfile(): Promise<UserDetailResponse> {
 export async function updateMyProfile(data: {
   name?: string;
   password?: string;
+  currentPassword?: string;
   profileImagePath?: string;
 }): Promise<UserDetailResponse> {
   return api.patch<UserDetailResponse>("/users/me", data);

@@ -23,6 +23,12 @@ function formatEventDateTime(value: string) {
   }).format(new Date(value));
 }
 
+function audienceLabel(event: SchoolEvent) {
+  if (event.audience === "TEACHERS") return "Somente professores";
+  if (event.audience === "CLASS") return event.className || "Turma específica";
+  return "Toda a comunidade escolar";
+}
+
 export function EventsPanel({
   compact = false,
   showPast = false,
@@ -101,7 +107,7 @@ export function EventsPanel({
           <div className="flex items-center gap-2">
             <FiCalendar className="text-[var(--color-primary)]" />
             <h2 className="font-bold text-[var(--color-text-primary)]">
-              Próximos eventos
+              {showPast ? "Todos os eventos" : "Próximos eventos"}
             </h2>
           </div>
           {user?.role === "ADMIN" && (
@@ -182,19 +188,56 @@ export function EventsPanel({
         }
       >
         {selected && (
-          <div className="space-y-3 text-sm text-[var(--color-text-primary)]">
-            <h3 className="font-bold">{selected.title}</h3>
-            <p>{selected.description || "Sem descrição."}</p>
-            <p>{formatEventDateTime(selected.eventAt)}</p>
-            {selected.className && <p>Turma: {selected.className}</p>}
+          <div className="space-y-5 text-sm text-[var(--color-text-primary)]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-primary)]">
+                Evento
+              </p>
+              <h3 className="mt-1 text-xl font-bold leading-tight">
+                {selected.title}
+              </h3>
+            </div>
+            <dl className="grid gap-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                  Data e horário
+                </dt>
+                <dd className="mt-1 font-medium">
+                  {formatEventDateTime(selected.eventAt)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                  Público
+                </dt>
+                <dd className="mt-1 font-medium">{audienceLabel(selected)}</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                  Descrição
+                </dt>
+                <dd className="mt-1 whitespace-pre-wrap leading-relaxed text-[var(--color-text-secondary)]">
+                  {selected.description || "Sem descrição."}
+                </dd>
+              </div>
+            </dl>
             {user?.role === "ADMIN" && (
-              <>
-                <p>Criado por: {selected.createdByName}</p>
-                <p>
-                  Criado em:{" "}
-                  {formatEventDateTime(selected.createdAt)}
-                </p>
-              </>
+              <dl className="grid gap-4 border-t border-[var(--color-border)] pt-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold text-[var(--color-text-muted)]">
+                    Criado por
+                  </dt>
+                  <dd className="mt-1">{selected.createdByName || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold text-[var(--color-text-muted)]">
+                    Criado em
+                  </dt>
+                  <dd className="mt-1">
+                    {formatEventDateTime(selected.createdAt)}
+                  </dd>
+                </div>
+              </dl>
             )}
           </div>
         )}

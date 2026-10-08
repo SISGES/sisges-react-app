@@ -23,12 +23,12 @@ export function Pagination({
   return (
     <nav
       aria-label="Paginação da lista"
-      className={`flex flex-col gap-3 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:items-center sm:justify-between ${className}`}
+      className={`flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] pt-4 ${className}`}
     >
       <p className="text-sm text-[var(--color-text-muted)]" aria-live="polite">
         Exibindo {firstItem}–{lastItem} de {totalItems}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
         <button
           type="button"
           onClick={() => onPageChange(currentPage - 1)}
@@ -37,7 +37,7 @@ export function Pagination({
         >
           Anterior
         </button>
-        <span className="min-w-20 text-center text-sm text-[var(--color-text-muted)]">
+        <span className="text-center text-sm leading-tight text-[var(--color-text-muted)]">
           Página {currentPage} de {totalPages}
         </span>
         <button

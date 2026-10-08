@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
+import { FiUploadCloud, FiX } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile, updateMyProfile } from "../../services/userService";
 import { uploadFile } from "../../services/uploadService";
@@ -12,9 +13,12 @@ export function Account() {
   const [profile, setProfile] = useState<UserDetailResponse | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [draggingImage, setDraggingImage] = useState(false);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     void getMyProfile().then((p) => {
       setProfile(p);
@@ -23,21 +27,38 @@ export function Account() {
   }, []);
   if (!profile) return <div className="page-canvas">Carregando...</div>;
   const editable = profile.role === "ADMIN" || profile.role === "TEACHER";
+  const selectImage = (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setMessage("Selecione um arquivo de imagem válido.");
+      return;
+    }
+    setMessage("");
+    setImage(file);
+  };
+  const dropImage = (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    setDraggingImage(false);
+    selectImage(event.dataTransfer.files?.[0]);
+  };
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setMessage("");
     try {
       let profileImagePath = profile.profileImagePath || undefined;
-      if (image) profileImagePath = (await uploadFile(image, "profiles")).path;
+      if (image) profileImagePath = (await uploadFile(image, "profile-img")).path;
       const updated = await updateMyProfile({
         name,
         password: password || undefined,
+        currentPassword: password ? currentPassword : undefined,
         profileImagePath,
       });
       setProfile(updated);
       setPassword("");
+      setCurrentPassword("");
       setImage(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
       await refreshUser();
       setMessage("Perfil atualizado.");
     } catch (error) {
@@ -94,14 +115,75 @@ export function Account() {
                   minLength={8}
                 />
               </label>
-              <label className="text-sm font-medium">
-                Foto de perfil
-                <Input
+              {password && (
+                <label className="text-sm font-medium">
+                  Senha atual
+                  <Input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                </label>
+              )}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">Foto de perfil</span>
+                <input
+                  ref={imageInputRef}
+                  id="profile-image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImage(e.target.files?.[0] || null)}
+                  className="sr-only"
+                  onChange={(e) => selectImage(e.target.files?.[0])}
                 />
-              </label>
+                <label
+                  htmlFor="profile-image"
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    setDraggingImage(true);
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDragLeave={() => setDraggingImage(false)}
+                  onDrop={dropImage}
+                  className={[
+                    "flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-5 py-6 text-center transition-colors",
+                    draggingImage
+                      ? "border-[var(--color-primary)] bg-[var(--color-background)]"
+                      : "border-[var(--color-border)] bg-[var(--color-surface-subtle)] hover:border-[var(--color-primary)]",
+                  ].join(" ")}
+                >
+                  <FiUploadCloud
+                    size={28}
+                    className="text-[var(--color-primary)]"
+                    aria-hidden
+                  />
+                  <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+                    Arraste uma imagem ou clique para selecionar
+                  </span>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    PNG, JPG, GIF ou WebP de até 10 MB
+                  </span>
+                </label>
+                {image && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm">
+                    <span className="min-w-0 truncate text-[var(--color-text-secondary)]">
+                      {image.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImage(null);
+                        if (imageInputRef.current) imageInputRef.current.value = "";
+                      }}
+                      aria-label="Remover imagem selecionada"
+                      className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-error)]"
+                    >
+                      <FiX size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
               <Button type="submit" loading={saving}>
                 Salvar alterações
               </Button>
