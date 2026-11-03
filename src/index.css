@@ -183,3 +183,10 @@
     transform: none;
   }
 }
+
+/* Brand colors are independent of action colors. */
+.sisges-logo-negative { display: none; }
+.sisges-logo[data-logo-tone="inverse"] .sisges-logo-positive,
+[data-theme="dark"] .sisges-logo .sisges-logo-positive { display: none; }
+.sisges-logo[data-logo-tone="inverse"] .sisges-logo-negative,
+[data-theme="dark"] .sisges-logo .sisges-logo-negative { display: block; }

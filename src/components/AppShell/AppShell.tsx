@@ -64,6 +64,7 @@ export function AppShell() {
         >
           <SisgesLogo
             variant="lockup"
+            tone="inverse"
             className="min-w-0 transition-transform duration-200 ease-out group-hover:scale-[1.035] group-focus-visible:scale-[1.035]"
             textClassName="text-2xl font-bold tracking-tight text-white"
           />
@@ -180,7 +181,7 @@ export function AppShell() {
             <SisgesLogo
               variant="lockup"
               className="min-w-0"
-              textClassName="text-sm font-bold tracking-tight text-[var(--color-text-primary)] sm:text-base"
+              textClassName="text-xl"
             />
           </button>
           <div className="text-[var(--color-text-primary)]">
