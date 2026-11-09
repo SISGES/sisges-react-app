@@ -1,49 +1,90 @@
-import type { ReactNode } from "react";
-import { FiCheck, FiAlertTriangle, FiInfo } from "react-icons/fi";
-import { IoClose } from "react-icons/io5";
-import { useToast, Toast as ToastType } from "../../contexts/ToastContext";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  FiCheck,
+  FiAlertTriangle,
+  FiInfo,
+  FiAlertCircle,
+  FiX,
+} from "react-icons/fi";
+import { useToast, type Toast } from "../../contexts/ToastContext";
 
-const TOAST_ICONS: Record<ToastType["type"], ReactNode> = {
-  success: <FiCheck size={16} />,
-  error: <IoClose size={16} />,
-  warning: <FiAlertTriangle size={16} />,
-  info: <FiInfo size={16} />,
+const icons: Record<Toast["type"], ReactNode> = {
+  success: <FiCheck size={18} />,
+  error: <FiAlertCircle size={18} />,
+  warning: <FiAlertTriangle size={18} />,
+  info: <FiInfo size={18} />,
+};
+const tones: Record<Toast["type"], string> = {
+  success: "bg-[var(--color-success)]/10 text-[var(--color-success)]",
+  error: "bg-[var(--color-error)]/10 text-[var(--color-error)]",
+  warning: "bg-[var(--color-warning)]/10 text-[var(--color-warning)]",
+  info: "bg-[var(--color-primary)]/10 text-[var(--color-primary)]",
 };
 
-const TOAST_STYLES: Record<ToastType["type"], string> = {
-  success: "bg-[var(--color-success)] text-white",
-  error: "bg-[var(--color-error)] text-white",
-  warning: "bg-[var(--color-warning)] text-white",
-  info: "bg-[var(--color-primary)] text-white",
-};
+function ToastMessage({
+  toast,
+  remove,
+}: {
+  toast: Toast;
+  remove: (id: string) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const remaining = useRef(toast.type === "warning" ? 8000 : 5000);
+  useEffect(() => {
+    if (toast.type === "error" || hovered || focused) return;
+    const started = Date.now();
+    const timer = window.setTimeout(() => remove(toast.id), remaining.current);
+    return () => {
+      window.clearTimeout(timer);
+      remaining.current = Math.max(
+        0,
+        remaining.current - (Date.now() - started),
+      );
+    };
+  }, [toast.id, toast.type, hovered, focused, remove]);
+  return (
+    <div
+      data-testid="toast"
+      role={toast.type === "error" ? "alert" : "status"}
+      aria-atomic="true"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
+      }}
+      className="pointer-events-auto flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 pl-4 text-sm text-[var(--color-text-primary)] shadow-lg"
+    >
+      <span
+        aria-hidden
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${tones[toast.type]}`}
+      >
+        {icons[toast.type]}
+      </span>
+      <span className="min-w-0 flex-1 break-words">{toast.message}</span>
+      <button
+        type="button"
+        onClick={() => remove(toast.id)}
+        aria-label="Fechar notificação"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+      >
+        <FiX size={18} aria-hidden />
+      </button>
+    </div>
+  );
+}
 
 export function ToastContainer() {
   const { toasts, removeToast } = useToast();
-
-  if (toasts.length === 0) return null;
-
   return (
-    <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 max-w-xs w-full">
+    <section
+      aria-label="Notificações"
+      className="pointer-events-none fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 left-4 z-[11000] flex max-h-[60dvh] flex-col gap-2 overflow-y-auto sm:left-auto sm:w-96 sm:max-w-[calc(100vw-2rem)]"
+    >
       {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          role="alert"
-          className={[
-            "flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium",
-            TOAST_STYLES[toast.type],
-          ].join(" ")}
-        >
-          <span className="flex-shrink-0">{TOAST_ICONS[toast.type]}</span>
-          <span className="flex-1">{toast.message}</span>
-          <button
-            onClick={() => removeToast(toast.id)}
-            aria-label="Fechar"
-            className="flex-shrink-0 opacity-80 hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer text-inherit p-0 flex items-center"
-          >
-            <IoClose size={18} />
-          </button>
-        </div>
+        <ToastMessage key={toast.id} toast={toast} remove={removeToast} />
       ))}
-    </div>
+    </section>
   );
 }

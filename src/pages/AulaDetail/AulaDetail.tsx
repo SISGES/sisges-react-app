@@ -1,3 +1,4 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FiEdit2, FiInfo, FiPlus, FiTrash2 } from "react-icons/fi";
@@ -27,12 +28,12 @@ import {
   FormField,
   Input,
   Textarea,
-  Alert,
   Pagination,
 } from "../../components/ui";
 import { useDialog } from "../../contexts/DialogContext";
 
 export function AulaDetail() {
+  const { showToast } = useToast();
   const dialog = useDialog();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export function AulaDetail() {
   const [activityDesc, setActivityDesc] = useState("");
   const [activityFile, setActivityFile] = useState<File | null>(null);
   const [isSubmittingActivity, setIsSubmittingActivity] = useState(false);
-  const [activityError, setActivityError] = useState<string | null>(null);
+
   const [activitiesPage, setActivitiesPage] = useState(1);
   const [studentsPage, setStudentsPage] = useState(1);
   const visibleActivities = activities.slice(
@@ -119,11 +120,13 @@ export function AulaDetail() {
     setIsDeleting(true);
     try {
       await deleteAula(aulaId);
+      showToast("Aula excluída.", "success");
       setDeleteConfirm(false);
       navigate("/aulas");
     } catch (err) {
-      void dialog.alert(
+      showToast(
         err instanceof Error ? err.message : "Erro ao excluir aula.",
+        "error",
       );
     } finally {
       setIsDeleting(false);
@@ -144,8 +147,9 @@ export function AulaDetail() {
       });
     } catch (err) {
       setAttendance((prev) => ({ ...prev, [studentId]: prevStatus }));
-      void dialog.alert(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao atualizar frequência.",
+        "error",
       );
     } finally {
       setIsSubmittingFreq(null);
@@ -156,7 +160,7 @@ export function AulaDetail() {
     e.preventDefault();
     if (!aulaId || !activityTitle.trim()) return;
     setIsSubmittingActivity(true);
-    setActivityError(null);
+
     try {
       let filePath: string | undefined;
       if (activityFile) {
@@ -169,14 +173,16 @@ export function AulaDetail() {
         description: activityDesc.trim() || undefined,
         filePath,
       });
+      showToast("Atividade criada com sucesso.", "success");
       setActivityTitle("");
       setActivityDesc("");
       setActivityFile(null);
       setShowActivityModal(false);
       fetchActivities();
     } catch (err) {
-      setActivityError(
+      showToast(
         err instanceof Error ? err.message : "Erro ao criar atividade.",
+        "error",
       );
     } finally {
       setIsSubmittingActivity(false);
@@ -187,10 +193,12 @@ export function AulaDetail() {
     if (!(await dialog.confirm("Excluir esta atividade?"))) return;
     try {
       await deleteActivity(id);
+      showToast("Atividade excluída.", "success");
       fetchActivities();
     } catch (err) {
-      void dialog.alert(
+      showToast(
         err instanceof Error ? err.message : "Erro ao excluir.",
+        "error",
       );
     }
   };
@@ -289,7 +297,7 @@ export function AulaDetail() {
                         setActivityTitle("");
                         setActivityDesc("");
                         setActivityFile(null);
-                        setActivityError(null);
+
                         setShowActivityModal(true);
                       }}
                     >
@@ -418,7 +426,7 @@ export function AulaDetail() {
                         )}
                       </li>
                     );
-                })}
+                  })}
                 </ul>
                 <div className="px-5 py-4">
                   <Pagination
@@ -472,7 +480,6 @@ export function AulaDetail() {
           onSubmit={handleSubmitActivity}
           className="flex flex-col gap-4"
         >
-          {activityError && <Alert type="error">{activityError}</Alert>}
           <FormField label="Título" required>
             <Input
               value={activityTitle}

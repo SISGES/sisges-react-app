@@ -1,14 +1,16 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { FiUploadCloud, FiX } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile, updateMyProfile } from "../../services/userService";
 import { uploadFile } from "../../services/uploadService";
 import { UserAvatar } from "../../components/UserAvatar/UserAvatar";
-import { Alert, Input } from "../../components/ui/FormField";
+import { Input } from "../../components/ui/FormField";
 import { Button } from "../../components/ui/Button";
 import type { UserDetailResponse } from "../../types/auth";
 
 export function Account() {
+  const { showToast } = useToast();
   const { refreshUser } = useAuth();
   const [profile, setProfile] = useState<UserDetailResponse | null>(null);
   const [name, setName] = useState("");
@@ -16,7 +18,7 @@ export function Account() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [draggingImage, setDraggingImage] = useState(false);
-  const [message, setMessage] = useState("");
+
   const [saving, setSaving] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -30,10 +32,10 @@ export function Account() {
   const selectImage = (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setMessage("Selecione um arquivo de imagem válido.");
+      showToast("Selecione um arquivo de imagem válido.", "error");
       return;
     }
-    setMessage("");
+
     setImage(file);
   };
   const dropImage = (event: DragEvent<HTMLLabelElement>) => {
@@ -44,10 +46,11 @@ export function Account() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMessage("");
+
     try {
       let profileImagePath = profile.profileImagePath || undefined;
-      if (image) profileImagePath = (await uploadFile(image, "profile-img")).path;
+      if (image)
+        profileImagePath = (await uploadFile(image, "profile-img")).path;
       const updated = await updateMyProfile({
         name,
         password: password || undefined,
@@ -60,10 +63,11 @@ export function Account() {
       setImage(null);
       if (imageInputRef.current) imageInputRef.current.value = "";
       await refreshUser();
-      setMessage("Perfil atualizado.");
+      showToast("Perfil atualizado.", "success");
     } catch (error) {
-      setMessage(
+      showToast(
         error instanceof Error ? error.message : "Erro ao atualizar perfil.",
+        "error",
       );
     } finally {
       setSaving(false);
@@ -90,11 +94,7 @@ export function Account() {
             </p>
           </div>
         </div>
-        {message && (
-          <Alert type={message === "Perfil atualizado." ? "success" : "error"}>
-            {message}
-          </Alert>
-        )}
+
         <form onSubmit={save} className="mt-5 flex flex-col gap-4">
           <label className="text-sm font-medium">
             Nome
@@ -174,7 +174,8 @@ export function Account() {
                       type="button"
                       onClick={() => {
                         setImage(null);
-                        if (imageInputRef.current) imageInputRef.current.value = "";
+                        if (imageInputRef.current)
+                          imageInputRef.current.value = "";
                       }}
                       aria-label="Remover imagem selecionada"
                       className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-error)]"

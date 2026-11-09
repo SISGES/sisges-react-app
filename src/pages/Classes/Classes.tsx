@@ -1,3 +1,4 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiEdit2, FiInfo, FiPlus, FiTrash2 } from "react-icons/fi";
@@ -20,10 +21,8 @@ import {
   FormField,
   Input,
   Select,
-  Alert,
   Pagination,
 } from "../../components/ui";
-import { useDialog } from "../../contexts/DialogContext";
 
 const ACADEMIC_YEAR_OPTIONS = [
   "1º ano - Fundamental",
@@ -42,7 +41,7 @@ const ACADEMIC_YEAR_OPTIONS = [
 const PAGE_SIZE = 10;
 
 export function Classes() {
-  const dialog = useDialog();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [classes, setClasses] = useState<ClassSearchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,8 +54,7 @@ export function Classes() {
 
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+
   const [className, setClassName] = useState("");
   const [academicYear, setAcademicYear] = useState("");
 
@@ -85,8 +83,6 @@ export function Classes() {
   const resetForm = () => {
     setClassName("");
     setAcademicYear("");
-    setSubmitError(null);
-    setSubmitSuccess(null);
   };
 
   const handleCloseModal = () => {
@@ -99,11 +95,13 @@ export function Classes() {
     setIsDeleting(true);
     try {
       await deleteClass(deleteTarget.id);
+      showToast("Turma excluída.", "success");
       setDeleteTarget(null);
       fetchClasses();
     } catch (err) {
-      void dialog.alert(
+      showToast(
         err instanceof Error ? err.message : "Erro ao excluir turma.",
+        "error",
       );
     } finally {
       setIsDeleting(false);
@@ -112,19 +110,19 @@ export function Classes() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitError(null);
-    setSubmitSuccess(null);
+
     setIsSubmitting(true);
     try {
       const req: CreateClassRequest = { name: className, academicYear };
       const res = await createClass(req);
-      setSubmitSuccess(`Turma "${res.name}" criada com sucesso!`);
+      showToast(`Turma "${res.name}" criada com sucesso!`, "success");
       resetForm();
       fetchClasses();
-      setTimeout(handleCloseModal, 1500);
+      handleCloseModal();
     } catch (err) {
-      setSubmitError(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao criar turma.",
+        "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -251,8 +249,6 @@ export function Classes() {
           onSubmit={handleSubmit}
           className="flex flex-col gap-4"
         >
-          {submitError && <Alert type="error">{submitError}</Alert>}
-          {submitSuccess && <Alert type="success">{submitSuccess}</Alert>}
           <FormField label="Nome da Turma" required>
             <Input
               value={className}

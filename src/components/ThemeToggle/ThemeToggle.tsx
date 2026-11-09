@@ -9,7 +9,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={`Alternar para modo ${mode === "light" ? "escuro" : "claro"}`}
       title={`Modo atual: ${mode === "light" ? "Claro" : "Escuro"}`}
-      className="flex h-10 w-10 items-center justify-center rounded-lg border border-current/15 bg-transparent text-current/75 transition-colors hover:bg-white/10 hover:text-current cursor-pointer"
+      className="flex h-10 w-10 items-center justify-center rounded-lg border border-current/15 bg-transparent text-current/75 transition-colors hover:bg-[var(--color-surface-subtle)] hover:text-current cursor-pointer"
     >
       {mode === "light" ? <FiMoon size={18} /> : <FiSun size={18} />}
     </button>

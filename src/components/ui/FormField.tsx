@@ -1,3 +1,5 @@
+import { useId, useState } from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import type {
   InputHTMLAttributes,
   SelectHTMLAttributes,
@@ -39,22 +41,53 @@ export function FormField({
 
 const inputBase =
   "w-full min-h-11 px-3.5 py-2.5 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-3 focus:ring-[var(--color-primary)]/12 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
-const selectBase = "pr-10";
+const selectBase = "appearance-none !pr-11";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   icon?: ReactNode;
 }
 
 export function Input({ className = "", icon, ...props }: InputProps) {
-  if (!icon)
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const generatedId = useId();
+  const isPassword = props.type === "password";
+  const inputId = props.id ?? generatedId;
+
+  if (!icon && !isPassword)
     return <input className={`${inputBase} ${className}`} {...props} />;
 
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[var(--color-text-muted)]">
-        {icon}
-      </span>
-      <input className={`${inputBase} pl-10 ${className}`} {...props} />
+      {icon && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[var(--color-text-muted)]"
+        >
+          {icon}
+        </span>
+      )}
+      <input
+        {...props}
+        id={inputId}
+        type={isPassword && passwordVisible ? "text" : props.type}
+        className={`${inputBase} ${icon ? "pl-10" : ""} ${className} ${isPassword ? "!pr-12" : ""}`}
+      />
+      {isPassword && (
+        <button
+          type="button"
+          aria-label={passwordVisible ? "Ocultar senha" : "Mostrar senha"}
+          aria-controls={inputId}
+          disabled={props.disabled}
+          onClick={() => setPasswordVisible((visible) => !visible)}
+          className="absolute inset-y-0 right-0 flex min-h-11 w-11 items-center justify-center rounded-lg text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {passwordVisible ? (
+            <FiEyeOff size={18} aria-hidden="true" />
+          ) : (
+            <FiEye size={18} aria-hidden="true" />
+          )}
+        </button>
+      )}
     </div>
   );
 }
@@ -62,10 +95,21 @@ export function Input({ className = "", icon, ...props }: InputProps) {
 export function Select({
   className = "",
   children,
+  style,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & { children: ReactNode }) {
   return (
-    <select className={`${inputBase} ${selectBase} ${className}`} {...props}>
+    <select
+      className={`${inputBase} ${selectBase} ${className}`}
+      {...props}
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23718096' stroke-width='1.75' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+        backgroundPosition: "right 14px center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "16px",
+        ...style,
+      }}
+    >
       {children}
     </select>
   );

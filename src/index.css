@@ -18,9 +18,11 @@
   --color-error: #dc3f4f;
   --color-warning: #d68a0c;
   --color-success: #0b9b7f;
-  --color-sidebar: #061b31;
-  --color-sidebar-muted: #a9bbcf;
-  --color-sidebar-border: #17324d;
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #10213f;
+  --color-sidebar-hover: #f2f5f9;
+  --color-sidebar-muted: #52627a;
+  --color-sidebar-border: #e1e7ef;
 
   /* ── Typography ── */
   --font-sans:
@@ -48,7 +50,7 @@
   --shadow-xl: 0 28px 72px rgba(6, 27, 49, 0.18);
 
   /* ── Sidebar ── */
-  --sidebar-width: 268px;
+  --sidebar-width: 248px;
 }
 
 /* ── Dark mode overrides ── */
@@ -70,6 +72,8 @@
   --color-warning: #f5b84b;
   --color-success: #43d6b2;
   --color-sidebar: #041426;
+  --color-sidebar-foreground: #f3f7fb;
+  --color-sidebar-hover: #14243a;
   --color-sidebar-muted: #a9bbcf;
   --color-sidebar-border: #17324d;
 }

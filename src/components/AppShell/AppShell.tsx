@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
-import { FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import {
+  FiLogOut,
+  FiMenu,
+  FiX,
+  FiSun,
+  FiMoon,
+  FiChevronRight,
+} from "react-icons/fi";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { ThemeToggle } from "../ThemeToggle/ThemeToggle";
 import { getNavItemsForRole } from "../../config/navConfig";
@@ -22,6 +30,7 @@ function getRoleLabel(role?: string): string {
 
 export function AppShell() {
   const { user, logout } = useAuth();
+  const { mode, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const items = getNavItemsForRole(user?.role);
@@ -44,35 +53,38 @@ export function AppShell() {
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
-      "group flex min-h-12 items-center gap-3 rounded-lg px-3.5 py-2.5 text-base font-medium transition-all duration-150",
+      "group relative flex min-h-12 w-full items-center justify-start gap-3.5 px-6 py-3 text-left text-sm font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-primary)]",
       isActive
-        ? "bg-[var(--color-primary)] text-white shadow-md"
-        : "text-[var(--color-sidebar-muted)] hover:bg-white/8 hover:text-white",
+        ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] before:absolute before:inset-y-2.5 before:left-0 before:w-[3px] before:rounded-r before:bg-[var(--color-primary)]"
+        : "text-[var(--color-sidebar-muted)] hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-sidebar-foreground)]",
     ].join(" ");
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-[var(--color-sidebar)] text-white">
+    <div className="flex h-full min-h-0 flex-col border-r border-[var(--color-sidebar-border)] bg-[var(--color-sidebar)] text-[var(--color-sidebar-foreground)]">
       {/* Brand */}
-      <div className="border-b border-[var(--color-sidebar-border)] px-5 py-6">
+      <div className="shrink-0 px-6 pt-7 pb-8">
         <button
           type="button"
           onClick={() => {
             navigate("/");
             closeDrawer();
           }}
-          className="group flex w-full min-w-0 cursor-pointer items-center border-none bg-transparent p-0 text-left font-bold tracking-tight text-white transition-opacity hover:opacity-90"
+          className="group flex w-full min-w-0 cursor-pointer items-center border-none bg-transparent p-0 text-left font-bold tracking-tight text-[var(--color-sidebar-foreground)] transition-opacity hover:opacity-90"
         >
           <SisgesLogo
             variant="lockup"
-            tone="inverse"
-            className="min-w-0 transition-transform duration-200 ease-out group-hover:scale-[1.035] group-focus-visible:scale-[1.035]"
-            textClassName="text-2xl font-bold tracking-tight text-white"
+            tone="auto"
+            className="min-w-0"
+            textClassName="text-2xl font-bold tracking-tight text-[var(--color-sidebar-foreground)]"
           />
         </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-5">
+      <nav
+        aria-label="Páginas"
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto py-1"
+      >
         {items.map((item) => {
           const Icon = item.icon;
           return (
@@ -84,47 +96,69 @@ export function AppShell() {
               onClick={closeDrawer}
             >
               <Icon
-                size={22}
+                size={19}
                 strokeWidth={1.8}
                 className="shrink-0"
                 aria-hidden
               />
-              <span>{item.label}</span>
+              <span className="min-w-0 flex-1 text-left">{item.label}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      {/* User + actions */}
-      <div className="flex flex-col gap-4 border-t border-[var(--color-sidebar-border)] px-4 py-5">
+      {/* Theme and account stay available below the scrolling navigation. */}
+      <div className="shrink-0 pb-4 pt-5">
         <button
           type="button"
-          onClick={() => {
-            navigate("/account");
-            closeDrawer();
-          }}
-          className="flex w-full cursor-pointer items-center gap-3 rounded-lg border-none bg-transparent p-0 text-left hover:opacity-90"
+          onClick={toggleTheme}
+          aria-label={`Alternar para modo ${mode === "light" ? "escuro" : "claro"}`}
+          className="flex min-h-11 w-full items-center justify-start gap-3.5 px-6 py-3 text-left text-sm text-[var(--color-sidebar-muted)] transition-colors hover:bg-[var(--color-sidebar-hover)] hover:text-[var(--color-sidebar-foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-primary)]"
         >
-          <UserAvatar path={user?.profileImagePath} name={user?.name} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
-              {user?.name || user?.email}
-            </p>
-            <p className="mt-0.5 truncate text-xs text-[var(--color-sidebar-muted)]">
-              {getRoleLabel(user?.role)}
-            </p>
-          </div>
+          {mode === "light" ? (
+            <FiMoon size={19} aria-hidden />
+          ) : (
+            <FiSun size={19} aria-hidden />
+          )}
+          <span>Alternar tema</span>
         </button>
-        <div className="flex items-center gap-2 border-t border-[var(--color-sidebar-border)] pt-4 text-white">
-          <ThemeToggle />
+        <div className="mx-5 mt-3 flex items-center gap-2 border-t border-[var(--color-sidebar-border)] pt-4">
+          <button
+            type="button"
+            aria-label="Abrir minha conta"
+            onClick={() => {
+              navigate("/account");
+              closeDrawer();
+            }}
+            className="flex min-h-11 min-w-0 flex-1 items-center justify-start gap-2.5 rounded-md bg-transparent text-left hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            <UserAvatar
+              path={user?.profileImagePath}
+              name={user?.name}
+              className="h-9 w-9 shrink-0 rounded-lg"
+            />
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-sm font-semibold text-[var(--color-sidebar-foreground)]">
+                {user?.name || user?.email}
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-[var(--color-sidebar-muted)]">
+                {getRoleLabel(user?.role)}
+              </span>
+            </span>
+            <FiChevronRight
+              size={14}
+              aria-hidden
+              className="shrink-0 text-[var(--color-sidebar-muted)]"
+            />
+          </button>
           <button
             type="button"
             onClick={handleLogout}
             title="Sair"
             aria-label="Sair"
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-white/15 bg-transparent text-white/75 transition-colors hover:border-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white"
+            className="flex h-11 w-9 shrink-0 items-center justify-center rounded-md text-[var(--color-sidebar-muted)] transition-colors hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
           >
-            <FiLogOut size={18} />
+            <FiLogOut size={17} aria-hidden />
           </button>
         </div>
       </div>
@@ -153,7 +187,7 @@ export function AppShell() {
       <aside
         className={[
           "fixed bottom-0 left-0 top-0 z-40 flex w-[min(272px,88vw)] flex-col shadow-xl transition-transform duration-200 lg:hidden",
-          drawerOpen ? "translate-x-0" : "-translate-x-full",
+          drawerOpen ? "visible translate-x-0" : "invisible -translate-x-full",
         ].join(" ")}
         aria-label="Menu de navegação"
         aria-hidden={!drawerOpen}

@@ -13,9 +13,11 @@ export const lightTheme = {
   error: "#DC3F4F",
   warning: "#D68A0C",
   success: "#0B9B7F",
-  sidebar: "#061B31",
-  sidebarMuted: "#A9BBCF",
-  sidebarBorder: "#17324D",
+  sidebar: "#FFFFFF",
+  sidebarForeground: "#10213F",
+  sidebarHover: "#F2F5F9",
+  sidebarMuted: "#52627A",
+  sidebarBorder: "#E1E7EF",
 } as const;
 
 export const darkTheme = {
@@ -34,6 +36,8 @@ export const darkTheme = {
   warning: "#F5B84B",
   success: "#43D6B2",
   sidebar: "#041426",
+  sidebarForeground: "#F3F7FB",
+  sidebarHover: "#14243A",
   sidebarMuted: "#A9BBCF",
   sidebarBorder: "#17324D",
 } as const;

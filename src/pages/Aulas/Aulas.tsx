@@ -1,6 +1,7 @@
+import { DatePicker } from "../../components/ui/DatePicker";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiInfo, FiPlus } from "react-icons/fi";
+import { FiInfo, FiPlus, FiSliders, FiRotateCcw, FiX } from "react-icons/fi";
 import { BackButton } from "../../components/BackButton/BackButton";
 import {
   searchAulas,
@@ -24,13 +25,10 @@ import {
   StateBlock,
   tableStyles,
   Pagination,
-  Input,
   Select,
 } from "../../components/ui";
 import { formatBrDateInput, brDateToIso } from "../../utils/brDate";
 
-const selectCls =
-  "px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors";
 const PAGE_SIZE = 10;
 
 export function Aulas() {
@@ -121,88 +119,159 @@ export function Aulas() {
         }
       />
 
-      {/* Admin filters */}
       {isAdmin && (
-        <div className="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-          <Input
-            type="text"
-            inputMode="numeric"
-            placeholder="dd/mm/aaaa"
-            value={dateFilter}
-            onChange={(e) => {
-              const next = formatBrDateInput(e.target.value);
-              setDateFilter(next);
-              setFilters((p) => ({ ...p, date: brDateToIso(next) || undefined }));
-            }}
-            className={selectCls}
-          />
-          <Select
-            value={filters.disciplineId ?? ""}
-            onChange={(e) =>
-              setFilters((p) => ({
-                ...p,
-                disciplineId: e.target.value
-                  ? parseInt(e.target.value, 10)
-                  : undefined,
-              }))
-            }
-            className={selectCls}
-          >
-            <option value="">Todas as disciplinas</option>
-            {disciplines.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
+        <section
+          aria-label="Filtros de aulas"
+          className="mx-4 mt-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:mx-6 sm:p-5"
+        >
+          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
+            <FiSliders aria-hidden className="text-[var(--color-primary)]" />
+            Filtrar aulas
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="min-w-0">
+              <label
+                htmlFor="aulas-date"
+                className="mb-2 block text-sm text-[var(--color-text-secondary)]"
+              >
+                Data
+              </label>
+              <DatePicker
+                id="aulas-date"
+                aria-label="Filtrar aulas por data"
+                value={dateFilter}
+                onValueChange={(value) => {
+                  const next = formatBrDateInput(value);
+                  setDateFilter(next);
+                  setFilters((p) => ({
+                    ...p,
+                    date: brDateToIso(next) || undefined,
+                  }));
+                }}
+              />
+            </div>
+            {[
+              {
+                key: "disciplineId" as const,
+                label: "Disciplina",
+                placeholder: "Todas as disciplinas",
+                options: disciplines,
+              },
+              {
+                key: "schoolClassId" as const,
+                label: "Turma",
+                placeholder: "Todas as turmas",
+                options: schoolClasses,
+              },
+              {
+                key: "teacherId" as const,
+                label: "Professor",
+                placeholder: "Todos os professores",
+                options: teachers,
+              },
+            ].map((field) => (
+              <div key={field.key} className="min-w-0">
+                <label
+                  htmlFor={`aulas-${field.key}`}
+                  className="mb-2 block text-sm text-[var(--color-text-secondary)]"
+                >
+                  {field.label}
+                </label>
+                <Select
+                  id={`aulas-${field.key}`}
+                  value={filters[field.key] ?? ""}
+                  onChange={(e) =>
+                    setFilters((p) => ({
+                      ...p,
+                      [field.key]: e.target.value
+                        ? Number(e.target.value)
+                        : undefined,
+                    }))
+                  }
+                >
+                  <option value="">{field.placeholder}</option>
+                  {field.options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
             ))}
-          </Select>
-          <Select
-            value={filters.schoolClassId ?? ""}
-            onChange={(e) =>
-              setFilters((p) => ({
-                ...p,
-                schoolClassId: e.target.value
-                  ? parseInt(e.target.value, 10)
-                  : undefined,
-              }))
-            }
-            className={selectCls}
-          >
-            <option value="">Todas as turmas</option>
-            {schoolClasses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-          <Select
-            value={filters.teacherId ?? ""}
-            onChange={(e) =>
-              setFilters((p) => ({
-                ...p,
-                teacherId: e.target.value
-                  ? parseInt(e.target.value, 10)
-                  : undefined,
-              }))
-            }
-            className={selectCls}
-          >
-            <option value="">Todos os professores</option>
-            {teachers.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </Select>
-          <button
-            onClick={() => {
-              setDateFilter("");
-              setFilters({});
-            }}
-            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] bg-transparent border-none cursor-pointer transition-colors px-1"
-          >
-            Limpar
-          </button>
-        </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] pt-3">
+            <div
+              className="flex min-w-0 flex-wrap items-center gap-2"
+              aria-label="Filtros ativos"
+            >
+              {!dateFilter &&
+                !filters.disciplineId &&
+                !filters.schoolClassId &&
+                !filters.teacherId && (
+                  <span className="text-xs text-[var(--color-text-secondary)]">
+                    Nenhum filtro aplicado
+                  </span>
+                )}
+              {[
+                { key: "date" as const, label: "Data", value: dateFilter },
+                {
+                  key: "disciplineId" as const,
+                  label: "Disciplina",
+                  value: filters.disciplineId
+                    ? (disciplines.find((d) => d.id === filters.disciplineId)
+                        ?.name ?? String(filters.disciplineId))
+                    : "",
+                },
+                {
+                  key: "schoolClassId" as const,
+                  label: "Turma",
+                  value: filters.schoolClassId
+                    ? (schoolClasses.find((c) => c.id === filters.schoolClassId)
+                        ?.name ?? String(filters.schoolClassId))
+                    : "",
+                },
+                {
+                  key: "teacherId" as const,
+                  label: "Professor",
+                  value: filters.teacherId
+                    ? (teachers.find((t) => t.id === filters.teacherId)?.name ??
+                      String(filters.teacherId))
+                    : "",
+                },
+              ]
+                .filter((chip) => chip.value)
+                .map((chip) => (
+                  <button
+                    type="button"
+                    key={chip.key}
+                    aria-label={`Remover filtro ${chip.label}: ${chip.value}`}
+                    onClick={() => {
+                      if (chip.key === "date") setDateFilter("");
+                      setFilters((p) => ({ ...p, [chip.key]: undefined }));
+                    }}
+                    className="flex min-h-9 max-w-full items-center gap-2 rounded-md bg-[var(--color-primary)]/10 px-3 py-1.5 text-left text-xs text-[var(--color-primary)] hover:bg-[var(--color-primary)]/15"
+                  >
+                    <span className="break-words">
+                      {chip.label}: {chip.value}
+                    </span>
+                    <FiX className="shrink-0" aria-hidden />
+                  </button>
+                ))}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              icon={<FiRotateCcw />}
+              onClick={() => {
+                setDateFilter("");
+                setFilters({});
+              }}
+            >
+              Limpar filtros
+            </Button>
+          </div>
+        </section>
       )}
 
       <div className="flex-1 p-6">

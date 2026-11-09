@@ -9,7 +9,7 @@ import {
 import { BackButton } from "../../components/BackButton/BackButton";
 import { useToast } from "../../contexts/ToastContext";
 import { ApiError } from "../../services/api";
-import { FiAlertCircle, FiChevronDown } from "react-icons/fi";
+import { FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 import {
   getGradingConfig,
   updateGradingConfig,
@@ -33,19 +33,19 @@ function parseIntOrNull(s: string): number | null {
 function normalizePointsInput(raw: string, max: number): string {
   const d = digitsOnly(raw, MAX_DIGITS_YEAR);
   if (d === "") return "";
-  let n = parseInt(d, 10);
+  const n = parseInt(d, 10);
   if (Number.isNaN(n)) return "";
   return String(Math.min(max, n));
 }
 function normalizeCompositionPointsInput(raw: string, max: number): string {
   const d = digitsOnly(raw, MAX_DIGITS_YEAR);
   if (d === "") return "";
-  let n = parseInt(d, 10);
+  const n = parseInt(d, 10);
   if (Number.isNaN(n) || n === 0) return "";
   return String(Math.min(max, n));
 }
 function sanitizePctInput(s: string): string {
-  let t = s.replace(/[^0-9.]/g, "");
+  let t = s.replace(",", ".").replace(/[^0-9.]/g, "");
   const firstDot = t.indexOf(".");
   if (firstDot !== -1) {
     const rest = t.slice(firstDot + 1).replace(/\./g, "");
@@ -70,11 +70,11 @@ function formatPctOnBlur(s: string): string {
 }
 
 const inputCls =
-  "px-3 py-2 text-sm w-full bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+  "min-h-11 px-3 py-2 text-sm w-full bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
 const inputErrCls =
   "border-[var(--color-error)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]/10";
 const labelCls =
-  "text-xs font-medium text-[var(--color-text-muted)] mb-1 block";
+  "text-sm font-medium text-[var(--color-text-secondary)] mb-2 block";
 
 export function GradingConfig() {
   const { showToast } = useToast();
@@ -100,9 +100,6 @@ export function GradingConfig() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [trimesterOpen, setTrimesterOpen] = useState<
-    Record<1 | 2 | 3, boolean>
-  >({ 1: true, 2: true, 3: true });
 
   const fetchConfig = useCallback(async () => {
     setIsLoading(true);
@@ -201,7 +198,26 @@ export function GradingConfig() {
     compositionByTrimester[1].valid &&
     compositionByTrimester[2].valid &&
     compositionByTrimester[3].valid;
-  const canSave = yearValid && sumValid && compositionAllValid && !isSaving;
+  const percentagesValid = [yearMinStr, t1MinStr, t2MinStr, t3MinStr].every(
+    (value) => {
+      const number = parsePctOrNull(value);
+      return number !== null && number >= 0 && number <= 100;
+    },
+  );
+  const canSave =
+    yearValid &&
+    sumValid &&
+    compositionAllValid &&
+    percentagesValid &&
+    !isSaving;
+  const passingPoints = (max: number | null, percentage: string) => {
+    const pct = parsePctOrNull(percentage);
+    return max !== null && pct !== null && pct >= 0 && pct <= 100
+      ? ((max * pct) / 100).toLocaleString("pt-BR", {
+          maximumFractionDigits: 2,
+        })
+      : "—";
+  };
 
   const handlePctChange = (
     e: ChangeEvent<HTMLInputElement>,
@@ -341,8 +357,7 @@ export function GradingConfig() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <PageHeader title="Configuração de Notas" back={<BackButton to="/" />} />
-
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-4 sm:p-6">
         <StateBlock
           loading={isLoading}
           loadingText="Carregando..."
@@ -351,258 +366,248 @@ export function GradingConfig() {
         >
           <form
             onSubmit={handleSubmit}
-            className="mx-auto flex w-full max-w-5xl flex-col gap-6"
+            className="mx-auto flex w-full max-w-6xl flex-col gap-6"
           >
-            {/* Annual section */}
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-5 flex flex-col gap-4">
-              <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                Ano letivo
+            <div>
+              <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                Regras de avaliação
               </h2>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="yearMax" className={labelCls}>
-                    Pontuação máxima
-                  </label>
-                  <input
-                    id="yearMax"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    maxLength={MAX_DIGITS_YEAR}
-                    value={yearMaxStr}
-                    onChange={(e) =>
-                      setYearMaxStr(
-                        normalizePointsInput(e.target.value, YEAR_MAX),
-                      )
-                    }
-                    className={`${inputCls} ${yearMaxStr !== "" && !yearValid ? inputErrCls : ""}`}
-                    disabled={isSaving}
-                  />
-                  {yearMaxStr !== "" && !yearValid && (
-                    <p className="text-xs text-[var(--color-error)] mt-1">
-                      Entre {YEAR_MIN} e {YEAR_MAX}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="yearMin" className={labelCls}>
-                    Média mínima (%)
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="yearMin"
-                      type="text"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      value={yearMinStr}
-                      onChange={(e) => handlePctChange(e, setYearMinStr)}
-                      onBlur={() => handlePctBlur(yearMinStr, setYearMinStr)}
-                      className={`${inputCls} pr-8`}
-                      disabled={isSaving}
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)]">
-                      %
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                Defina os pontos do ano e distribua entre os três trimestres.
+              </p>
             </div>
-
-            {/* Trimester sections */}
-            {trimesterData.map((t) => {
-              const idx = t.idx;
-              const comp = compositionByTrimester[idx];
-              const tm = parseIntOrNull(t.maxStr);
-              const hasTrimesterIssue = !(
-                tm !== null &&
-                tm >= 1 &&
-                parsePctOrNull(t.minStr) !== null &&
-                comp.valid
-              );
-              const isOpen = trimesterOpen[idx];
-              return (
-                <div
-                  key={idx}
-                  className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden"
+            <section
+              aria-label="Ano letivo"
+              className="grid gap-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 md:grid-cols-3"
+            >
+              <div>
+                <label htmlFor="yearMax" className={labelCls}>
+                  Pontos no ano
+                </label>
+                <input
+                  id="yearMax"
+                  inputMode="numeric"
+                  required
+                  maxLength={MAX_DIGITS_YEAR}
+                  value={yearMaxStr}
+                  onChange={(e) =>
+                    setYearMaxStr(
+                      normalizePointsInput(e.target.value, YEAR_MAX),
+                    )
+                  }
+                  className={`${inputCls} ${yearMaxStr !== "" && !yearValid ? inputErrCls : ""}`}
+                  disabled={isSaving}
+                  aria-describedby="year-range"
+                  aria-invalid={yearMaxStr !== "" && !yearValid}
+                />
+                <p
+                  id="year-range"
+                  className={`mt-2 text-xs ${yearMaxStr !== "" && !yearValid ? "text-[var(--color-error)]" : "text-[var(--color-text-secondary)]"}`}
                 >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setTrimesterOpen((prev) => ({
-                        ...prev,
-                        [idx]: !prev[idx],
-                      }))
-                    }
-                    aria-expanded={isOpen}
-                    className="w-full flex items-center gap-3 px-5 py-3.5 bg-transparent border-none cursor-pointer text-left"
+                  Entre {YEAR_MIN} e {YEAR_MAX} pontos.
+                </p>
+              </div>
+              <div>
+                <label htmlFor="yearMin" className={labelCls}>
+                  Mínimo para aprovação (%)
+                </label>
+                <input
+                  id="yearMin"
+                  inputMode="decimal"
+                  required
+                  value={yearMinStr}
+                  onChange={(e) => handlePctChange(e, setYearMinStr)}
+                  onBlur={() => handlePctBlur(yearMinStr, setYearMinStr)}
+                  className={inputCls}
+                  disabled={isSaving}
+                />
+                <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                  Percentual de 0 a 100%.
+                </p>
+              </div>
+              <div className="flex flex-col justify-center border-t border-[var(--color-border)] pt-4 md:border-t-0 md:border-l md:pl-5 md:pt-0">
+                <span className="text-sm text-[var(--color-text-secondary)]">
+                  Aprovação no ano
+                </span>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--color-text-primary)]">
+                  {passingPoints(yearMaxPoints, yearMinStr)}{" "}
+                  <span className="text-sm font-normal">
+                    de {yearMaxPoints ?? "—"} pontos
+                  </span>
+                </p>
+              </div>
+            </section>
+            <div
+              className="grid gap-4 xl:grid-cols-3"
+              data-testid="trimester-overview"
+            >
+              {trimesterData.map((t) => {
+                const idx = t.idx;
+                const comp = compositionByTrimester[idx];
+                const max = parseIntOrNull(t.maxStr);
+                return (
+                  <section
+                    key={idx}
+                    aria-labelledby={`trimester-${idx}`}
+                    className="flex flex-col gap-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
                   >
-                    <FiChevronDown
-                      size={16}
-                      className={`text-[var(--color-text-muted)] transition-transform duration-200 ${isOpen ? "rotate-0" : "-rotate-90"}`}
-                    />
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)] flex-1">
+                    <h3
+                      id={`trimester-${idx}`}
+                      className="text-base font-semibold text-[var(--color-text-primary)]"
+                    >
                       {t.label}
-                    </span>
-                    {hasTrimesterIssue && (
-                      <FiAlertCircle
-                        size={16}
-                        className="text-[var(--color-warning)]"
-                        title="Campos em falta ou inválidos"
-                      />
-                    )}
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-5 pb-5 flex flex-col gap-4 border-t border-[var(--color-border)]">
-                      <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        <div>
-                          <label htmlFor={`t${idx}Max`} className={labelCls}>
-                            Pontuação máxima
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor={`t${idx}Max`} className={labelCls}>
+                          Total de pontos
+                        </label>
+                        <input
+                          id={`t${idx}Max`}
+                          inputMode="numeric"
+                          required
+                          maxLength={MAX_DIGITS_YEAR}
+                          value={t.maxStr}
+                          onChange={(e) =>
+                            t.setMaxStr(
+                              normalizePointsInput(
+                                e.target.value,
+                                TRIMESTER_POINTS_MAX,
+                              ),
+                            )
+                          }
+                          className={inputCls}
+                          disabled={isSaving}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`t${idx}Pct`} className={labelCls}>
+                          Mínimo (%)
+                        </label>
+                        <input
+                          id={`t${idx}Pct`}
+                          inputMode="decimal"
+                          required
+                          value={t.minStr}
+                          onChange={(e) => handlePctChange(e, t.setMinStr)}
+                          onBlur={() => handlePctBlur(t.minStr, t.setMinStr)}
+                          className={inputCls}
+                          disabled={isSaving}
+                        />
+                      </div>
+                    </div>
+                    <fieldset className="flex flex-col gap-3 border-t border-[var(--color-border)] pt-4">
+                      <legend className="text-xs font-medium text-[var(--color-text-secondary)]">
+                        Distribuição de pontos
+                      </legend>
+                      {[
+                        {
+                          id: `t${idx}Provas`,
+                          label: "Provas",
+                          value: t.provasStr,
+                          set: t.setProvasStr,
+                        },
+                        {
+                          id: `t${idx}Ativ`,
+                          label: "Atividades",
+                          value: t.ativStr,
+                          set: t.setAtivStr,
+                        },
+                        {
+                          id: `t${idx}Trab`,
+                          label: "Trabalhos",
+                          value: t.trabStr,
+                          set: t.setTrabStr,
+                        },
+                      ].map((f) => (
+                        <div
+                          key={f.id}
+                          className="flex items-center justify-between gap-4"
+                        >
+                          <label
+                            htmlFor={f.id}
+                            className="text-sm text-[var(--color-text-secondary)]"
+                          >
+                            {f.label}
                           </label>
                           <input
-                            id={`t${idx}Max`}
-                            type="text"
+                            id={f.id}
                             inputMode="numeric"
-                            autoComplete="off"
+                            required
                             maxLength={MAX_DIGITS_YEAR}
-                            value={t.maxStr}
+                            value={f.value}
                             onChange={(e) =>
-                              t.setMaxStr(
-                                normalizePointsInput(
+                              f.set(
+                                normalizeCompositionPointsInput(
                                   e.target.value,
                                   TRIMESTER_POINTS_MAX,
                                 ),
                               )
                             }
-                            className={inputCls}
+                            className={`${inputCls} max-w-24 text-right tabular-nums`}
                             disabled={isSaving}
+                            aria-describedby={`composition-${idx}`}
                           />
                         </div>
-                        <div>
-                          <label htmlFor={`t${idx}Pct`} className={labelCls}>
-                            Média mínima (%)
-                          </label>
-                          <div className="relative">
-                            <input
-                              id={`t${idx}Pct`}
-                              type="text"
-                              inputMode="decimal"
-                              autoComplete="off"
-                              value={t.minStr}
-                              onChange={(e) => handlePctChange(e, t.setMinStr)}
-                              onBlur={() =>
-                                handlePctBlur(t.minStr, t.setMinStr)
-                              }
-                              className={`${inputCls} pr-8`}
-                              disabled={isSaving}
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)]">
-                              %
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <p className="text-xs font-medium text-[var(--color-text-muted)]">
-                          Provas, atividades e trabalhos (pontos)
+                      ))}
+                    </fieldset>
+                    <div
+                      id={`composition-${idx}`}
+                      className="mt-auto border-t border-[var(--color-border)] pt-4"
+                      aria-live="polite"
+                    >
+                      <p
+                        className={`flex items-start gap-2 text-sm font-medium ${comp.valid ? "text-[var(--color-success)]" : "text-[var(--color-warning)]"}`}
+                      >
+                        {comp.valid ? (
+                          <FiCheckCircle
+                            className="mt-0.5 shrink-0"
+                            aria-hidden
+                          />
+                        ) : (
+                          <FiAlertCircle
+                            className="mt-0.5 shrink-0"
+                            aria-hidden
+                          />
+                        )}
+                        {comp.sum} de {max ?? "—"} pontos distribuídos
+                      </p>
+                      {!comp.valid && (
+                        <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                          {comp.hint ??
+                            "Informe o total de pontos do trimestre."}
                         </p>
-                        <div className="grid gap-3 md:grid-cols-3">
-                          {[
-                            {
-                              id: `t${idx}Provas`,
-                              label: "Provas",
-                              value: t.provasStr,
-                              set: t.setProvasStr,
-                            },
-                            {
-                              id: `t${idx}Ativ`,
-                              label: "Atividades",
-                              value: t.ativStr,
-                              set: t.setAtivStr,
-                            },
-                            {
-                              id: `t${idx}Trab`,
-                              label: "Trabalhos",
-                              value: t.trabStr,
-                              set: t.setTrabStr,
-                            },
-                          ].map((f) => (
-                            <div key={f.id}>
-                              <label htmlFor={f.id} className={labelCls}>
-                                {f.label}
-                              </label>
-                              <input
-                                id={f.id}
-                                type="text"
-                                inputMode="numeric"
-                                autoComplete="off"
-                                maxLength={MAX_DIGITS_YEAR}
-                                value={f.value}
-                                onChange={(e) =>
-                                  f.set(
-                                    normalizeCompositionPointsInput(
-                                      e.target.value,
-                                      TRIMESTER_POINTS_MAX,
-                                    ),
-                                  )
-                                }
-                                className={inputCls}
-                                disabled={isSaving}
-                              />
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Composition sum indicator */}
-                        <div
-                          className={[
-                            "flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium",
-                            comp.valid
-                              ? "bg-[var(--color-success)]/10 border border-[var(--color-success)]/30 text-[var(--color-success)]"
-                              : "bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 text-[var(--color-warning)]",
-                          ].join(" ")}
-                        >
-                          <span>
-                            Soma: {comp.sum} / {tm ?? "—"}
-                          </span>
-                          {comp.valid ? (
-                            <span>OK</span>
-                          ) : comp.hint ? (
-                            <span>{comp.hint}</span>
-                          ) : null}
-                        </div>
-                      </div>
+                      )}
+                      <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                        Aprovação a partir de {passingPoints(max, t.minStr)}{" "}
+                        pontos.
+                      </p>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Annual sum indicator */}
-            <div
-              className={[
-                "flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium border",
-                sumValid
-                  ? "bg-[var(--color-success)]/10 border-[var(--color-success)]/30 text-[var(--color-success)]"
-                  : "bg-[var(--color-warning)]/10 border-[var(--color-warning)]/30 text-[var(--color-warning)]",
-              ].join(" ")}
-            >
-              <span>
-                Soma dos trimestres: {trimesterSum} / {yearMaxPoints ?? "—"}
-              </span>
-              {sumValid ? (
-                <span>OK</span>
-              ) : (
-                <span>A soma deve ser igual à pontuação do ano</span>
-              )}
+                  </section>
+                );
+              })}
             </div>
-
-            <div className="flex justify-end">
+            <footer className="flex flex-col gap-4 border-t border-[var(--color-border)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <div aria-live="polite">
+                <p className="font-semibold text-[var(--color-text-primary)]">
+                  {trimesterSum} / {yearMaxPoints ?? "—"} pontos distribuídos
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                  {!sumValid
+                    ? "A soma dos trimestres deve ser igual à pontuação do ano."
+                    : !compositionAllValid
+                      ? "Revise a distribuição de pontos nos trimestres."
+                      : !percentagesValid
+                        ? "Preencha os percentuais de aprovação de 0 a 100%."
+                        : !yearValid
+                          ? "Revise a pontuação do ano."
+                          : "Todos os trimestres estão equilibrados."}
+                </p>
+              </div>
               <Button type="submit" disabled={!canSave} loading={isSaving}>
                 Salvar configuração
               </Button>
-            </div>
+            </footer>
           </form>
         </StateBlock>
       </div>

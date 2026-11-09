@@ -1,3 +1,4 @@
+import { DatePicker } from "../../components/ui/DatePicker";
 import { useState, useEffect, FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FiPlus } from "react-icons/fi";
@@ -95,7 +96,6 @@ export function RegisterUser() {
   const [newClassName, setNewClassName] = useState("");
   const [newClassAcademicYear, setNewClassAcademicYear] = useState("");
   const [isCreatingClass, setIsCreatingClass] = useState(false);
-  const [classModalError, setClassModalError] = useState<string | null>(null);
 
   useEffect(() => {
     const r = searchParams.get("role");
@@ -139,7 +139,7 @@ export function RegisterUser() {
 
   const handleCreateClass = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setClassModalError(null);
+
     setIsCreatingClass(true);
     try {
       const req: CreateClassRequest = {
@@ -154,8 +154,9 @@ export function RegisterUser() {
       setNewClassName("");
       setNewClassAcademicYear("");
     } catch (err) {
-      setClassModalError(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao criar turma.",
+        "error",
       );
     } finally {
       setIsCreatingClass(false);
@@ -234,7 +235,7 @@ export function RegisterUser() {
         setFieldErrors(errors);
         setError("Corrija os erros nos campos abaixo.");
       } else {
-        setError(getErrorMessage(err));
+        showToast(getErrorMessage(err), "error");
       }
     } finally {
       setIsLoading(false);
@@ -323,11 +324,11 @@ export function RegisterUser() {
                 required
                 error={fieldErrors.birthDate}
               >
-                <Input
-                  type="text"
-                  inputMode="numeric"
+                <DatePicker
+                  aria-label="Data de nascimento"
+
                   value={birthDate}
-                  onChange={(e) => handleBirthDateChange(e.target.value)}
+                  onValueChange={(value) => handleBirthDateChange(value)}
                   placeholder="DD/MM/AAAA"
                   maxLength={10}
                   required
@@ -370,7 +371,7 @@ export function RegisterUser() {
                         onClick={() => {
                           setNewClassName("");
                           setNewClassAcademicYear("");
-                          setClassModalError(null);
+
                           setShowClassModal(true);
                         }}
                         disabled={isLoading}
@@ -589,7 +590,6 @@ export function RegisterUser() {
           onSubmit={handleCreateClass}
           className="flex flex-col gap-4"
         >
-          {classModalError && <Alert type="error">{classModalError}</Alert>}
           <FormField label="Nome da Turma" required>
             <Input
               value={newClassName}

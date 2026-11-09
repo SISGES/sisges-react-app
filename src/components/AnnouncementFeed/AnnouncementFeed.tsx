@@ -1,3 +1,4 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -241,6 +242,8 @@ function AnnouncementCard({
     void loadComments();
   }, [showComments, feedRefreshVersion, loadComments]);
 
+  const { showToast } = useToast();
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || isSubmitting) return;
@@ -250,6 +253,11 @@ function AnnouncementCard({
       setNewComment("");
       loadComments();
       onRefresh();
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Erro ao salvar comentário.",
+        "error",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -274,6 +282,11 @@ function AnnouncementCard({
       setEditContent("");
       loadComments();
       onRefresh();
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Erro ao salvar comentário.",
+        "error",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -284,8 +297,12 @@ function AnnouncementCard({
       await deleteAnnouncementComment(a.id, commentId);
       loadComments();
       onRefresh();
-    } catch {
-      void 0;
+      showToast("Comentário excluído.", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Erro ao excluir comentário.",
+        "error",
+      );
     }
   };
 
@@ -435,9 +452,7 @@ function AnnouncementCard({
           <dd>{formatDateTime(a.createdAt)}</dd>
           <dt className="font-semibold">Expira em</dt>
           <dd>
-            {a.activeUntil
-              ? formatDateTime(a.activeUntil)
-              : "Não informado"}
+            {a.activeUntil ? formatDateTime(a.activeUntil) : "Não informado"}
           </dd>
         </dl>
       </Modal>
@@ -671,17 +686,23 @@ export function AnnouncementFeed({
     }
   }, []);
 
+  const { showToast } = useToast();
+
   const handleDeleteAnnouncement = useCallback(
     async (id: number) => {
       if (!(await dialog.confirm("Excluir este aviso?"))) return;
       try {
         await deleteAnnouncement(id);
+        showToast("Aviso excluído.", "success");
         fetchFeed({ silent: true });
-      } catch {
-        void 0;
+      } catch (error) {
+        showToast(
+          error instanceof Error ? error.message : "Erro ao excluir aviso.",
+          "error",
+        );
       }
     },
-    [dialog, fetchFeed],
+    [dialog, fetchFeed, showToast],
   );
 
   const handleLike = useCallback(
@@ -689,11 +710,14 @@ export function AnnouncementFeed({
       try {
         await toggleAnnouncementLike(id);
         fetchFeed({ silent: true });
-      } catch {
-        void 0;
+      } catch (error) {
+        showToast(
+          error instanceof Error ? error.message : "Erro ao atualizar curtida.",
+          "error",
+        );
       }
     },
-    [fetchFeed],
+    [fetchFeed, showToast],
   );
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -1,3 +1,4 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback } from "react";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { BackButton } from "../../components/BackButton/BackButton";
@@ -34,6 +35,7 @@ const selectCls =
 const PAGE_SIZE = 10;
 
 export function Materials() {
+  const { showToast } = useToast();
   const dialog = useDialog();
   const [materials, setMaterials] = useState<DisciplineMaterial[]>([]);
   const [classes, setClasses] = useState<ClassSearchResponse[]>([]);
@@ -125,6 +127,7 @@ export function Materials() {
         filePath,
       };
       await createMaterial(data);
+      showToast("Material criado com sucesso.", "success");
       setTitle("");
       setDescription("");
       setMaterialFile(null);
@@ -132,8 +135,9 @@ export function Materials() {
       setShowModal(false);
       fetchMaterials();
     } catch (err) {
-      setSubmitError(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao criar material.",
+        "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -144,10 +148,12 @@ export function Materials() {
     if (!(await dialog.confirm("Excluir este material?"))) return;
     try {
       await deleteMaterial(id);
+      showToast("Material excluído.", "success");
       fetchMaterials();
     } catch (err) {
-      void dialog.alert(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao excluir.",
+        "error",
       );
     }
   };

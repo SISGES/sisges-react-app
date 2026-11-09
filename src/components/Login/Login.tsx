@@ -1,16 +1,18 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useState, FormEvent } from "react";
 import { FiArrowRight, FiLock, FiMail } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ApiError } from "../../services/authService";
 import { ThemeToggle } from "../ThemeToggle/ThemeToggle";
-import { Alert, Input, Spinner } from "../ui";
+import { Input, Spinner } from "../ui";
 import { SisgesLogo } from "../SisgesLogo/SisgesLogo";
 
 export function Login() {
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export function Login() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
+
     setIsLoading(true);
 
     try {
@@ -31,20 +33,21 @@ export function Login() {
       if (err instanceof ApiError) {
         switch (err.code) {
           case "AUTH_INVALID_CREDENTIALS":
-            setError(err.message);
+            showToast(err.message, "error");
             break;
           case "VALIDATION_ERROR":
-            setError(
+            showToast(
               err.errors?.map((e) => e.message).join(", ") || err.message,
+              "error",
             );
             break;
           default:
-            setError(err.message);
+            showToast(err.message, "error");
         }
       } else if (err instanceof Error) {
-        setError(err.message);
+        showToast(err.message, "error");
       } else {
-        setError("Erro ao fazer login. Verifique suas credenciais.");
+        showToast("Erro ao fazer login. Verifique suas credenciais.", "error");
       }
     } finally {
       setIsLoading(false);
@@ -73,8 +76,6 @@ export function Login() {
 
           <div className="surface-panel p-6 sm:p-8">
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              {error && <Alert type="error">{error}</Alert>}
-
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="email"

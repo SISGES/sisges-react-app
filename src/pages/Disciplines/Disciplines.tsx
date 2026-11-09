@@ -1,3 +1,4 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback } from "react";
 import { FiEdit2, FiPlus } from "react-icons/fi";
 import { BackButton } from "../../components/BackButton/BackButton";
@@ -22,13 +23,13 @@ import {
   FormField,
   Input,
   Textarea,
-  Alert,
   Pagination,
 } from "../../components/ui";
 
 const PAGE_SIZE = 10;
 
 export function Disciplines() {
+  const { showToast } = useToast();
   const [disciplines, setDisciplines] = useState<DisciplineResponse[]>([]);
   const [teachers, setTeachers] = useState<TeacherSearchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,8 +42,7 @@ export function Disciplines() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<DisciplineResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<number[]>([]);
@@ -84,8 +84,6 @@ export function Disciplines() {
     setDescription("");
     setSelectedTeacherIds([]);
     setEditing(null);
-    setSubmitError(null);
-    setSubmitSuccess(null);
   };
 
   const handleClose = () => {
@@ -109,8 +107,7 @@ export function Disciplines() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitError(null);
-    setSubmitSuccess(null);
+
     setIsSubmitting(true);
     try {
       if (editing) {
@@ -122,7 +119,7 @@ export function Disciplines() {
             vinculado: selectedTeacherIds.includes(t.id),
           })),
         });
-        setSubmitSuccess("Disciplina atualizada com sucesso!");
+        showToast("Disciplina atualizada com sucesso!", "success");
       } else {
         await createDiscipline({
           name: name.trim(),
@@ -130,14 +127,15 @@ export function Disciplines() {
           teacherIds:
             selectedTeacherIds.length > 0 ? selectedTeacherIds : undefined,
         });
-        setSubmitSuccess("Disciplina criada com sucesso!");
+        showToast("Disciplina criada com sucesso!", "success");
       }
       resetForm();
       fetchDisciplines();
-      setTimeout(handleClose, 1200);
+      handleClose();
     } catch (err) {
-      setSubmitError(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao salvar disciplina.",
+        "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -249,8 +247,6 @@ export function Disciplines() {
           onSubmit={handleSubmit}
           className="flex flex-col gap-4"
         >
-          {submitError && <Alert type="error">{submitError}</Alert>}
-          {submitSuccess && <Alert type="success">{submitSuccess}</Alert>}
           <FormField label="Nome" required>
             <Input
               value={name}

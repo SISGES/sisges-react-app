@@ -1,3 +1,6 @@
+import { useToast } from "../../contexts/ToastContext";
+import { TimePicker } from "../../components/ui/TimePicker";
+import { DatePicker } from "../../components/ui/DatePicker";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "../../components/BackButton/BackButton";
@@ -58,12 +61,11 @@ interface TeacherDisciplineOption {
   schoolClassIds: number[];
 }
 
-const selectCls =
-  "w-full px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
 const inputCls =
   "w-full px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50 transition-colors";
 
 export function CreateAula() {
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   const isTeacher = user?.role === "TEACHER";
@@ -228,64 +230,21 @@ export function CreateAula() {
         startTime,
         endTime,
       });
+      showToast("Aula criada com sucesso.", "success");
       navigate("/aulas");
     } catch (err) {
-      setSubmitError(
+      showToast(
         err instanceof ApiError
           ? err.message
           : err instanceof Error
             ? err.message
             : "Erro ao criar aula.",
+        "error",
       );
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const HoursSelect = ({
-    value,
-    onChange,
-    disabled,
-  }: {
-    value: number;
-    onChange: (v: number) => void;
-    disabled: boolean;
-  }) => (
-    <select
-      value={value}
-      onChange={(e) => onChange(parseInt(e.target.value, 10))}
-      className={`${selectCls} w-20`}
-      disabled={disabled}
-    >
-      {Array.from({ length: 24 }, (_, i) => (
-        <option key={i} value={i}>
-          {String(i).padStart(2, "0")}h
-        </option>
-      ))}
-    </select>
-  );
-  const MinsSelect = ({
-    value,
-    onChange,
-    disabled,
-  }: {
-    value: number;
-    onChange: (v: number) => void;
-    disabled: boolean;
-  }) => (
-    <select
-      value={value}
-      onChange={(e) => onChange(parseInt(e.target.value, 10))}
-      className={`${selectCls} w-20`}
-      disabled={disabled}
-    >
-      {Array.from({ length: 60 }, (_, i) => (
-        <option key={i} value={i}>
-          {String(i).padStart(2, "0")}
-        </option>
-      ))}
-    </select>
-  );
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -316,11 +275,12 @@ export function CreateAula() {
 
               <FormField label="Data" required>
                 <div className="flex items-center gap-3">
-                  <input
-                    type="text"
+                  <DatePicker
+                    aria-label="Data da aula"
+
                     value={date}
-                    onChange={(e) => {
-                      setDate(formatDateInput(e.target.value));
+                    onValueChange={(value) => {
+                      setDate(formatDateInput(value));
                       if (isToday) setIsToday(false);
                     }}
                     className={`${inputCls} flex-1`}
@@ -391,38 +351,30 @@ export function CreateAula() {
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Horário início" required>
-                  <div className="flex items-center gap-1">
-                    <HoursSelect
-                      value={startHour}
-                      onChange={setStartHour}
-                      disabled={isSubmitting}
-                    />
-                    <span className="text-[var(--color-text-muted)] text-sm">
-                      :
-                    </span>
-                    <MinsSelect
-                      value={startMinute}
-                      onChange={setStartMinute}
-                      disabled={isSubmitting}
-                    />
-                  </div>
+                  <TimePicker
+                    label="Início da aula"
+                    value={startTime}
+                    onValueChange={(time) => {
+                      const [hour, minute] = time.split(":").map(Number);
+                      setStartHour(hour);
+                      setStartMinute(minute);
+                    }}
+                    required
+                    disabled={isSubmitting}
+                  />
                 </FormField>
                 <FormField label="Horário fim" required>
-                  <div className="flex items-center gap-1">
-                    <HoursSelect
-                      value={endHour}
-                      onChange={setEndHour}
-                      disabled={isSubmitting}
-                    />
-                    <span className="text-[var(--color-text-muted)] text-sm">
-                      :
-                    </span>
-                    <MinsSelect
-                      value={endMinute}
-                      onChange={setEndMinute}
-                      disabled={isSubmitting}
-                    />
-                  </div>
+                  <TimePicker
+                    label="Fim da aula"
+                    value={endTime}
+                    onValueChange={(time) => {
+                      const [hour, minute] = time.split(":").map(Number);
+                      setEndHour(hour);
+                      setEndMinute(minute);
+                    }}
+                    required
+                    disabled={isSubmitting}
+                  />
                 </FormField>
               </div>
               {timeError && <Alert type="error">{timeError}</Alert>}

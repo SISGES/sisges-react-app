@@ -1,3 +1,7 @@
+import { useToast } from "../../contexts/ToastContext";
+import { eventDateTimeToIso } from "../../utils/eventDateTime";
+import { TimePicker } from "../ui/TimePicker";
+import { DatePicker } from "../ui/DatePicker";
 import { useEffect, useState } from "react";
 import { FiCalendar, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
@@ -36,6 +40,8 @@ export function EventsPanel({
   compact?: boolean;
   showPast?: boolean;
 }) {
+  const { showToast } = useToast();
+  const [saving, setSaving] = useState(false);
   const { user } = useAuth();
   const dialog = useDialog();
   const [events, setEvents] = useState<SchoolEvent[]>([]);
@@ -57,7 +63,9 @@ export function EventsPanel({
       setEvents(
         showPast
           ? items
-          : items.filter((event) => new Date(event.eventAt).getTime() >= Date.now()),
+          : items.filter(
+              (event) => new Date(event.eventAt).getTime() >= Date.now(),
+            ),
       );
       setCurrentPage(1);
     });
@@ -69,30 +77,49 @@ export function EventsPanel({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const date = brDateToIso(form.date);
-    if (!date || !form.time) return;
-    await createEvent({
-      title: form.title,
-      description: form.description || undefined,
-      eventAt: `${date}T${form.time}:00`,
-      audience: form.audience,
-      classId: form.audience === "CLASS" ? Number(form.classId) : undefined,
-    });
-    setCreating(false);
-    setForm({
-      title: "",
-      description: "",
-      date: "",
-      time: "",
-      audience: "ALL",
-      classId: "",
-    });
-    load();
+    if (saving || !date || !form.time) return;
+    setSaving(true);
+    try {
+      await createEvent({
+        title: form.title,
+        description: form.description || undefined,
+        eventAt: eventDateTimeToIso(date, form.time),
+        audience: form.audience,
+        classId: form.audience === "CLASS" ? Number(form.classId) : undefined,
+      });
+      showToast("Evento criado com sucesso.", "success");
+      setCreating(false);
+      setForm({
+        title: "",
+        description: "",
+        date: "",
+        time: "",
+        audience: "ALL",
+        classId: "",
+      });
+      load();
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Erro ao criar evento.",
+        "error",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
   const remove = async (id: number) => {
     if (!(await dialog.confirm("Excluir este evento?"))) return;
-    await deleteEvent(id);
-    setSelected(null);
-    load();
+    try {
+      await deleteEvent(id);
+      setSelected(null);
+      showToast("Evento excluído.", "success");
+      load();
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Erro ao excluir evento.",
+        "error",
+      );
+    }
   };
   return (
     <>
@@ -151,7 +178,11 @@ export function EventsPanel({
                   <div>
                     <h3 className="text-sm font-bold text-[var(--color-text-primary)]">
                       {event.title}
-                      {isPast && <span className="ml-2 text-xs font-medium">Encerrado</span>}
+                      {isPast && (
+                        <span className="ml-2 text-xs font-medium">
+                          Encerrado
+                        </span>
+                      )}
                     </h3>
                     <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
                       {formatEventDateTime(event.eventAt)}
@@ -247,7 +278,7 @@ export function EventsPanel({
         onClose={() => setCreating(false)}
         title="Novo evento"
         footer={
-          <Button type="submit" form="event-form">
+          <Button type="submit" form="event-form" loading={saving}>
             Criar evento
           </Button>
         }
@@ -265,23 +296,21 @@ export function EventsPanel({
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Input
-              type="text"
-              inputMode="numeric"
+            <DatePicker
+              aria-label="Data do evento"
+
               placeholder="Data (dd/mm/aaaa)"
               required
               value={form.date}
-              onChange={(e) =>
-                setForm({ ...form, date: formatBrDateInput(e.target.value) })
+              onValueChange={(value) =>
+                setForm({ ...form, date: formatBrDateInput(value) })
               }
             />
-            <Input
-              type="time"
-              step="60"
-              aria-label="Horário do evento"
+            <TimePicker
+              label="Horário do evento"
               required
               value={form.time}
-              onChange={(e) => setForm({ ...form, time: e.target.value })}
+              onValueChange={(time) => setForm({ ...form, time })}
             />
           </div>
           <Select

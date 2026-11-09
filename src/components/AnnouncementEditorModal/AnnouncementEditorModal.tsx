@@ -1,7 +1,8 @@
+import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { CharCounter } from "../CharCounter/CharCounter";
 import { Modal } from "../ui/Modal";
-import { Alert, Input, Select, Textarea } from "../ui/FormField";
+import { Input, Select, Textarea } from "../ui/FormField";
 import { Button } from "../ui/Button";
 import { FiUploadCloud, FiX, FiImage } from "react-icons/fi";
 import {
@@ -47,6 +48,7 @@ export function AnnouncementEditorModal({
   onSuccess,
   editingAnnouncement,
 }: Props) {
+  const { showToast } = useToast();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imagePath, setImagePath] = useState("");
@@ -54,8 +56,7 @@ export function AnnouncementEditorModal({
   const [hiddenForRoles, setHiddenForRoles] = useState<string[]>([]);
   const [ttlHours, setTtlHours] = useState<AnnouncementTtl>(24);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+
   const [isDragOver, setIsDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,8 +68,7 @@ export function AnnouncementEditorModal({
     setImageFile(null);
     setHiddenForRoles([]);
     setTtlHours(24);
-    setSubmitError(null);
-    setSubmitSuccess(null);
+
     setImagePreview(null);
   }, []);
 
@@ -89,8 +89,7 @@ export function AnnouncementEditorModal({
 
   useEffect(() => {
     if (!open) return;
-    setSubmitError(null);
-    setSubmitSuccess(null);
+
     if (editingAnnouncement) {
       setTitle(editingAnnouncement.title);
       setContent(editingAnnouncement.content || "");
@@ -116,8 +115,7 @@ export function AnnouncementEditorModal({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitError(null);
-    setSubmitSuccess(null);
+
     setIsSubmitting(true);
     try {
       let finalImagePath = imagePath.trim() || undefined;
@@ -138,7 +136,7 @@ export function AnnouncementEditorModal({
             hiddenForRoles.length > 0 ? hiddenForRoles : undefined,
         };
         await updateAnnouncement(editingAnnouncement.id, data);
-        setSubmitSuccess("Aviso atualizado com sucesso!");
+        showToast("Aviso atualizado com sucesso!", "success");
       } else {
         const data: CreateAnnouncementRequest = {
           title: title.trim(),
@@ -150,13 +148,14 @@ export function AnnouncementEditorModal({
           ttlHours,
         };
         await createAnnouncement(data);
-        setSubmitSuccess("Aviso criado com sucesso!");
+        showToast("Aviso criado com sucesso!", "success");
       }
       onSuccess();
-      setTimeout(handleClose, 1200);
+      handleClose();
     } catch (err) {
-      setSubmitError(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao salvar aviso.",
+        "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -194,9 +193,6 @@ export function AnnouncementEditorModal({
         onSubmit={handleSubmit}
         className="flex flex-col gap-4"
       >
-        {submitError && <Alert type="error">{submitError}</Alert>}
-        {submitSuccess && <Alert type="success">{submitSuccess}</Alert>}
-
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="announcementEditorTitle"

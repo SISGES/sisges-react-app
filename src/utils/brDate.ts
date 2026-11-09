@@ -20,7 +20,15 @@ export function brDateToIso(value: string): string {
   const [, d, m, y] = match;
   const day = parseInt(d!, 10);
   const month = parseInt(m!, 10);
-  if (day < 1 || day > 31 || month < 1 || month > 12) return "";
+  const year = Number(y);
+  const parsed = new Date(year, month - 1, day);
+  if (
+    year < 1000 ||
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  )
+    return "";
   return `${y}-${m}-${d}`;
 }
 

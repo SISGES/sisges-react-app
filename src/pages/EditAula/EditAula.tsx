@@ -1,3 +1,6 @@
+import { useToast } from "../../contexts/ToastContext";
+import { TimePicker } from "../../components/ui/TimePicker";
+import { DatePicker } from "../../components/ui/DatePicker";
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BackButton } from "../../components/BackButton/BackButton";
@@ -21,11 +24,14 @@ import {
   StateBlock,
   FormField,
   Select,
-  Input,
   Alert,
   Pagination,
 } from "../../components/ui";
-import { brDateToIso, formatBrDateInput, isoDateToBr } from "../../utils/brDate";
+import {
+  brDateToIso,
+  formatBrDateInput,
+  isoDateToBr,
+} from "../../utils/brDate";
 
 function timeToMins(t: string): number {
   const parts = t.split(":");
@@ -35,10 +41,8 @@ function timesOverlap(s1: string, e1: string, s2: string, e2: string): boolean {
   return timeToMins(s1) < timeToMins(e2) && timeToMins(s2) < timeToMins(e1);
 }
 
-const inputCls =
-  "w-full px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50 transition-colors";
-
 export function EditAula() {
+  const { showToast } = useToast();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -63,7 +67,7 @@ export function EditAula() {
   const [attendance, setAttendance] = useState<Record<string, "P" | "F">>({});
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
   const [isSubmittingFreq, setIsSubmittingFreq] = useState(false);
-  const [freqError, setFreqError] = useState<string | null>(null);
+
   const [frequencyPage, setFrequencyPage] = useState(1);
   const visibleFrequencyStudents = (aula?.students ?? []).slice(
     (frequencyPage - 1) * 10,
@@ -220,10 +224,12 @@ export function EditAula() {
         startTime,
         endTime,
       });
+      showToast("Aula atualizada com sucesso.", "success");
       navigate(`/aulas/${aulaId}`);
     } catch (err) {
-      setSubmitError(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao atualizar aula.",
+        "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -233,7 +239,7 @@ export function EditAula() {
   const handleSubmitFrequency = async () => {
     if (!aulaId || !aula) return;
     setIsSubmittingFreq(true);
-    setFreqError(null);
+
     try {
       await submitAulaFrequency(aulaId, {
         entries: (aula.students ?? []).map((s) => ({
@@ -241,10 +247,12 @@ export function EditAula() {
           status: (attendance[s.name] ?? "P") as "P" | "F",
         })),
       });
+      showToast("Frequência salva.", "success");
       setShowFrequencyModal(false);
     } catch (err) {
-      setFreqError(
+      showToast(
         err instanceof ApiError ? err.message : "Erro ao lançar frequência.",
+        "error",
       );
     } finally {
       setIsSubmittingFreq(false);
@@ -292,11 +300,11 @@ export function EditAula() {
               {submitError && <Alert type="error">{submitError}</Alert>}
 
               <FormField label="Data" required>
-                <Input
-                  type="text"
-                  inputMode="numeric"
+                <DatePicker
+                  aria-label="Data da aula"
+
                   value={date}
-                  onChange={(e) => setDate(formatBrDateInput(e.target.value))}
+                  onValueChange={(value) => setDate(formatBrDateInput(value))}
                   placeholder="dd/mm/aaaa"
                   required
                   disabled={isSubmitting}
@@ -345,23 +353,21 @@ export function EditAula() {
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Início" required>
-                  <input
-                    type="time"
+                  <TimePicker
+                    label="Início da aula"
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
+                    onValueChange={setStartTime}
                     required
                     disabled={isSubmitting}
-                    className={inputCls}
                   />
                 </FormField>
                 <FormField label="Fim" required>
-                  <input
-                    type="time"
+                  <TimePicker
+                    label="Fim da aula"
                     value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
+                    onValueChange={setEndTime}
                     required
                     disabled={isSubmitting}
-                    className={inputCls}
                   />
                 </FormField>
               </div>
@@ -408,7 +414,6 @@ export function EditAula() {
           }
         >
           <div className="flex flex-col gap-3">
-            {freqError && <Alert type="error">{freqError}</Alert>}
             {visibleFrequencyStudents.map((s) => (
               <div
                 key={s.id}
