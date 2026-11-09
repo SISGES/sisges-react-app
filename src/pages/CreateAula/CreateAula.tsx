@@ -1,3 +1,4 @@
+import { brDateToIso as dateBrToIso, getTodayBr } from "../../utils/brDate";
 import { useToast } from "../../contexts/ToastContext";
 import { TimePicker } from "../../components/ui/TimePicker";
 import { DatePicker } from "../../components/ui/DatePicker";
@@ -22,29 +23,6 @@ import {
   Alert,
 } from "../../components/ui";
 
-function getTodayBr(): string {
-  const now = new Date();
-  return [
-    String(now.getDate()).padStart(2, "0"),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    now.getFullYear(),
-  ].join("/");
-}
-function dateBrToIso(value: string): string {
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return "";
-  const [, d, m, y] = match;
-  const day = parseInt(d!, 10),
-    month = parseInt(m!, 10);
-  if (day < 1 || day > 31 || month < 1 || month > 12) return "";
-  return `${y}-${m}-${d}`;
-}
-function formatDateInput(value: string): string {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
-}
 function minsToTime(mins: number): string {
   return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
 }
@@ -60,9 +38,6 @@ interface TeacherDisciplineOption {
   discipline: DisciplineSimple;
   schoolClassIds: number[];
 }
-
-const inputCls =
-  "w-full px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50 transition-colors";
 
 export function CreateAula() {
   const { showToast } = useToast();
@@ -81,7 +56,6 @@ export function CreateAula() {
   const [optionsError, setOptionsError] = useState<string | null>(null);
 
   const [date, setDate] = useState("");
-  const [isToday, setIsToday] = useState(false);
   const [disciplineId, setDisciplineId] = useState<number | "">("");
   const [schoolClassId, setSchoolClassId] = useState<number | "">("");
   const [startHour, setStartHour] = useState<number>(8);
@@ -95,7 +69,7 @@ export function CreateAula() {
   const startTime = minsToTime(startHour * 60 + startMinute);
   const endTime = minsToTime(endHour * 60 + endMinute);
   const isTimeValid = timeToMins(endTime) > timeToMins(startTime);
-  const isDateValid = /^\d{2}\/\d{2}\/\d{4}$/.test(date);
+  const isDateValid = !!dateBrToIso(date);
 
   useEffect(() => {
     setTimeError(
@@ -196,6 +170,7 @@ export function CreateAula() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
+      isSubmitting ||
       !disciplineId ||
       !schoolClassId ||
       !date ||
@@ -250,7 +225,7 @@ export function CreateAula() {
     <div className="flex flex-col flex-1 min-h-0">
       <PageHeader title="Nova Aula" back={<BackButton to="/aulas" />} />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-4 sm:p-6">
         {user?.role !== "TEACHER" ? (
           <p className="text-sm text-[var(--color-text-muted)]">
             Apenas professores podem criar aulas.
@@ -267,136 +242,187 @@ export function CreateAula() {
             }
             onRetry={fetchOptions}
           >
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-5 max-w-md"
-            >
-              {submitError && <Alert type="error">{submitError}</Alert>}
+            <div className="mx-auto w-full max-w-5xl">
+              <p className="mb-6 text-sm text-[var(--color-text-secondary)]">
+                Escolha a disciplina, a turma e quando a aula vai acontecer.
+              </p>
+              <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(240px,1fr)]">
+                <form
+                  onSubmit={handleSubmit}
+                  className="flex min-w-0 flex-col gap-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6"
+                >
+                  {submitError && <Alert type="error">{submitError}</Alert>}
 
-              <FormField label="Data" required>
-                <div className="flex items-center gap-3">
-                  <DatePicker
-                    aria-label="Data da aula"
+                  <FormField label="Disciplina" required>
+                    <Select
+                      aria-label="Disciplina"
+                      value={disciplineId}
+                      onChange={(e) =>
+                        setDisciplineId(
+                          e.target.value ? parseInt(e.target.value, 10) : "",
+                        )
+                      }
+                      required
+                      disabled={isSubmitting || disciplineOptions.length === 1}
+                    >
+                      <option value="">Selecione a disciplina</option>
+                      {disciplineOptions.map((o) => (
+                        <option key={o.discipline.id} value={o.discipline.id}>
+                          {o.discipline.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormField>
 
-                    value={date}
-                    onValueChange={(value) => {
-                      setDate(formatDateInput(value));
-                      if (isToday) setIsToday(false);
-                    }}
-                    className={`${inputCls} flex-1`}
-                    placeholder="dd/mm/aaaa"
-                    maxLength={10}
-                    required
-                    disabled={isSubmitting}
-                  />
-                  <label className="flex items-center gap-2 text-sm text-[var(--color-text-primary)] cursor-pointer whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={isToday}
-                      onChange={(e) => {
-                        setIsToday(e.target.checked);
-                        setDate(e.target.checked ? getTodayBr() : "");
-                      }}
+                  <FormField label="Turma" required>
+                    <Select
+                      aria-label="Turma"
+                      value={schoolClassId}
+                      onChange={(e) =>
+                        setSchoolClassId(
+                          e.target.value ? parseInt(e.target.value, 10) : "",
+                        )
+                      }
+                      required
+                      disabled={
+                        isSubmitting ||
+                        schoolClassOptions.length === 0 ||
+                        schoolClassOptions.length === 1
+                      }
+                    >
+                      <option value="">Selecione a turma</option>
+                      {schoolClassOptions.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormField>
+
+                  <div className="border-t border-[var(--color-border)] pt-5">
+                    <h3 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">
+                      Data e horário
+                    </h3>
+                    <FormField label="Data" required>
+                      <div className="flex items-center gap-3">
+                        <DatePicker
+                          aria-label="Data da aula"
+                          value={date}
+                          onValueChange={setDate}
+                          required
+                          disabled={isSubmitting}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={isSubmitting}
+                          onClick={() => setDate(getTodayBr())}
+                        >
+                          Hoje
+                        </Button>
+                      </div>
+                    </FormField>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <FormField label="Início · 24h" required>
+                      <TimePicker
+                        label="Início da aula"
+                        value={startTime}
+                        onValueChange={(time) => {
+                          const [hour, minute] = time.split(":").map(Number);
+                          setStartHour(hour);
+                          setStartMinute(minute);
+                        }}
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </FormField>
+                    <FormField label="Fim · 24h" required>
+                      <TimePicker
+                        label="Fim da aula"
+                        value={endTime}
+                        onValueChange={(time) => {
+                          const [hour, minute] = time.split(":").map(Number);
+                          setEndHour(hour);
+                          setEndMinute(minute);
+                        }}
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </FormField>
+                  </div>
+                  {timeError && <Alert type="error">{timeError}</Alert>}
+
+                  <div className="flex gap-3 justify-end">
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      onClick={() => navigate("/aulas")}
                       disabled={isSubmitting}
-                      className="accent-[var(--color-primary)] w-4 h-4"
-                    />
-                    Hoje
-                  </label>
-                </div>
-              </FormField>
-
-              <FormField label="Disciplina" required>
-                <Select
-                  value={disciplineId}
-                  onChange={(e) =>
-                    setDisciplineId(
-                      e.target.value ? parseInt(e.target.value, 10) : "",
-                    )
-                  }
-                  required
-                  disabled={isSubmitting || disciplineOptions.length === 1}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      loading={isSubmitting}
+                      disabled={
+                        !disciplineId ||
+                        !schoolClassId ||
+                        !isTimeValid ||
+                        !isDateValid
+                      }
+                    >
+                      Criar Aula
+                    </Button>
+                  </div>
+                </form>
+                <aside
+                  aria-label="Resumo da aula"
+                  className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6"
                 >
-                  <option value="">Selecione a disciplina</option>
-                  {disciplineOptions.map((o) => (
-                    <option key={o.discipline.id} value={o.discipline.id}>
-                      {o.discipline.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormField>
-
-              <FormField label="Turma" required>
-                <Select
-                  value={schoolClassId}
-                  onChange={(e) =>
-                    setSchoolClassId(
-                      e.target.value ? parseInt(e.target.value, 10) : "",
-                    )
-                  }
-                  required
-                  disabled={
-                    isSubmitting ||
-                    schoolClassOptions.length === 0 ||
-                    schoolClassOptions.length === 1
-                  }
-                >
-                  <option value="">Selecione a turma</option>
-                  {schoolClassOptions.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormField>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField label="Horário início" required>
-                  <TimePicker
-                    label="Início da aula"
-                    value={startTime}
-                    onValueChange={(time) => {
-                      const [hour, minute] = time.split(":").map(Number);
-                      setStartHour(hour);
-                      setStartMinute(minute);
-                    }}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </FormField>
-                <FormField label="Horário fim" required>
-                  <TimePicker
-                    label="Fim da aula"
-                    value={endTime}
-                    onValueChange={(time) => {
-                      const [hour, minute] = time.split(":").map(Number);
-                      setEndHour(hour);
-                      setEndMinute(minute);
-                    }}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </FormField>
+                  <h2 className="mb-5 text-base font-semibold text-[var(--color-text-primary)]">
+                    Resumo da aula
+                  </h2>
+                  <dl className="flex flex-col gap-5 text-left">
+                    {[
+                      [
+                        "Disciplina",
+                        disciplineOptions.find(
+                          (o) => o.discipline.id === disciplineId,
+                        )?.discipline.name ?? "Selecione a disciplina",
+                      ],
+                      [
+                        "Turma",
+                        schoolClassOptions.find((c) => c.id === schoolClassId)
+                          ?.name ?? "Selecione a turma",
+                      ],
+                      [
+                        "Data",
+                        isDateValid ? date : "Selecione uma data válida",
+                      ],
+                      ["Horário", `${startTime} – ${endTime}`],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <dt className="text-xs text-[var(--color-text-secondary)]">
+                          {label}
+                        </dt>
+                        <dd className="mt-1 break-words text-sm font-medium text-[var(--color-text-primary)]">
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p
+                    aria-live="polite"
+                    className={`mt-5 border-t border-[var(--color-border)] pt-4 text-sm ${isTimeValid ? "text-[var(--color-primary)]" : "text-[var(--color-error)]"}`}
+                  >
+                    {isTimeValid
+                      ? `${timeToMins(endTime) - timeToMins(startTime)} minutos de aula`
+                      : "O fim deve ser depois do início."}
+                  </p>
+                </aside>
               </div>
-              {timeError && <Alert type="error">{timeError}</Alert>}
-
-              <div className="flex gap-3 justify-end">
-                <Button
-                  variant="secondary"
-                  type="button"
-                  onClick={() => navigate("/aulas")}
-                  disabled={isSubmitting}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!isTimeValid || !isDateValid}
-                >
-                  Criar Aula
-                </Button>
-              </div>
-            </form>
+            </div>
           </StateBlock>
         )}
       </div>
