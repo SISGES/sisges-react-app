@@ -10,7 +10,7 @@ const source = readFileSync(
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ES2020 },
 });
-const { eventDateTimeToIso } = await import(
+const { eventDateTimeToIso, validateEventDateTime, eventDateLimits } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 
@@ -45,4 +45,21 @@ test("event timestamps preserve local time and include the timezone required by 
     if (original === undefined) delete process.env.TZ;
     else process.env.TZ = original;
   }
+});
+
+test("event limits include now and year end, excluding past and next year", () => {
+  const now = new Date("2026-11-09T22:00:00.000Z");
+  for (const value of [now.toISOString(), "2026-11-10T00:00:00Z", "2027-01-01T02:59:59.999Z"]) {
+    assert.doesNotThrow(() => validateEventDateTime(value, now));
+  }
+  for (const value of ["2026-11-09T21:59:59.999Z", "2027-01-01T03:00:00Z", "2040-09-09T22:05:00Z", "invalid"]) {
+    assert.throws(() => validateEventDateTime(value, now));
+  }
+  const utcNewYear = new Date("2027-01-01T01:00:00Z");
+  assert.equal(eventDateLimits(utcNewYear).year, 2026);
+  assert.doesNotThrow(() => validateEventDateTime("2027-01-01T02:59:59.999Z", utcNewYear));
+  assert.throws(() => validateEventDateTime("2027-01-01T03:00:00Z", utcNewYear));
+  const schoolNewYear = new Date("2027-01-01T03:00:00Z");
+  assert.equal(eventDateLimits(schoolNewYear).year, 2027);
+  assert.doesNotThrow(() => validateEventDateTime("2027-12-31T23:59:00-03:00", schoolNewYear));
 });

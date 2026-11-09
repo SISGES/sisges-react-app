@@ -4,30 +4,38 @@ import {
   fetchPrivateFile,
 } from "../../services/uploadService";
 
-export function useProtectedFileUrl(path: string | null): string | null {
-  const [url, setUrl] = useState<string | null>(null);
-
+export function useProtectedImage(path: string | null) {
+  const [result, setResult] = useState<{
+    path: string;
+    url: string | null;
+    failed: boolean;
+  } | null>(null);
+  const remote = !!path && /^(https?:|blob:|data:)/.test(path);
   useEffect(() => {
-    if (!path) {
-      setUrl(null);
-      return;
-    }
+    if (!path || remote) return;
     let active = true;
     let objectUrl: string | null = null;
     fetchPrivateFile(path)
       .then((blob) => {
         if (!active) return;
         objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
+        setResult({ path, url: objectUrl, failed: false });
       })
-      .catch(() => active && setUrl(null));
+      .catch(() => {
+        if (active) setResult({ path, url: null, failed: true });
+      });
     return () => {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [path]);
+  }, [path, remote]);
+  if (remote) return { url: path, loading: false };
+  const current = result?.path === path ? result : null;
+  return { url: current?.url ?? null, loading: !!path && !current };
+}
 
-  return url;
+export function useProtectedFileUrl(path: string | null): string | null {
+  return useProtectedImage(path).url;
 }
 
 export function ProtectedDownloadButton({

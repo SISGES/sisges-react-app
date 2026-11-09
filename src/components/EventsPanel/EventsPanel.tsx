@@ -1,5 +1,9 @@
 import { useToast } from "../../contexts/ToastContext";
-import { eventDateTimeToIso } from "../../utils/eventDateTime";
+import {
+  eventDateTimeToIso,
+  eventDateLimits,
+  validateEventDateTime,
+} from "../../utils/eventDateTime";
 import { TimePicker } from "../ui/TimePicker";
 import { DatePicker } from "../ui/DatePicker";
 import { useEffect, useState } from "react";
@@ -80,10 +84,12 @@ export function EventsPanel({
     if (saving || !date || !form.time) return;
     setSaving(true);
     try {
+      const eventAt = eventDateTimeToIso(date, form.time);
+      validateEventDateTime(eventAt);
       await createEvent({
         title: form.title,
         description: form.description || undefined,
-        eventAt: eventDateTimeToIso(date, form.time),
+        eventAt,
         audience: form.audience,
         classId: form.audience === "CLASS" ? Number(form.classId) : undefined,
       });
@@ -298,6 +304,9 @@ export function EventsPanel({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DatePicker
               aria-label="Data do evento"
+              min={eventDateLimits().min}
+              max={eventDateLimits().max}
+              aria-describedby="event-date-limits"
 
               placeholder="Data (dd/mm/aaaa)"
               required
@@ -313,6 +322,13 @@ export function EventsPanel({
               onValueChange={(time) => setForm({ ...form, time })}
             />
           </div>
+          <p
+            id="event-date-limits"
+            className="text-xs text-[var(--color-text-secondary)]"
+          >
+            Escolha um horário a partir de agora, até 31/12/
+            {eventDateLimits().year}, às 23:59 (horário de São Paulo).
+          </p>
           <Select
             value={form.audience}
             onChange={(e) =>

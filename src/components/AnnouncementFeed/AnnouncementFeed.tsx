@@ -1,3 +1,4 @@
+import { LoadingImage } from "../ui/LoadingImage";
 import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -33,7 +34,7 @@ import { AnnouncementEditorModal } from "../AnnouncementEditorModal/Announcement
 import { Button } from "../ui/Button";
 import { Spinner } from "../ui/FormField";
 import { Pagination } from "../ui/Pagination";
-import { useProtectedFileUrl } from "../ProtectedFile/ProtectedFile";
+import { useProtectedImage } from "../ProtectedFile/ProtectedFile";
 import { UserAvatar } from "../UserAvatar/UserAvatar";
 import { Modal } from "../ui/Modal";
 import { EventsPanel } from "../EventsPanel/EventsPanel";
@@ -73,7 +74,7 @@ const FEED_IMAGE_PREVIEW_H = "h-72 sm:h-80"; // 18rem / 20rem
 
 function FeedImage({ path, title }: { path: string; title: string }) {
   const [lightbox, setLightbox] = useState(false);
-  const src = useProtectedFileUrl(path);
+  const { url: src, loading: imagePending } = useProtectedImage(path);
 
   useEffect(() => {
     if (!lightbox) return;
@@ -89,7 +90,6 @@ function FeedImage({ path, title }: { path: string; title: string }) {
     };
   }, [lightbox]);
 
-  if (!src) return null;
   return (
     <>
       <div className="mr-6 border-t border-b border-[var(--color-border)]/60 bg-[var(--color-background)]">
@@ -97,6 +97,7 @@ function FeedImage({ path, title }: { path: string; title: string }) {
           <div className="mx-auto w-full max-w-3xl sm:max-w-4xl">
             <button
               type="button"
+              disabled={!src || imagePending}
               onClick={() => setLightbox(true)}
               className="group relative flex w-full items-center justify-center overflow-hidden rounded-xl border-0 bg-[var(--color-surface)]/40 p-0 shadow-sm ring-1 ring-[var(--color-border)]/50 transition-shadow hover:ring-2 hover:ring-[var(--color-primary)]/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
               aria-label="Ampliar imagem"
@@ -107,7 +108,9 @@ function FeedImage({ path, title }: { path: string; title: string }) {
                   FEED_IMAGE_PREVIEW_H,
                 ].join(" ")}
               >
-                <img
+                <LoadingImage
+                  pending={imagePending}
+                  containerClassName="flex h-full w-full items-center justify-center"
                   src={src}
                   alt={title}
                   className="max-h-full max-w-full object-contain"
@@ -146,7 +149,9 @@ function FeedImage({ path, title }: { path: string; title: string }) {
                 className="box-border h-[min(88dvh,calc(100dvh-3rem))] w-[min(98dvw,100dvw-0.5rem)] min-w-0 shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
-                <img
+                <LoadingImage
+                  pending={imagePending}
+                  containerClassName="flex h-full w-full items-center justify-center"
                   src={src}
                   alt={title}
                   className="block h-full w-full object-contain object-center shadow-2xl"

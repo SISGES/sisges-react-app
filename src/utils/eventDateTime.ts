@@ -20,3 +20,31 @@ export function eventDateTimeToIso(date: string, time: string): string {
   }
   return value.toISOString();
 }
+
+/** The school's year boundary is São Paulo time, regardless of server timezone. */
+export function eventDateLimits(now = new Date()) {
+  const year = Number(
+    new Intl.DateTimeFormat("en", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+    }).format(now),
+  );
+  const end = new Date(`${year + 1}-01-01T00:00:00-03:00`);
+  end.setMilliseconds(end.getMilliseconds() - 1);
+  const localDay = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return { min: localDay(now), max: localDay(end), end, year };
+}
+
+export function validateEventDateTime(value: string, now = new Date()): void {
+  const date = new Date(value);
+  if (
+    !Number.isFinite(date.getTime()) ||
+    date < now ||
+    date > eventDateLimits(now).end
+  ) {
+    throw new Error(
+      "O evento deve ocorrer entre agora e o fim do ano atual (horário de São Paulo).",
+    );
+  }
+}

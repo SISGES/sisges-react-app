@@ -1,4 +1,5 @@
-import { useProtectedFileUrl } from "../ProtectedFile/ProtectedFile";
+import { LoadingImage } from "../ui/LoadingImage";
+import { useProtectedImage } from "../ProtectedFile/ProtectedFile";
 
 export const DEFAULT_AVATAR =
   "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg";
@@ -12,15 +13,28 @@ export function UserAvatar({
   name?: string;
   className?: string;
 }) {
-  const protectedUrl = useProtectedFileUrl(
-    path?.startsWith("/api/files/") ? path : null,
-  );
-  const src = path?.startsWith("http") ? path : protectedUrl || DEFAULT_AVATAR;
+  const { url, loading } = useProtectedImage(path || null);
+  const initials =
+    name
+      ?.trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "?";
   return (
-    <img
-      src={src}
+    <LoadingImage
+      src={url}
+      pending={loading}
       alt={name ? `Foto de ${name}` : "Foto do usuário"}
-      className={`${className} shrink-0 rounded-full object-cover`}
+      containerClassName={`${className} inline-flex shrink-0 rounded-full`}
+      className="h-full w-full object-cover"
+      fallback={
+        <span className="text-xs font-semibold" aria-hidden>
+          {initials}
+        </span>
+      }
     />
   );
 }

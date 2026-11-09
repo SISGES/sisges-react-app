@@ -46,6 +46,8 @@ export function DatePicker({
   disabled,
   readOnly,
   className,
+  min,
+  max,
   ...props
 }: Props) {
   const id = useId();
@@ -56,12 +58,18 @@ export function DatePicker({
   const [view, setView] = useState(new Date());
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const iso = brDateToIso(value);
-  const invalid = value.length === 10 && !iso;
+  const outsideRange = (date: string) =>
+    !!date &&
+    ((min !== undefined && date < String(min)) ||
+      (max !== undefined && date > String(max)));
+  const invalid = value.length === 10 && (!iso || outsideRange(iso));
   const close = () => {
     setOpen(false);
     trigger.current?.focus();
   };
   const choose = (date: Date) => {
+    const day = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    if (outsideRange(day)) return;
     onValueChange(
       `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`,
     );
@@ -75,9 +83,13 @@ export function DatePicker({
   useEffect(() => {
     const field = input.current?.querySelector("input");
     field?.setCustomValidity(
-      value && !iso ? "Informe uma data válida no formato dd/mm/aaaa." : "",
+      value && !iso
+        ? "Informe uma data válida no formato dd/mm/aaaa."
+        : invalid
+          ? "Selecione uma data dentro do período permitido."
+          : "",
     );
-  }, [value, iso]);
+  }, [value, iso, invalid]);
   useEffect(() => {
     if (!open) return;
     const place = () => {
@@ -266,12 +278,13 @@ export function DatePicker({
                     data-focused={
                       (iso ? isoDateToBr(iso) : getTodayBr()) === br
                     }
+                    disabled={outsideRange(brDateToIso(br))}
                     aria-pressed={value === br}
                     aria-current={getTodayBr() === br ? "date" : undefined}
                     aria-label={date.toLocaleDateString("pt-BR", {
                       dateStyle: "full",
                     })}
-                    className={`${buttonClass} ${value === br ? "bg-[var(--color-primary)] text-white" : ""}`}
+                    className={`${buttonClass} disabled:opacity-30 disabled:cursor-not-allowed ${value === br ? "bg-[var(--color-primary)] text-white" : ""}`}
                     onClick={() => choose(date)}
                     onKeyDown={(e) => {
                       const delta = {
@@ -283,6 +296,14 @@ export function DatePicker({
                       if (delta !== undefined) {
                         e.preventDefault();
                         const next = new Date(year, month, i + 1 + delta);
+                        if (
+                          outsideRange(
+                            brDateToIso(
+                              `${String(next.getDate()).padStart(2, "0")}/${String(next.getMonth() + 1).padStart(2, "0")}/${next.getFullYear()}`,
+                            ),
+                          )
+                        )
+                          return;
                         setView(next);
                         requestAnimationFrame(() =>
                           popup.current

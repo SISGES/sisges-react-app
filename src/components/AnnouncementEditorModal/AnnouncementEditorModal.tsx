@@ -1,3 +1,4 @@
+import { LoadingImage } from "../ui/LoadingImage";
 import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { CharCounter } from "../CharCounter/CharCounter";
@@ -293,10 +294,11 @@ export function AnnouncementEditorModal({
 
           {imagePreview ? (
             <div className="relative overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
-              <img
+              <LoadingImage
+                containerClassName="block h-48 w-full"
                 src={imagePreview}
-                alt="Preview"
-                className="max-h-48 w-full object-cover"
+                alt="Prévia da imagem"
+                className="h-full w-full object-cover"
               />
               {!isSubmitting && (
                 <button

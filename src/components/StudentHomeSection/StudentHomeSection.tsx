@@ -1,3 +1,4 @@
+import { ClassDirectory } from "./ClassDirectory";
 import { useState, useEffect, useCallback } from "react";
 import { getMaterials } from "../../services/materialService";
 import { getMyActivities } from "../../services/activityService";
@@ -59,22 +60,25 @@ export function StudentHomeSection({
   const [error, setError] = useState<string | null>(null);
   const [materialsPage, setMaterialsPage] = useState(1);
   const [activitiesPage, setActivitiesPage] = useState(1);
-  const [classmatesPage, setClassmatesPage] = useState(1);
-  const [teachersPage, setTeachersPage] = useState(1);
   const [absencesPage, setAbsencesPage] = useState(1);
-  const visibleMaterials = materials.slice((materialsPage - 1) * 10, materialsPage * 10);
-  const visibleActivities = activities.slice((activitiesPage - 1) * 10, activitiesPage * 10);
-  const visibleClassmates = (myClass?.classmates ?? []).slice((classmatesPage - 1) * 10, classmatesPage * 10);
-  const visibleTeachers = (myClass?.teachers ?? []).slice((teachersPage - 1) * 10, teachersPage * 10);
-  const visibleAbsences = absencesByDiscipline.slice((absencesPage - 1) * 10, absencesPage * 10);
+  const visibleMaterials = materials.slice(
+    (materialsPage - 1) * 10,
+    materialsPage * 10,
+  );
+  const visibleActivities = activities.slice(
+    (activitiesPage - 1) * 10,
+    activitiesPage * 10,
+  );
+  const visibleAbsences = absencesByDiscipline.slice(
+    (absencesPage - 1) * 10,
+    absencesPage * 10,
+  );
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setMaterialsPage(1);
     setActivitiesPage(1);
-    setClassmatesPage(1);
-    setTeachersPage(1);
     setAbsencesPage(1);
     try {
       if (variant === "class") {
@@ -179,7 +183,12 @@ export function StudentHomeSection({
                 ))}
               </ul>
             )}
-            <Pagination currentPage={materialsPage} pageSize={10} totalItems={materials.length} onPageChange={setMaterialsPage} />
+            <Pagination
+              currentPage={materialsPage}
+              pageSize={10}
+              totalItems={materials.length}
+              onPageChange={setMaterialsPage}
+            />
           </SectionCard>
 
           <SectionCard title="Atividades Avaliativas">
@@ -211,103 +220,17 @@ export function StudentHomeSection({
                 ))}
               </ul>
             )}
-            <Pagination currentPage={activitiesPage} pageSize={10} totalItems={activities.length} onPageChange={setActivitiesPage} />
+            <Pagination
+              currentPage={activitiesPage}
+              pageSize={10}
+              totalItems={activities.length}
+              onPageChange={setActivitiesPage}
+            />
           </SectionCard>
         </>
       )}
 
-      {showClass && (
-        <SectionCard title={variant !== "class" ? "Minha turma" : undefined}>
-          {!myClass?.className ? (
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Nenhuma turma vinculada à sua conta.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-5">
-              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                {myClass.className}
-                {myClass.academicYear ? ` · ${myClass.academicYear}` : ""}
-              </p>
-
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-                  Colegas
-                </h4>
-                {myClass.classmates.length === 0 ? (
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    Não há outros alunos nesta turma.
-                  </p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className={tableClass}>
-                      <thead>
-                        <tr>
-                          <th className={thClass}>Nome</th>
-                          <th className={thClass}>E-mail</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleClassmates.map((c) => (
-                          <tr key={c.id}>
-                            <td className={tdClass}>{c.name}</td>
-                            <td className={tdClass}>
-                              <a
-                                href={`mailto:${c.email}`}
-                                className="text-[var(--color-primary)] hover:underline"
-                              >
-                                {c.email}
-                              </a>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                <Pagination currentPage={classmatesPage} pageSize={10} totalItems={myClass.classmates.length} onPageChange={setClassmatesPage} />
-              </div>
-
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-                  Professores
-                </h4>
-                {myClass.teachers.length === 0 ? (
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    Nenhum professor vinculado à turma.
-                  </p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className={tableClass}>
-                      <thead>
-                        <tr>
-                          <th className={thClass}>Nome</th>
-                          <th className={thClass}>E-mail</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleTeachers.map((t) => (
-                          <tr key={t.id}>
-                            <td className={tdClass}>{t.name}</td>
-                            <td className={tdClass}>
-                              <a
-                                href={`mailto:${t.email}`}
-                                className="text-[var(--color-primary)] hover:underline"
-                              >
-                                {t.email}
-                              </a>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                <Pagination currentPage={teachersPage} pageSize={10} totalItems={myClass.teachers.length} onPageChange={setTeachersPage} />
-              </div>
-            </div>
-          )}
-        </SectionCard>
-      )}
+      {showClass && <ClassDirectory schoolClass={myClass} />}
 
       {showAbsences && (
         <SectionCard
@@ -348,7 +271,12 @@ export function StudentHomeSection({
               </table>
             </div>
           )}
-          <Pagination currentPage={absencesPage} pageSize={10} totalItems={absencesByDiscipline.length} onPageChange={setAbsencesPage} />
+          <Pagination
+            currentPage={absencesPage}
+            pageSize={10}
+            totalItems={absencesByDiscipline.length}
+            onPageChange={setAbsencesPage}
+          />
         </SectionCard>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { useToast } from "../../contexts/ToastContext";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useId } from "react";
 import { useParams } from "react-router-dom";
-import { FiPlus, FiUserMinus } from "react-icons/fi";
+import { FiPlus, FiUserMinus, FiSave } from "react-icons/fi";
 import { BackButton } from "../../components/BackButton/BackButton";
 import {
   getClassById,
@@ -33,12 +33,10 @@ import {
   StateBlock,
   FormField,
   Input,
+  Select,
   Textarea,
   Pagination,
 } from "../../components/ui";
-
-const selectCls =
-  "flex-1 px-3 py-2 text-sm bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
 
 export function EditClass() {
   const { showToast } = useToast();
@@ -150,9 +148,18 @@ export function EditClass() {
     action: () => Promise<ClassDetailResponse>,
     key: string,
   ) => {
+    if (actionLoading) return;
     setActionLoading(key);
     try {
       setSchoolClass(await action());
+      showToast(
+        key === "add-teacher"
+          ? "Professor vinculado à turma."
+          : key === "add-student"
+            ? "Aluno vinculado à turma."
+            : "Disciplina vinculada à turma.",
+        "success",
+      );
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Erro", "error");
     } finally {
@@ -244,6 +251,11 @@ export function EditClass() {
         >
           {schoolClass && (
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                Selecione uma pessoa ou disciplina e clique em{" "}
+                <strong>Salvar vínculo</strong>. Cada vínculo é salvo
+                individualmente.
+              </p>
               {/* Alunos */}
               <SectionPanel
                 title={`Alunos (${schoolClass.students.length})`}
@@ -586,42 +598,52 @@ function AddRow({
   onAdd: () => void;
   addLoading: boolean;
 }) {
+  const id = useId();
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-medium text-[var(--color-text-muted)]">
+    <form
+      className="flex flex-col gap-2"
+      aria-label={label}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (value && !disabled) onAdd();
+      }}
+    >
+      <label
+        htmlFor={id}
+        className="text-sm font-medium text-[var(--color-text-secondary)]"
+      >
         {label}
       </label>
-      <div className="flex items-center gap-2">
-        <select
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+        <Select
+          id={id}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          className={selectCls}
+          onChange={(event) => onChange(event.target.value)}
+          disabled={disabled || options.length === 0}
+          className="min-w-0 sm:flex-1"
         >
-          <option value="">{placeholder}</option>
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
+          <option value="">
+            {options.length
+              ? placeholder
+              : "Nenhuma opção disponível para vincular"}
+          </option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
-        </select>
-        <button
-          type="button"
-          onClick={onAdd}
+        </Select>
+        <Button
+          type="submit"
           disabled={!value || disabled}
-          title="Vincular"
-          className="flex items-center justify-center w-8 h-8 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          loading={addLoading}
+          icon={<FiSave size={16} />}
+          className="min-h-11 shrink-0"
+          title="Salvar vínculo"
         >
-          {addLoading ? (
-            <span
-              className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full"
-              style={{ animation: "spin 0.8s linear infinite" }}
-            />
-          ) : (
-            <FiPlus size={15} />
-          )}
-        </button>
+          Salvar vínculo
+        </Button>
       </div>
-    </div>
+    </form>
   );
 }
