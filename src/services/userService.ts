@@ -158,9 +158,11 @@ export async function searchResponsibles(
 export async function addTeacherToClass(
   classId: number,
   teacherId: number,
+  disciplineIds?: number[],
 ): Promise<ClassDetailResponse> {
   const response = await api.post<ClassDetailResponse>(
     `/classes/${classId}/teacher/add/${teacherId}`,
+    disciplineIds ? { disciplineIds } : undefined,
   );
   return response;
 }

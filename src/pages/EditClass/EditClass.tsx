@@ -57,6 +57,12 @@ export function EditClass() {
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<string>("");
+  const [teacherChoice, setTeacherChoice] = useState<{
+    teacherId: number;
+    name: string;
+    disciplines: DisciplineResponse[];
+  } | null>(null);
+  const [chosenDisciplines, setChosenDisciplines] = useState<number[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const [confirmModal, setConfirmModal] = useState<
@@ -165,6 +171,71 @@ export function EditClass() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const saveTeacherLink = async (
+    teacherId: number,
+    disciplineIds: number[],
+  ) => {
+    if (!classId || actionLoading) return;
+    setActionLoading("add-teacher");
+    try {
+      setSchoolClass(
+        await addTeacherToClass(classId, teacherId, disciplineIds),
+      );
+      setSelectedTeacherId("");
+      setTeacherChoice(null);
+      setChosenDisciplines([]);
+      showToast("Professor e disciplinas vinculados à turma.", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Erro ao salvar vínculo.",
+        "error",
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const prepareTeacherLink = async () => {
+    const teacherId = Number(selectedTeacherId);
+    if (!teacherId || actionLoading) return;
+    setActionLoading("load-teacher-disciplines");
+    let disciplines: DisciplineResponse[];
+    try {
+      const fresh = await getDisciplines();
+      setAllDisciplines(fresh);
+      disciplines = fresh.filter((d) =>
+        d.teachers?.some((t) => t.id === teacherId),
+      );
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar disciplinas.",
+        "error",
+      );
+      setActionLoading(null);
+      return;
+    }
+    setActionLoading(null);
+    if (!disciplines.length) {
+      showToast(
+        "Este professor não possui disciplinas. Vincule uma disciplina ao professor antes de adicioná-lo à turma.",
+        "warning",
+      );
+      return;
+    }
+    if (disciplines.length === 1) {
+      await saveTeacherLink(teacherId, [disciplines[0].id]);
+      return;
+    }
+    setChosenDisciplines([]);
+    setTeacherChoice({
+      teacherId,
+      name: allTeachers.find((t) => t.id === teacherId)?.name ?? "Professor",
+      disciplines,
+    });
   };
 
   const handleCreateDiscipline = async () => {
@@ -330,19 +401,11 @@ export function EditClass() {
                     value: String(t.id),
                     label: `${t.name} (${t.email})`,
                   }))}
-                  onAdd={() => {
-                    const teacherId = parseInt(selectedTeacherId, 10);
-                    if (!isNaN(teacherId))
-                      handleAdd(
-                        () =>
-                          addTeacherToClass(classId, teacherId).then((r) => {
-                            setSelectedTeacherId("");
-                            return r;
-                          }),
-                        "add-teacher",
-                      );
-                  }}
-                  addLoading={actionLoading === "add-teacher"}
+                  onAdd={() => void prepareTeacherLink()}
+                  addLoading={
+                    actionLoading === "add-teacher" ||
+                    actionLoading === "load-teacher-disciplines"
+                  }
                 />
               </SectionPanel>
 
@@ -424,6 +487,76 @@ export function EditClass() {
           )}
         </StateBlock>
       </div>
+
+      <Modal
+        open={!!teacherChoice}
+        onClose={() => {
+          if (!actionLoading) setTeacherChoice(null);
+        }}
+        title="Selecionar disciplinas"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              disabled={!!actionLoading}
+              onClick={() => setTeacherChoice(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={!chosenDisciplines.length || !!actionLoading}
+              loading={actionLoading === "add-teacher"}
+              onClick={() => {
+                if (teacherChoice)
+                  void saveTeacherLink(
+                    teacherChoice.teacherId,
+                    chosenDisciplines,
+                  );
+              }}
+            >
+              Salvar vínculo
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          Selecione as disciplinas que <strong>{teacherChoice?.name}</strong>{" "}
+          vai lecionar nesta turma. O professor e as disciplinas serão
+          vinculados juntos.
+        </p>
+        <fieldset disabled={!!actionLoading} className="flex flex-col gap-2">
+          <legend className="mb-2 text-sm font-medium text-[var(--color-text-primary)]">
+            Disciplinas do professor
+          </legend>
+          {teacherChoice?.disciplines.map((d) => (
+            <label
+              key={d.id}
+              className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-[var(--color-border)] p-3 text-sm text-[var(--color-text-primary)]"
+            >
+              <input
+                type="checkbox"
+                checked={chosenDisciplines.includes(d.id)}
+                onChange={(e) =>
+                  setChosenDisciplines((ids) =>
+                    e.target.checked
+                      ? [...ids, d.id]
+                      : ids.filter((id) => id !== d.id),
+                  )
+                }
+                className="h-4 w-4 accent-[var(--color-primary)]"
+              />
+              <span>
+                {d.name}
+                {disciplineIdsInClass.has(d.id) && (
+                  <span className="ml-2 text-xs text-[var(--color-text-secondary)]">
+                    Já vinculada à turma
+                  </span>
+                )}
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      </Modal>
 
       {/* Confirm unlink */}
       <ConfirmModal
