@@ -125,3 +125,122 @@ describe("Grade horária e registro diário", () => {
     cy.contains("button", "Salvar registro").should("not.exist");
   });
 });
+
+describe("Rascunhos da grade horária", () => {
+  beforeEach(() => {
+    cy.viewport(1440, 1000);
+    cy.intercept("**/api/**", []);
+    cy.intercept("POST", "**/classes/search", [
+      { id: 1, name: "Turma A" },
+      { id: 2, name: "Turma B" },
+    ]);
+    for (const id of [1, 2]) {
+      cy.intercept("GET", `**/classes/${id}`, {
+        id,
+        disciplines: [
+          { id: 3, name: "Matemática" },
+          { id: 4, name: "Português" },
+        ],
+      });
+      cy.intercept("GET", `**/classes/${id}/schedule`, {
+        revision: 4,
+        slots: [{ weekday: 1, slot: 0, disciplineId: 4 }],
+      });
+    }
+    visit("/admin/grade-horaria", "ADMIN");
+  });
+  function edit() {
+    cy.get('button[aria-label="Segunda, 07:00 – 07:50: Português"]').click();
+    cy.get('select[aria-label="Disciplina do horário"]').select("3");
+  }
+  function warning(expected: boolean) {
+    cy.window().should((win) => {
+      const event = new win.Event("beforeunload", { cancelable: true });
+      win.dispatchEvent(event);
+      expect(event.defaultPrevented).to.equal(expected);
+    });
+  }
+  function math() {
+    cy.get('button[aria-label="Segunda, 07:00 – 07:50: Matemática"]').should(
+      "exist",
+    );
+  }
+  function reset() {
+    cy.contains("button", "Redefinir").click();
+    cy.get('[role="dialog"]').contains("button", "Redefinir").click();
+  }
+  it("mantém rascunhos por turma ao navegar e só redefine após confirmação", () => {
+    edit();
+    cy.get('select[aria-label="Turma"]').select("2");
+    edit();
+    cy.get('a[href="/aulas"]').first().click();
+    warning(true);
+    cy.get('a[href="/admin/grade-horaria"]').first().click();
+    cy.get('select[aria-label="Turma"]').should("have.value", "2");
+    math();
+    cy.contains("button", "Redefinir").click();
+    cy.get('[role="dialog"]').contains("button", "Cancelar").click();
+    math();
+    reset();
+    cy.get('button[aria-label="Segunda, 07:00 – 07:50: Português"]').should(
+      "exist",
+    );
+    warning(true); // The other class still has a draft.
+    cy.get('select[aria-label="Turma"]').select("1");
+    math();
+    reset();
+    warning(false);
+  });
+  it("retém alterações após erro e limpa o rascunho somente após salvar", () => {
+    edit();
+    cy.intercept("PUT", "**/classes/1/schedule", {
+      statusCode: 500,
+      body: { message: "Erro ao salvar" },
+    }).as("failed");
+    cy.contains("button", "Salvar grade").click();
+    cy.wait("@failed");
+    warning(true);
+    cy.get('[data-testid="toast"]')
+      .contains("Erro ao salvar")
+      .parent()
+      .find("button")
+      .click();
+    cy.get('a[href="/aulas"]').first().click();
+    cy.get('a[href="/admin/grade-horaria"]').first().click();
+    math();
+    cy.intercept("PUT", "**/classes/1/schedule", (req) =>
+      req.reply({ ...req.body, revision: 5 }),
+    ).as("saved");
+    cy.contains("button", "Salvar grade").click();
+    cy.wait("@saved");
+    warning(false);
+  });
+  it("descarta rascunhos ao atualizar a página", () => {
+    edit();
+    warning(true);
+    cy.reload();
+    cy.get('button[aria-label="Segunda, 07:00 – 07:50: Português"]').should(
+      "exist",
+    );
+    warning(false);
+  });
+  it("limpa os rascunhos e o aviso de atualização no logout", () => {
+    edit();
+    warning(true);
+    cy.get('button[aria-label="Sair"]').filter(":visible").click();
+    cy.location("pathname").should("eq", "/login");
+    warning(false);
+    cy.intercept("POST", "**/auth/login", {
+      accessToken: createTestJwt(),
+      user: { id: 1, name: "Teste", email: "test@example.com", role: "ADMIN" },
+    });
+    cy.get('input[type="email"]').type("test@example.com");
+    cy.get('input[type="password"]').type("password123");
+    cy.contains("button", "Entrar").click();
+    cy.get('a[href="/admin/grade-horaria"]').first().click();
+    cy.get('button[aria-label="Segunda, 07:00 – 07:50: Português"]').should(
+      "exist",
+    );
+    warning(false);
+  });
+});

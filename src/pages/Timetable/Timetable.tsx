@@ -6,6 +6,7 @@ import {
   FormField,
   Select,
   Alert,
+  ConfirmModal,
 } from "../../components/ui";
 import { searchClasses, getClassById } from "../../services/userService";
 import {
@@ -17,11 +18,19 @@ import {
 } from "../../services/scheduleService";
 import { useToast } from "../../contexts/ToastContext";
 
+import { useTimetableDrafts } from "../../contexts/TimetableDraftContext";
+
 export function Timetable() {
+  const { classId, setClassId, getDraft, setDraft, clearDraft } =
+    useTimetableDrafts();
+  const [resetOpen, setResetOpen] = useState(false);
+  const [savedSchedule, setSavedSchedule] = useState<Schedule>({
+    revision: 0,
+    slots: [],
+  });
   const { showToast } = useToast();
   const editor = useRef<HTMLElement>(null);
   const [classes, setClasses] = useState<{ id: number; name: string }[]>([]);
-  const [classId, setClassId] = useState("");
   const [disciplines, setDisciplines] = useState<
     { id: number; name: string }[]
   >([]);
@@ -45,7 +54,8 @@ export function Timetable() {
       .then((data) => {
         if (active) {
           setClasses(data);
-          setClassId(data[0]?.id.toString() ?? "");
+          if (!classId || !data.some((c) => String(c.id) === classId))
+            setClassId(data[0]?.id.toString() ?? "");
           if (!data.length) setLoading(false);
         }
       })
@@ -58,7 +68,7 @@ export function Timetable() {
     return () => {
       active = false;
     };
-  }, [retry]);
+  }, [retry, classId, setClassId]);
   useEffect(() => {
     if (!classId) return;
     let active = true;
@@ -68,9 +78,11 @@ export function Timetable() {
     Promise.all([getSchedule(Number(classId)), getClassById(Number(classId))])
       .then(([data, detail]) => {
         if (active) {
-          setSchedule(data);
+          setSavedSchedule(data);
+          const draft = getDraft(classId);
+          setSchedule(draft ?? data);
           setDisciplines(detail.disciplines ?? []);
-          setDirty(false);
+          setDirty(!!draft);
         }
       })
       .catch(() => {
@@ -83,16 +95,7 @@ export function Timetable() {
     return () => {
       active = false;
     };
-  }, [classId, retry]);
-  useEffect(() => {
-    if (!dirty) return;
-    const guard = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", guard);
-    return () => window.removeEventListener("beforeunload", guard);
-  }, [dirty]);
+  }, [classId, retry, getDraft]);
   useEffect(() => {
     if (selected && window.matchMedia("(max-width: 1279px)").matches) {
       editor.current?.scrollIntoView({ block: "center", behavior: "instant" });
@@ -102,7 +105,10 @@ export function Timetable() {
   async function save() {
     setSaving(true);
     try {
-      setSchedule(await saveSchedule(Number(classId), schedule));
+      const saved = await saveSchedule(Number(classId), schedule);
+      clearDraft(classId, schedule);
+      setSavedSchedule(saved);
+      setSchedule(saved);
       setDirty(false);
       showToast("Grade salva com sucesso.", "success");
     } catch (e) {
@@ -116,20 +122,35 @@ export function Timetable() {
   }
   function assign(value: string) {
     if (!selected) return;
-    setSchedule((prev) => ({
-      ...prev,
+    const next = {
+      ...schedule,
       slots: [
-        ...prev.slots.filter(
+        ...schedule.slots.filter(
           (s) => s.weekday !== selected.weekday || s.slot !== selected.slot,
         ),
         ...(value ? [{ ...selected, disciplineId: Number(value) }] : []),
       ],
-    }));
+    };
+    setDraft(classId, next);
+    setSchedule(next);
     setDirty(true);
   }
   return (
     <div className="flex flex-1 flex-col min-w-0">
       <PageHeader title="Grade horária" />
+      <ConfirmModal
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onConfirm={() => {
+          clearDraft(classId);
+          setSchedule(savedSchedule);
+          setDirty(false);
+          setResetOpen(false);
+        }}
+        title="Redefinir alterações?"
+        message="As alterações não salvas desta turma serão descartadas. A grade voltará à última versão salva."
+        confirmLabel="Redefinir"
+      />
       <div className="p-4 pb-24 sm:p-6 sm:pb-24 space-y-5">
         <p className="text-sm text-[var(--color-text-secondary)]">
           Organize a semana de cada turma. Clique em um horário para definir a
@@ -143,12 +164,6 @@ export function Timetable() {
                 value={classId}
                 disabled={saving}
                 onChange={(e) => {
-                  if (
-                    dirty &&
-                    !window.confirm("Descartar alterações não salvas?")
-                  )
-                    return;
-                  setDirty(false);
                   setClassId(e.target.value);
                 }}
               >
@@ -160,7 +175,7 @@ export function Timetable() {
               </Select>
             </FormField>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <span
               className="text-sm text-[var(--color-text-secondary)]"
               aria-live="polite"
@@ -169,6 +184,13 @@ export function Timetable() {
                 ? "Alterações não salvas"
                 : `${schedule.slots.length} de 25 horários preenchidos`}
             </span>
+            <Button
+              variant="secondary"
+              onClick={() => setResetOpen(true)}
+              disabled={loading || saving || !!error || !dirty}
+            >
+              Redefinir
+            </Button>
             <Button
               onClick={save}
               loading={saving}
