@@ -271,7 +271,7 @@ export function Timetable() {
                 </Fragment>
               ))}
               <p className="px-4 py-3 text-xs text-[var(--color-text-muted)]">
-                11:25 – 11:50 · Sem aula no modelo de 50 minutos
+                11:25 · Fim das aulas
               </p>
             </section>
             <aside
