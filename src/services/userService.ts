@@ -277,6 +277,9 @@ export async function searchAulas(
 }
 
 interface ClassMeetingApiResponse {
+  scheduleSlot?: number | null;
+  content?: string;
+  attachments?: { name: string; path: string }[];
   id: number;
   date?: string;
   startTime?: string;
@@ -306,6 +309,9 @@ export async function getAulaById(id: number): Promise<AulaDetailResponse> {
   }));
   return {
     id: data.id,
+    scheduleSlot: data.scheduleSlot,
+    content: data.content,
+    attachments: data.attachments,
     name: classInfo?.name ?? "",
     academicYear: classInfo?.academicYear ?? "",
     students,

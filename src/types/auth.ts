@@ -260,6 +260,9 @@ export interface AulaDetailStudent extends StudentSearchResponse {
 }
 
 export interface AulaDetailResponse {
+  scheduleSlot?: number | null;
+  content?: string;
+  attachments?: { name: string; path: string }[];
   id: number;
   name: string;
   academicYear: string;

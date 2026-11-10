@@ -31,6 +31,7 @@ export async function uploadFile(
 
 function privateFileUrl(path: string): string {
   const prefixes = [
+    "lesson-files/",
     "post-img/",
     "profile-img/",
     "materials/",

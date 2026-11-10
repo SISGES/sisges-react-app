@@ -1,431 +1,483 @@
-import { brDateToIso as dateBrToIso, getTodayBr } from "../../utils/brDate";
-import { useToast } from "../../contexts/ToastContext";
-import { TimePicker } from "../../components/ui/TimePicker";
-import { DatePicker } from "../../components/ui/DatePicker";
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { FiBookOpen, FiFile, FiUpload, FiX } from "react-icons/fi";
 import { BackButton } from "../../components/BackButton/BackButton";
-import {
-  createAula,
-  getTeacherMe,
-  getClassById,
-  searchAulas,
-} from "../../services/userService";
-import { ApiError } from "../../services/api";
-import { useAuth } from "../../contexts/AuthContext";
-import type { DisciplineSimple } from "../../types/auth";
 import {
   PageHeader,
   Button,
-  StateBlock,
   FormField,
   Select,
+  Textarea,
+  DatePicker,
   Alert,
 } from "../../components/ui";
-
-function minsToTime(mins: number): string {
-  return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
-}
-function timeToMins(t: string): number {
-  const parts = t.split(":");
-  return parseInt(parts[0] || "0", 10) * 60 + parseInt(parts[1] || "0", 10);
-}
-function timesOverlap(s1: string, e1: string, s2: string, e2: string): boolean {
-  return timeToMins(s1) < timeToMins(e2) && timeToMins(s2) < timeToMins(e1);
-}
-
-interface TeacherDisciplineOption {
-  discipline: DisciplineSimple;
-  schoolClassIds: number[];
-}
+import { useToast } from "../../contexts/ToastContext";
+import { getTeacherMe } from "../../services/userService";
+import {
+  getLessonDay,
+  saveLessonRecord,
+  type DailyLesson,
+  type LessonAttachment,
+} from "../../services/scheduleService";
+import { uploadFile, downloadPrivateFile } from "../../services/uploadService";
+import { brDateToIso, getTodayBr } from "../../utils/brDate";
 
 export function CreateAula() {
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const isTeacher = user?.role === "TEACHER";
-  const teacherId = isTeacher ? (user?.id ?? null) : null;
-
-  const [disciplineOptions, setDisciplineOptions] = useState<
-    TeacherDisciplineOption[]
-  >([]);
-  const [schoolClassOptions, setSchoolClassOptions] = useState<
-    { id: number; name: string }[]
-  >([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
-  const [optionsError, setOptionsError] = useState<string | null>(null);
-
-  const [date, setDate] = useState("");
-  const [disciplineId, setDisciplineId] = useState<number | "">("");
-  const [schoolClassId, setSchoolClassId] = useState<number | "">("");
-  const [startHour, setStartHour] = useState<number>(8);
-  const [startMinute, setStartMinute] = useState<number>(0);
-  const [endHour, setEndHour] = useState<number>(9);
-  const [endMinute, setEndMinute] = useState<number>(0);
-  const [timeError, setTimeError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const startTime = minsToTime(startHour * 60 + startMinute);
-  const endTime = minsToTime(endHour * 60 + endMinute);
-  const isTimeValid = timeToMins(endTime) > timeToMins(startTime);
-  const isDateValid = !!dateBrToIso(date);
-
+  const [params] = useSearchParams();
+  const [classes, setClasses] = useState<{ id: number; name: string }[]>([]);
+  const [classId, setClassId] = useState(params.get("classId") ?? "");
+  const [date, setDate] = useState(() => {
+    const d = params.get("date");
+    return d && /^\d{4}-\d{2}-\d{2}$/.test(d)
+      ? d.split("-").reverse().join("/")
+      : getTodayBr();
+  });
+  const [lessons, setLessons] = useState<DailyLesson[]>([]);
+  const [slot, setSlot] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [classesError, setClassesError] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const [retry, setRetry] = useState(0);
+  const iso = brDateToIso(date);
   useEffect(() => {
-    setTimeError(
-      isTimeValid || !startTime || !endTime
-        ? null
-        : "O horário de fim deve ser maior que o de início.",
-    );
-  }, [
-    startHour,
-    startMinute,
-    endHour,
-    endMinute,
-    isTimeValid,
-    startTime,
-    endTime,
-  ]);
-
-  const fetchOptions = useCallback(async () => {
-    if (!teacherId) return;
-    setIsLoadingOptions(true);
-    setOptionsError(null);
-    try {
-      const teacher = await getTeacherMe();
-      const classIds = teacher.classes?.map((c) => c.id) ?? [];
-      const classDetails = await Promise.all(
-        classIds.map((id) => getClassById(id).catch(() => null)),
-      );
-      const disciplineMap = new Map<number, number[]>();
-      for (let i = 0; i < classDetails.length; i++) {
-        const c = classDetails[i];
-        if (!c?.disciplines) continue;
-        const classId = classIds[i];
-        for (const d of c.disciplines) {
-          if (!disciplineMap.has(d.id)) disciplineMap.set(d.id, []);
-          disciplineMap.get(d.id)!.push(classId);
+    let active = true;
+    setClassesError("");
+    setClassesLoading(true);
+    getTeacherMe()
+      .then((t) => {
+        if (active) {
+          setClasses(t.classes ?? []);
+          setClassId(
+            (prev) =>
+              prev || (t.classes?.length === 1 ? String(t.classes[0].id) : ""),
+          );
+          setClassesLoading(false);
         }
-      }
-      const options: TeacherDisciplineOption[] = [];
-      const seen = new Set<number>();
-      for (const c of classDetails) {
-        if (!c?.disciplines) continue;
-        for (const d of c.disciplines) {
-          if (seen.has(d.id)) continue;
-          seen.add(d.id);
-          options.push({
-            discipline: d,
-            schoolClassIds: disciplineMap.get(d.id) ?? [],
-          });
+      })
+      .catch(() => {
+        if (active) {
+          setClassesError("Não foi possível carregar suas turmas.");
+          setClassesLoading(false);
         }
-      }
-      setDisciplineOptions(options);
-      if (options.length === 1 && options[0].schoolClassIds.length > 0) {
-        setDisciplineId(options[0].discipline.id);
-        const classNames = await Promise.all(
-          options[0].schoolClassIds.map((id) =>
-            getClassById(id).then((cc) => ({ id: cc.id, name: cc.name })),
-          ),
-        );
-        setSchoolClassOptions(classNames);
-        if (classNames.length === 1) setSchoolClassId(classNames[0].id);
-      }
-    } catch (err) {
-      setOptionsError(
-        err instanceof ApiError ? err.message : "Erro ao carregar opções.",
-      );
-    } finally {
-      setIsLoadingOptions(false);
-    }
-  }, [teacherId]);
-
-  useEffect(() => {
-    if (isTeacher) fetchOptions();
-  }, [isTeacher, fetchOptions]);
-
-  useEffect(() => {
-    if (disciplineId === "") {
-      setSchoolClassOptions([]);
-      setSchoolClassId("");
-      return;
-    }
-    const opt = disciplineOptions.find((o) => o.discipline.id === disciplineId);
-    if (!opt) return;
-    (async () => {
-      const classes: { id: number; name: string }[] = [];
-      for (const id of opt.schoolClassIds) {
-        try {
-          const c = await getClassById(id);
-          classes.push({ id: c.id, name: c.name });
-        } catch {
-          void 0;
-        }
-      }
-      setSchoolClassOptions(classes);
-      setSchoolClassId(classes.length === 1 ? classes[0].id : "");
-    })();
-  }, [disciplineId, disciplineOptions]);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (
-      isSubmitting ||
-      !disciplineId ||
-      !schoolClassId ||
-      !date ||
-      !isTimeValid ||
-      !isDateValid
-    )
-      return;
-    const dateIso = dateBrToIso(date);
-    if (!dateIso) return;
-    setSubmitError(null);
-    setIsSubmitting(true);
-    try {
-      const existingAulas = await searchAulas({
-        date: dateIso,
-        schoolClassId: Number(schoolClassId),
       });
-      if (
-        (existingAulas ?? []).some((a) =>
-          timesOverlap(startTime, endTime, a.startTime ?? "", a.endTime ?? ""),
-        )
-      ) {
-        setSubmitError(
-          "Já existe uma aula cadastrada nesta turma no mesmo dia com horário sobreposto.",
-        );
-        setIsSubmitting(false);
-        return;
-      }
-      await createAula({
-        date: dateIso,
-        disciplineId: Number(disciplineId),
-        classId: Number(schoolClassId),
-        startTime,
-        endTime,
+    return () => {
+      active = false;
+    };
+  }, [retry]);
+  useEffect(() => {
+    setLessons([]);
+    if (!classId || !iso) return;
+    let active = true;
+    setLoading(true);
+    setError("");
+    getLessonDay(Number(classId), iso)
+      .then((data) => {
+        if (active) {
+          setLessons(data);
+          setSlot((prev) =>
+            data.some((l) => l.slot === prev)
+              ? prev
+              : (data.find((l) => l.slot === Number(params.get("slot")))
+                  ?.slot ??
+                data[0]?.slot ??
+                null),
+          );
+        }
+      })
+      .catch((e) => {
+        if (active)
+          setError(
+            e instanceof Error ? e.message : "Não foi possível carregar o dia.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
-      showToast("Aula criada com sucesso.", "success");
-      navigate("/aulas");
-    } catch (err) {
-      showToast(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Erro ao criar aula.",
-        "error",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+    return () => {
+      active = false;
+    };
+  }, [classId, iso, revision, params]);
+  useEffect(() => {
+    if (!dirty) return;
+    const guard = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [dirty]);
+  function discard() {
+    if (dirty && !window.confirm("Descartar o conteúdo ainda não salvo?"))
+      return false;
+    setDirty(false);
+    return true;
+  }
+  const selected = lessons.find((l) => l.slot === slot);
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <PageHeader title="Nova Aula" back={<BackButton to="/aulas" />} />
-
-      <div className="flex-1 p-4 sm:p-6">
-        {user?.role !== "TEACHER" ? (
-          <p className="text-sm text-[var(--color-text-muted)]">
-            Apenas professores podem criar aulas.
-          </p>
-        ) : (
-          <StateBlock
-            loading={isLoadingOptions}
-            loadingText="Carregando opções..."
-            error={
-              optionsError ||
-              (disciplineOptions.length === 0
-                ? "Você não possui disciplinas ou turmas vinculadas."
-                : null)
-            }
-            onRetry={fetchOptions}
-          >
-            <div className="mx-auto w-full max-w-5xl">
-              <p className="mb-6 text-sm text-[var(--color-text-secondary)]">
-                Escolha a disciplina, a turma e quando a aula vai acontecer.
-              </p>
-              <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(240px,1fr)]">
-                <form
-                  onSubmit={handleSubmit}
-                  className="flex min-w-0 flex-col gap-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6"
-                >
-                  {submitError && <Alert type="error">{submitError}</Alert>}
-
-                  <FormField label="Disciplina" required>
-                    <Select
-                      aria-label="Disciplina"
-                      value={disciplineId}
-                      onChange={(e) =>
-                        setDisciplineId(
-                          e.target.value ? parseInt(e.target.value, 10) : "",
-                        )
-                      }
-                      required
-                      disabled={isSubmitting || disciplineOptions.length === 1}
-                    >
-                      <option value="">Selecione a disciplina</option>
-                      {disciplineOptions.map((o) => (
-                        <option key={o.discipline.id} value={o.discipline.id}>
-                          {o.discipline.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormField>
-
-                  <FormField label="Turma" required>
-                    <Select
-                      aria-label="Turma"
-                      value={schoolClassId}
-                      onChange={(e) =>
-                        setSchoolClassId(
-                          e.target.value ? parseInt(e.target.value, 10) : "",
-                        )
-                      }
-                      required
-                      disabled={
-                        isSubmitting ||
-                        schoolClassOptions.length === 0 ||
-                        schoolClassOptions.length === 1
-                      }
-                    >
-                      <option value="">Selecione a turma</option>
-                      {schoolClassOptions.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormField>
-
-                  <div className="border-t border-[var(--color-border)] pt-5">
-                    <h3 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">
-                      Data e horário
-                    </h3>
-                    <FormField label="Data" required>
-                      <div className="flex items-center gap-3">
-                        <DatePicker
-                          aria-label="Data da aula"
-                          value={date}
-                          onValueChange={setDate}
-                          required
-                          disabled={isSubmitting}
-                        />
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          disabled={isSubmitting}
-                          onClick={() => setDate(getTodayBr())}
-                        >
-                          Hoje
-                        </Button>
-                      </div>
-                    </FormField>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <FormField label="Início · 24h" required>
-                      <TimePicker
-                        label="Início da aula"
-                        value={startTime}
-                        onValueChange={(time) => {
-                          const [hour, minute] = time.split(":").map(Number);
-                          setStartHour(hour);
-                          setStartMinute(minute);
-                        }}
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </FormField>
-                    <FormField label="Fim · 24h" required>
-                      <TimePicker
-                        label="Fim da aula"
-                        value={endTime}
-                        onValueChange={(time) => {
-                          const [hour, minute] = time.split(":").map(Number);
-                          setEndHour(hour);
-                          setEndMinute(minute);
-                        }}
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </FormField>
-                  </div>
-                  {timeError && <Alert type="error">{timeError}</Alert>}
-
-                  <div className="flex gap-3 justify-end">
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      onClick={() => navigate("/aulas")}
-                      disabled={isSubmitting}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      type="submit"
-                      loading={isSubmitting}
-                      disabled={
-                        !disciplineId ||
-                        !schoolClassId ||
-                        !isTimeValid ||
-                        !isDateValid
-                      }
-                    >
-                      Criar Aula
-                    </Button>
-                  </div>
-                </form>
-                <aside
-                  aria-label="Resumo da aula"
-                  className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6"
-                >
-                  <h2 className="mb-5 text-base font-semibold text-[var(--color-text-primary)]">
-                    Resumo da aula
-                  </h2>
-                  <dl className="flex flex-col gap-5 text-left">
-                    {[
-                      [
-                        "Disciplina",
-                        disciplineOptions.find(
-                          (o) => o.discipline.id === disciplineId,
-                        )?.discipline.name ?? "Selecione a disciplina",
-                      ],
-                      [
-                        "Turma",
-                        schoolClassOptions.find((c) => c.id === schoolClassId)
-                          ?.name ?? "Selecione a turma",
-                      ],
-                      [
-                        "Data",
-                        isDateValid ? date : "Selecione uma data válida",
-                      ],
-                      ["Horário", `${startTime} – ${endTime}`],
-                    ].map(([label, value]) => (
-                      <div key={label}>
-                        <dt className="text-xs text-[var(--color-text-secondary)]">
-                          {label}
-                        </dt>
-                        <dd className="mt-1 break-words text-sm font-medium text-[var(--color-text-primary)]">
-                          {value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                  <p
-                    aria-live="polite"
-                    className={`mt-5 border-t border-[var(--color-border)] pt-4 text-sm ${isTimeValid ? "text-[var(--color-primary)]" : "text-[var(--color-error)]"}`}
-                  >
-                    {isTimeValid
-                      ? `${timeToMins(endTime) - timeToMins(startTime)} minutos de aula`
-                      : "O fim deve ser depois do início."}
-                  </p>
-                </aside>
-              </div>
+    <div className="flex flex-1 min-w-0 flex-col">
+      <PageHeader title="Registro de aulas" back={<BackButton to="/aulas" />} />
+      <div className="mx-auto w-full max-w-6xl p-4 pb-24 sm:p-6 sm:pb-24 space-y-6">
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          Selecione o dia e a turma para registrar o conteúdo das suas aulas.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <FormField label="Data da aula">
+            <div className="flex gap-2">
+              <DatePicker
+                aria-label="Data da aula"
+                value={date}
+                disabled={busy}
+                onValueChange={(v) => {
+                  if (discard()) setDate(v);
+                }}
+              />
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => {
+                  if (discard()) setDate(getTodayBr());
+                }}
+              >
+                Hoje
+              </Button>
             </div>
-          </StateBlock>
+          </FormField>
+          <FormField label="Turma">
+            <Select
+              aria-label="Turma"
+              value={classId}
+              disabled={busy}
+              onChange={(e) => {
+                if (discard()) setClassId(e.target.value);
+              }}
+            >
+              <option value="">Selecione a turma</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        </div>
+        {classesLoading ? (
+          <p role="status">Carregando turmas...</p>
+        ) : classesError ? (
+          <Alert type="error">
+            {classesError}{" "}
+            <button
+              className="underline"
+              onClick={() => setRetry((x) => x + 1)}
+            >
+              Tentar novamente
+            </button>
+          </Alert>
+        ) : !classes.length ? (
+          <Alert type="warning">Você não possui turmas vinculadas.</Alert>
+        ) : !classId || !iso ? (
+          <p className="text-[var(--color-text-secondary)]">
+            Escolha uma turma e uma data válida.
+          </p>
+        ) : loading ? (
+          <p role="status">Carregando aulas do dia...</p>
+        ) : error ? (
+          <Alert type="error">
+            {error}{" "}
+            <button
+              className="underline"
+              onClick={() => setRevision((x) => x + 1)}
+            >
+              Tentar novamente
+            </button>
+          </Alert>
+        ) : !lessons.length ? (
+          <section className="rounded-xl border border-dashed border-[var(--color-border)] p-8">
+            <FiBookOpen
+              className="mb-3 text-[var(--color-text-muted)]"
+              size={24}
+            />
+            <h2 className="font-semibold">Nenhuma aula disponível neste dia</h2>
+            <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+              Confira a data ou peça à administração para verificar a grade e
+              suas disciplinas nesta turma.
+            </p>
+          </section>
+        ) : (
+          <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+            <section aria-label="Aulas do dia" className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h2 className="font-semibold">Suas aulas</h2>
+                <span className="text-xs text-[var(--color-text-muted)]">
+                  {lessons.filter((l) => l.meetingId).length}/{lessons.length}{" "}
+                  registradas
+                </span>
+              </div>
+              {lessons.map((l) => (
+                <button
+                  key={l.slot}
+                  disabled={busy}
+                  aria-pressed={slot === l.slot}
+                  onClick={() => {
+                    if (l.slot !== slot && discard()) setSlot(l.slot);
+                  }}
+                  className={`w-full rounded-xl border p-4 text-left transition-colors ${slot === l.slot ? "border-[var(--color-primary)] bg-[var(--color-surface)]" : "border-[var(--color-border)] hover:bg-[var(--color-surface)]"}`}
+                >
+                  <span className="text-xs text-[var(--color-text-secondary)]">
+                    {l.startTime} – {l.endTime}
+                  </span>
+                  <span className="block my-2 font-semibold">
+                    {l.disciplineName}
+                  </span>
+                  <span
+                    className={`text-xs ${l.meetingId ? "text-[var(--color-primary)]" : "text-[var(--color-text-muted)]"}`}
+                  >
+                    {l.meetingId ? "Registrada" : "Pendente"}
+                  </span>
+                </button>
+              ))}
+            </section>
+            {selected && (
+              <LessonEditor
+                key={`${classId}-${iso}-${slot}-${revision}`}
+                lesson={selected}
+                classId={Number(classId)}
+                date={iso}
+                onDirty={setDirty}
+                onBusy={setBusy}
+                onSaved={() => {
+                  setDirty(false);
+                  setRevision((x) => x + 1);
+                }}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
+  );
+}
+function LessonEditor({
+  lesson,
+  classId,
+  date,
+  onDirty,
+  onBusy,
+  onSaved,
+}: {
+  lesson: DailyLesson;
+  classId: number;
+  date: string;
+  onDirty: (v: boolean) => void;
+  onBusy: (v: boolean) => void;
+  onSaved: () => void;
+}) {
+  const { showToast } = useToast();
+  const [content, setContent] = useState(lesson.content);
+  const [attachments, setAttachments] = useState<LessonAttachment[]>(
+    lesson.attachments,
+  );
+  const [files, setFiles] = useState<File[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [progress, setProgress] = useState("");
+  function addFiles(list: FileList | null) {
+    if (!list) return;
+    const incoming = Array.from(list);
+    if (incoming.length + files.length + attachments.length > 10) {
+      showToast("Anexe no máximo 10 arquivos.", "warning");
+      return;
+    }
+    if (
+      incoming.some(
+        (f) =>
+          f.size === 0 ||
+          f.size > 10 * 1024 * 1024 ||
+          !/\.(pdf|txt|docx?|xlsx?|pptx?|png|jpe?g|gif|webp)$/i.test(f.name),
+      )
+    ) {
+      showToast(
+        "Use arquivos válidos de até 10 MB: PDF, Office, TXT ou imagens.",
+        "warning",
+      );
+      return;
+    }
+    setFiles((prev) => [...prev, ...incoming]);
+    onDirty(true);
+  }
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    onBusy(true);
+    let uploaded = [...attachments];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        setProgress(`Enviando arquivo ${i + 1} de ${files.length}...`);
+        const result = await uploadFile(files[i], "lesson-files");
+        uploaded = [...uploaded, { name: files[i].name, path: result.path }];
+        setAttachments(uploaded);
+        setFiles((prev) => prev.slice(1));
+      }
+      setProgress("Salvando registro...");
+      await saveLessonRecord(classId, {
+        date,
+        slot: lesson.slot,
+        disciplineId: lesson.disciplineId,
+        content,
+        attachments: uploaded,
+      });
+      showToast("Registro salvo com sucesso.", "success");
+      onSaved();
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Não foi possível salvar o registro.",
+        "error",
+      );
+    } finally {
+      setSaving(false);
+      onBusy(false);
+      setProgress("");
+    }
+  }
+  async function download(a: LessonAttachment) {
+    try {
+      await downloadPrivateFile(a.path);
+    } catch {
+      showToast("Não foi possível baixar o arquivo.", "error");
+    }
+  }
+  return (
+    <form
+      onSubmit={submit}
+      className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6 space-y-5"
+    >
+      <header className="border-b border-[var(--color-border)] pb-4">
+        <h2 className="text-lg font-semibold">{lesson.disciplineName}</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+          {lesson.startTime} – {lesson.endTime} ·{" "}
+          {date.split("-").reverse().join("/")}
+        </p>
+      </header>
+      <FormField label="Conteúdo da aula">
+        <Textarea
+          aria-label="Conteúdo da aula"
+          rows={7}
+          maxLength={20000}
+          value={content}
+          disabled={saving}
+          placeholder="Descreva os assuntos abordados e as atividades realizadas..."
+          onChange={(e) => {
+            setContent(e.target.value);
+            onDirty(true);
+          }}
+        />
+      </FormField>
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Arquivos da aula</h3>
+        <label
+          className={`flex items-center gap-3 rounded-lg border border-dashed border-[var(--color-border)] p-4 ${saving ? "opacity-50" : "cursor-pointer hover:bg-[var(--color-background)]"} focus-within:outline-2 focus-within:outline-[var(--color-primary)]`}
+        >
+          <FiUpload aria-hidden />
+          <span className="text-sm">
+            Adicionar arquivos
+            <span className="block text-xs text-[var(--color-text-muted)] mt-1">
+              Até 10 arquivos · 10 MB cada · PDF, Office, TXT e imagens
+            </span>
+          </span>
+          <input
+            aria-label="Adicionar arquivos"
+            type="file"
+            multiple
+            accept=".pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp"
+            className="sr-only"
+            disabled={saving}
+            onChange={(e) => {
+              addFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {attachments.map((a, i) => (
+          <div
+            key={`${a.path}-${i}`}
+            className="flex items-center gap-2 text-sm"
+          >
+            <FiFile aria-hidden />
+            <button
+              type="button"
+              className="truncate text-[var(--color-primary)] underline text-left flex-1"
+              onClick={() => download(a)}
+            >
+              {a.name}
+            </button>
+            <button
+              type="button"
+              aria-label={`Remover ${a.name}`}
+              disabled={saving}
+              className="p-3"
+              onClick={() => {
+                setAttachments((x) => x.filter((_, j) => j !== i));
+                onDirty(true);
+              }}
+            >
+              <FiX />
+            </button>
+          </div>
+        ))}
+        {files.map((f, i) => (
+          <div
+            key={`${f.name}-${i}`}
+            className="flex items-center gap-2 text-sm"
+          >
+            <FiFile aria-hidden />
+            <span className="truncate flex-1">{f.name}</span>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              A enviar
+            </span>
+            <button
+              type="button"
+              aria-label={`Remover ${f.name}`}
+              disabled={saving}
+              className="p-3"
+              onClick={() => {
+                setFiles((x) => x.filter((_, j) => j !== i));
+                onDirty(true);
+              }}
+            >
+              <FiX />
+            </button>
+          </div>
+        ))}
+      </div>
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] pt-5">
+        {lesson.meetingId ? (
+          <Link
+            className="text-sm text-[var(--color-primary)]"
+            to={`/aulas/${lesson.meetingId}`}
+          >
+            Ver aula e chamada
+          </Link>
+        ) : (
+          <span className="text-xs text-[var(--color-text-muted)]">
+            O horário é definido pela grade da turma.
+          </span>
+        )}
+        <Button
+          type="submit"
+          loading={saving}
+          disabled={!content.trim() && !attachments.length && !files.length}
+        >
+          Salvar registro
+        </Button>
+      </footer>
+      {progress && (
+        <p role="status" className="text-sm text-[var(--color-text-secondary)]">
+          {progress}
+        </p>
+      )}
+    </form>
   );
 }

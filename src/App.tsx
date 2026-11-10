@@ -27,6 +27,8 @@ import { useAuth } from "./contexts/AuthContext";
 import { Account } from "./pages/Account/Account";
 import { Events } from "./pages/Events/Events";
 
+import { Timetable } from "./pages/Timetable/Timetable";
+
 function App() {
   const { isAuthenticated } = useAuth();
 
@@ -44,6 +46,14 @@ function App() {
         }
       >
         <Route path="/" element={<Home />} />
+        <Route
+          path="/admin/grade-horaria"
+          element={
+            <AdminRoute>
+              <Timetable />
+            </AdminRoute>
+          }
+        />
         <Route path="/account" element={<Account />} />
         <Route
           path="/events"

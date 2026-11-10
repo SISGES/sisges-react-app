@@ -213,10 +213,16 @@ export function AulaDetail() {
 
   const headerActions = aula ? (
     <div className="flex items-center gap-2">
-      {canEdit && (
+      {canEdit && (aula.scheduleSlot == null || !isAdmin) && (
         <button
           type="button"
-          onClick={() => navigate(`/aulas/${aulaId}/edit`)}
+          onClick={() =>
+            navigate(
+              aula.scheduleSlot != null
+                ? `/aulas/new?classId=${aula.schoolClassId}&date=${aula.date}&slot=${aula.scheduleSlot}`
+                : `/aulas/${aulaId}/edit`,
+            )
+          }
           title="Editar"
           className="flex items-center justify-center w-8 h-8 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors"
         >
@@ -283,6 +289,25 @@ export function AulaDetail() {
                 </div>
               </div>
 
+              {aula.scheduleSlot != null && (
+                <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
+                  <h2 className="font-semibold">Conteúdo da aula</h2>
+                  <p className="whitespace-pre-wrap break-words text-sm">
+                    {aula.content || "Registro com arquivos anexados."}
+                  </p>
+                  {aula.attachments?.map((file) => (
+                    <div
+                      key={file.path}
+                      className="flex items-center gap-3 text-sm"
+                    >
+                      <span className="break-all">{file.name}</span>
+                      <ProtectedDownloadButton path={file.path}>
+                        Baixar
+                      </ProtectedDownloadButton>
+                    </div>
+                  ))}
+                </section>
+              )}
               {/* Activities */}
               {canEdit && (
                 <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">

@@ -113,7 +113,7 @@ export function Aulas() {
               icon={<FiPlus size={14} />}
               onClick={() => navigate("/aulas/new")}
             >
-              Nova aula
+              Registrar aula
             </Button>
           ) : undefined
         }
