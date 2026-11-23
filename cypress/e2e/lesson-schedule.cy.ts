@@ -1,6 +1,8 @@
 /// <reference types="cypress" />
 import { createTestJwt } from "../support/testJwt";
 
+import { expectNotification } from "../support/notifications";
+
 function visit(path: string, role: "ADMIN" | "TEACHER") {
   cy.visit(path, {
     onBeforeLoad(win) {
@@ -54,7 +56,7 @@ describe("Grade horária e registro diário", () => {
     cy.get('select[aria-label="Disciplina do horário"]').select("3");
     cy.contains("button", "Salvar grade").click();
     cy.wait("@save");
-    cy.contains("Grade salva com sucesso.").should("be.visible");
+    expectNotification("Grade salva com sucesso.");
     cy.contains("09:30 – 09:45 · Intervalo").should("exist");
   });
 

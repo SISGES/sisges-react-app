@@ -1,3 +1,4 @@
+import { expectNotification } from "../support/notifications";
 import { loginAs, logout, openPage } from "../support/live";
 
 describe("From the weekly timetable to the student's report", () => {
@@ -40,7 +41,7 @@ describe("From the weekly timetable to the student's report", () => {
     cy.get('button[aria-label^="Segunda, 07:00"]').click();
     cy.get('select[aria-label="Disciplina do horário"]').select(subject);
     cy.contains("button", "Salvar grade").click();
-    cy.contains("Grade salva com sucesso.").should("be.visible");
+    expectNotification("Grade salva com sucesso.");
 
     // The academic cycle is managed through the API. Start it for the lesson fixture.
     cy.env(["apiBaseUrl"]).then(({ apiBaseUrl }) =>
@@ -97,7 +98,7 @@ describe("From the weekly timetable to the student's report", () => {
     cy.contains("a", activity).click();
     cy.contains("tr", "Alice Almeida").find("input").type("8.5");
     cy.contains("button", /^Salvar$/).click();
-    cy.contains("Notas salvas com sucesso.").should("be.visible");
+    expectNotification("Notas salvas com sucesso.");
     cy.location("pathname").as("gradebookPath", { type: "static" });
 
     logout();
@@ -139,9 +140,7 @@ describe("From the weekly timetable to the student's report", () => {
     cy.get('[role="dialog"]')
       .contains("button", /^Excluir$/)
       .click();
-    cy.contains("Não é possível excluir uma aula com notas liberadas.").should(
-      "be.visible",
-    );
+    expectNotification("Não é possível excluir uma aula com notas liberadas.");
     cy.get<string>("@lessonPath").then((path) =>
       cy.location("pathname").should("eq", path),
     );
@@ -154,7 +153,7 @@ describe("From the weekly timetable to the student's report", () => {
       .siblings('button[title="Excluir material"]')
       .click();
     cy.get('[role="dialog"]').contains("button", "Confirmar").click();
-    cy.contains("Material excluído.").should("be.visible");
+    expectNotification("Material excluído.");
     cy.intercept("GET", "**/api/materials?classId=*").as(
       "materialsAfterDelete",
     );

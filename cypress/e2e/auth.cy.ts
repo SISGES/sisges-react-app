@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { expectNotification } from "../support/notifications";
+
 describe("Autenticação", () => {
   it("redireciona usuário autenticado de /login para /", () => {
     cy.intercept("GET", "**/announcements/feed", []).as("feed");
@@ -34,7 +36,7 @@ describe("Autenticação", () => {
     cy.get("#password").type("senhaerrada", { log: false });
     cy.contains("button", "Entrar").click();
     cy.wait("@login");
-    cy.contains("E-mail ou senha inválidos").should("be.visible");
+    expectNotification("E-mail ou senha inválidos");
     cy.location("pathname").should("eq", "/login");
   });
 

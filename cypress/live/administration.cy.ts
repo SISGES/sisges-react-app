@@ -1,3 +1,4 @@
+import { expectNotification } from "../support/notifications";
 import { loginAs, logout, openPage } from "../support/live";
 
 describe("School administration against the seeded API", () => {
@@ -30,7 +31,7 @@ describe("School administration against the seeded API", () => {
     cy.get('[role="dialog"]')
       .contains("button", /^Excluir$/)
       .click();
-    cy.contains("Turma excluída.").should("be.visible");
+    expectNotification("Turma excluída.");
     cy.contains("tr", name).should("not.exist");
   });
 
@@ -41,9 +42,7 @@ describe("School administration against the seeded API", () => {
     cy.get("#yearMax").clear().type("100");
     cy.get("#yearMin").clear().type("65");
     cy.contains("button", "Salvar configuração").click();
-    cy.contains("Configuração de notas salva com sucesso.").should(
-      "be.visible",
-    );
+    expectNotification("Configuração de notas salva com sucesso.");
     cy.reload();
     cy.get("#yearMin").should("have.value", "65");
   });
@@ -83,7 +82,7 @@ describe("School administration against the seeded API", () => {
         }
       }
       cy.contains("button", "Cadastrar Usuário").click();
-      cy.contains(`Usuário "${name}" cadastrado`).should("be.visible");
+      expectNotification(`Usuário "${name}" cadastrado`);
       openPage(person.list);
       cy.contains("tr", name)
         .children("td")
@@ -116,7 +115,7 @@ describe("School administration against the seeded API", () => {
               .find("input")
               .type(password, { log: false });
             cy.contains("button", "Salvar alterações").click();
-            cy.contains("Perfil atualizado.").should("be.visible");
+            expectNotification("Perfil atualizado.");
             cy.reload();
             cy.contains("label", "Nome")
               .find("input")
@@ -125,7 +124,7 @@ describe("School administration against the seeded API", () => {
             cy.get("#email").type(email);
             cy.get("#password").type(password, { log: false });
             cy.contains("button", "Entrar").click();
-            cy.contains("E-mail ou senha inválidos").should("be.visible");
+            expectNotification("E-mail ou senha inválidos");
             cy.get("#password").clear().type(newPassword, { log: false });
             cy.contains("button", "Entrar").click();
             cy.get('button[aria-label="Abrir minha conta"]:visible').should(

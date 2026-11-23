@@ -1,3 +1,4 @@
+import { expectNotification } from "../support/notifications";
 import { loginAs, logout } from "../support/live";
 
 type FeedAnnouncement = {
@@ -59,9 +60,7 @@ describe("Announcement creation — real API", () => {
       .type(description);
     cy.get('button[form="announcement-editor-form"]').click();
 
-    cy.contains("Aviso criado com sucesso!", { timeout: 30000 }).should(
-      "be.visible",
-    );
+    expectNotification("Aviso criado com sucesso!", 30000);
     cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
 
     cy.contains(title).should("be.visible");
@@ -119,7 +118,7 @@ describe("Announcement creation — real API", () => {
         .click();
       cy.contains('[role="menuitem"]', "Excluir").click();
       cy.get('[role="dialog"]').contains("button", "Confirmar").click();
-      cy.contains("Aviso excluído.").should("be.visible");
+      expectNotification("Aviso excluído.");
       cy.contains("article", title).should("not.exist");
     });
   });
