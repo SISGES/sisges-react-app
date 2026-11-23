@@ -1,14 +1,14 @@
-# SISGES frontend documentation
+# Documentação do frontend do SISGES
 
-The shared technical handbook lives in the SISGES backend repository. It covers both services and records the frontend and backend source revisions for each edition. The links below open the edition written for frontend `b58d2df`. The backend repository README links to the handbook on its default branch once the shared edition is merged.
+O manual técnico compartilhado fica no repositório do backend e abrange os dois serviços. Cada edição informa as revisões do cliente e da API usadas como referência. Os links abaixo abrem a edição em português do Brasil correspondente ao frontend `b58d2df`. Após a incorporação da documentação à branch principal, o README do backend também dará acesso ao manual.
 
-| Task | Reference |
+| Tarefa | Referência |
 | --- | --- |
-| Browse the documentation map and agent templates | [Handbook index](https://github.com/SISGES/sisges-sboot-app/blob/27eb1ba03904e19ffaed023605849b08a5bd11e7/docs/README.md) |
-| Run the local client against a seeded API | [Development setup](https://github.com/SISGES/sisges-sboot-app/blob/27eb1ba03904e19ffaed023605849b08a5bd11e7/docs/engineering/development.md) |
-| Change a screen, guard, service or theme | [Frontend engineering guide](https://github.com/SISGES/sisges-sboot-app/blob/27eb1ba03904e19ffaed023605849b08a5bd11e7/docs/engineering/frontend.md) |
-| Check school requirements and implementation gaps | [Product requirements](https://github.com/SISGES/sisges-sboot-app/blob/27eb1ba03904e19ffaed023605849b08a5bd11e7/docs/product/prd.md) |
-| Integrate with the Go service | [API reference](https://github.com/SISGES/sisges-sboot-app/blob/27eb1ba03904e19ffaed023605849b08a5bd11e7/docs/api/README.md) |
-| Verify a release | [Test strategy](https://github.com/SISGES/sisges-sboot-app/blob/27eb1ba03904e19ffaed023605849b08a5bd11e7/docs/engineering/test-strategy.md) |
+| Consultar o mapa da documentação e os modelos para agentes | [Índice do manual](https://github.com/SISGES/sisges-sboot-app/blob/e02ad581a7bb3f643b01cbc1566cf08c7db2d948/docs/README.md) |
+| Executar o cliente local com a API e dados de demonstração | [Ambiente de desenvolvimento](https://github.com/SISGES/sisges-sboot-app/blob/e02ad581a7bb3f643b01cbc1566cf08c7db2d948/docs/engineering/development.md) |
+| Alterar uma tela, proteção de rota, serviço ou tema | [Guia de engenharia do frontend](https://github.com/SISGES/sisges-sboot-app/blob/e02ad581a7bb3f643b01cbc1566cf08c7db2d948/docs/engineering/frontend.md) |
+| Conferir os requisitos escolares e as lacunas de implementação | [Requisitos do produto](https://github.com/SISGES/sisges-sboot-app/blob/e02ad581a7bb3f643b01cbc1566cf08c7db2d948/docs/product/prd.md) |
+| Integrar o cliente ao serviço Go | [Referência da API](https://github.com/SISGES/sisges-sboot-app/blob/e02ad581a7bb3f643b01cbc1566cf08c7db2d948/docs/api/README.md) |
+| Verificar uma entrega | [Estratégia de testes](https://github.com/SISGES/sisges-sboot-app/blob/e02ad581a7bb3f643b01cbc1566cf08c7db2d948/docs/engineering/test-strategy.md) |
 
-Maintain the shared handbook alongside changes to the client contract. Update the links here when adopting a new edition. [Backend repository](https://github.com/SISGES/sisges-sboot-app)
+Atualize o manual compartilhado quando mudar o contrato do cliente. Ao adotar uma nova edição, atualize também os links desta página. [Repositório do backend](https://github.com/SISGES/sisges-sboot-app)
