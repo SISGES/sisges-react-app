@@ -1,52 +1,8 @@
-# SISGES - Sistema de Gestão Escolar
+# Portal escolar do SISGES
 
-Aplicação React moderna para gestão escolar.
+O cliente em React e TypeScript atende administradores, professores e alunos. Ele se conecta à API Go do SISGES para matrícula, grade horária, registro de aulas, avaliação, frequência e comunicação escolar.
 
-## 🚀 Tecnologias
-
-- **React 18** - Biblioteca JavaScript para construção de interfaces
-- **TypeScript** - Superset JavaScript com tipagem estática
-- **Vite** - Build tool moderna e rápida
-- **React Router** - Roteamento para aplicações React
-
-## 📦 Instalação
-
-```bash
-npm install
-```
-
-## 🛠️ Scripts Disponíveis
-
-- `npm run dev` - Inicia o servidor de desenvolvimento
-- `npm run build` - Cria build de produção
-- `npm run preview` - Preview do build de produção
-- `npm run lint` - Executa o linter
-
-## 🏃 Executando o Projeto
-
-```bash
-npm run dev
-```
-
-O projeto estará disponível em `http://localhost:3000`
-
-## 📁 Estrutura do Projeto
-
-```
-sisges-react-app/
-├── src/
-│   ├── main.tsx          # Ponto de entrada da aplicação
-│   ├── App.tsx           # Componente principal
-│   └── index.css         # Estilos globais
-├── index.html            # HTML principal
-├── package.json          # Dependências do projeto
-├── tsconfig.json         # Configuração TypeScript
-└── vite.config.ts        # Configuração Vite
-```
-
-## 📝 Licença
-
-Este projeto é privado.
+Consulte o [manual técnico](docs/README.md) para preparar o ambiente local, conferir requisitos e contratos da API, executar os testes e entender as limitações conhecidas da integração. As orientações de uso da identidade visual acompanham o [kit de marca](brand/open-book/README.md).
 
 ## Testes automatizados
 
@@ -70,4 +26,4 @@ O comando cria um cluster temporário com bancos separados para a API, o encerra
 
 Os comandos Cypress individuais esperam o frontend ativo em `http://localhost:3000`, configurável por `CYPRESS_BASE_URL`. Para a suíte de integração individual, use uma instância descartável com a carga de demonstração original. Ela altera cadastros, horários, notas e frequência. Copie `cypress/cypress.env.example.json` para `cypress/cypress.env.json` e configure a mesma URL da API no frontend e no Cypress. O comando completo configura as credenciais de teste automaticamente.
 
-Pull requests do frontend executam os testes unitários e de interface simulada. Para executar a suíte completa no GitHub Actions, use **Run workflow** em **Frontend tests** e indique a revisão do backend desejada. Se o repositório do backend for privado, configure o segredo `SISGES_BACKEND_READ_TOKEN` com acesso de leitura a esse repositório.
+As propostas de alteração para a branch `main` executam os testes unitários e de navegador com respostas simuladas. A publicação na `main` passa pela suíte integrada, que também pode ser executada manualmente na esteira **Testes do frontend**.
