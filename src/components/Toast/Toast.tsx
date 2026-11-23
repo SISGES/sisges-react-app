@@ -54,7 +54,7 @@ function ToastMessage({
       onBlurCapture={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
       }}
-      className="pointer-events-auto flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 pl-4 text-sm text-[var(--color-text-primary)] shadow-lg"
+      className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 pl-4 text-sm text-[var(--color-text-primary)] shadow-lg"
     >
       <span
         aria-hidden
@@ -67,7 +67,7 @@ function ToastMessage({
         type="button"
         onClick={() => remove(toast.id)}
         aria-label="Fechar notificação"
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+        className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
       >
         <FiX size={18} aria-hidden />
       </button>

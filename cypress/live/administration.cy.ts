@@ -10,6 +10,10 @@ describe("School administration against the seeded API", () => {
     cy.get("#class-form input").type(name);
     cy.get("#class-form select").select("7º ano");
     cy.contains("button", "Criar Turma").click();
+    cy.contains(
+      '[data-testid="toast"]',
+      `Turma "${name}" criada com sucesso!`,
+    ).should("have.css", "pointer-events", "none");
     cy.contains("tr", name).find('[title="Editar"]').click();
     cy.contains("h1", "Editar Turma").should("be.visible");
     cy.get('form[aria-label="Vincular disciplina existente"]').within(() => {
