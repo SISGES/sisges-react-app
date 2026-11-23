@@ -277,6 +277,7 @@ export async function searchAulas(
 }
 
 interface ClassMeetingApiResponse {
+  disciplineId?: number;
   scheduleSlot?: number | null;
   content?: string;
   attachments?: { name: string; path: string }[];
@@ -289,13 +290,14 @@ interface ClassMeetingApiResponse {
     name: string;
     academicYear: string;
     students?: {
+      userId: number;
       id: number;
       name: string;
       email: string;
       present?: boolean | null;
     }[];
   };
-  teacher?: { id: number; name: string; email: string };
+  teacher?: { userId: number; id: number; name: string; email: string };
 }
 
 export async function getAulaById(id: number): Promise<AulaDetailResponse> {
@@ -303,6 +305,7 @@ export async function getAulaById(id: number): Promise<AulaDetailResponse> {
   const classInfo = data.classInfo;
   const students = (classInfo?.students ?? []).map((s) => ({
     id: s.id,
+    userId: s.userId,
     name: s.name,
     email: s.email,
     present: s.present,
@@ -315,11 +318,11 @@ export async function getAulaById(id: number): Promise<AulaDetailResponse> {
     name: classInfo?.name ?? "",
     academicYear: classInfo?.academicYear ?? "",
     students,
-    professor: data.teacher ?? { id: 0, name: "-", email: "" },
+    professor: data.teacher ?? { id: 0, userId: 0, name: "-", email: "" },
     date: data.date,
     startTime: data.startTime,
     endTime: data.endTime,
-    disciplineId: undefined,
+    disciplineId: data.disciplineId,
     schoolClassId: classInfo?.id,
   };
 }

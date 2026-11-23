@@ -76,7 +76,7 @@ async function handleErrorResponse(response: Response): Promise<never> {
   });
 }
 
-async function fetchWithAuth(
+export async function fetchWithAuth(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<Response> {

@@ -1,14 +1,27 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
+type UploadDestination =
+  | "lesson-files"
+  | "materials"
+  | "activities"
+  | "post-img"
+  | "profile-img";
+
+export const schoolFileAccept =
+  ".pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp";
+
 function getToken(): string | null {
   return localStorage.getItem("token");
 }
 
 export async function uploadFile(
   file: File,
-  subdir: string = "general",
+  subdir: UploadDestination,
 ): Promise<{ path: string }> {
+  if (!file.size || file.size > 10 * 1024 * 1024) {
+    throw new Error("Selecione um arquivo não vazio de até 10 MiB.");
+  }
   const token = getToken();
   const formData = new FormData();
   formData.append("file", file);
@@ -30,18 +43,19 @@ export async function uploadFile(
 }
 
 function privateFileUrl(path: string): string {
-  const prefixes = [
-    "lesson-files/",
-    "post-img/",
-    "profile-img/",
-    "materials/",
-    "activities/",
-    "general/",
-  ];
-  const prefix = prefixes.find((candidate) => path.includes(candidate));
-  if (!prefix) throw new Error("Caminho de arquivo inválido");
-  const key = path.slice(path.indexOf(prefix));
-  return `${API_BASE_URL}/files/${key}`;
+  // O armazenamento local legado gravava /uploads/ e o MinIO e o R2 usam /api/files/.
+  const match = path.match(
+    /(?:^|\/)(lesson-files|post-img|announcements|profile-img|materials|activities|general)\/(.+)$/,
+  );
+  if (!match) throw new Error("Caminho de arquivo inválido");
+  const segments = [match[1], ...match[2].split("/")];
+  const invalid = segments.some(
+    (part) => !part || part === "." || part === ".." || part.includes("\\"),
+  );
+  if (invalid) {
+    throw new Error("Caminho de arquivo inválido");
+  }
+  return `${API_BASE_URL}/files/${segments.map(encodeURIComponent).join("/")}`;
 }
 
 export async function fetchPrivateFile(path: string): Promise<Blob> {

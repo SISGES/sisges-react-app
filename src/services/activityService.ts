@@ -10,6 +10,9 @@ export interface EvaluativeActivity {
 }
 
 export interface CreateEvaluativeActivityRequest {
+  maxPoints: number;
+  trimesterNumber?: number;
+  activityType?: string;
   classMeetingId: number;
   title: string;
   description?: string;

@@ -25,11 +25,11 @@ describe("Homepage — AVISOS (announcement feed)", () => {
     cy.location("pathname").should("eq", "/login");
   });
 
-  it("highlights AVISOS in the sidebar on the home route", () => {
+  it("highlights Início in the sidebar on the home route", () => {
     cy.intercept("GET", "**/announcements/feed", []).as("feed");
     cy.visitHomeAuthenticated();
     cy.wait("@feed");
-    cy.get('nav a[aria-current="page"]').should("contain.text", "AVISOS");
+    cy.get('nav a[aria-current="page"]').should("contain.text", "Início");
   });
 
   it("shows the teacher toolbar with Avisos heading and create button", () => {
@@ -44,7 +44,7 @@ describe("Homepage — AVISOS (announcement feed)", () => {
     cy.intercept("GET", "**/announcements/feed", []).as("feed");
     cy.visitHomeAuthenticated();
     cy.wait("@feed");
-    cy.contains("Nenhum aviso no momento.").should("be.visible");
+    cy.contains("Nenhum aviso no momento").should("be.visible");
   });
 
   it("renders announcement cards when the feed returns items", () => {
@@ -61,23 +61,14 @@ describe("Homepage — AVISOS (announcement feed)", () => {
   });
 
   it("shows server error and recovers after Tentar novamente", () => {
-    let calls = 0;
-    cy.intercept("GET", "**/announcements/feed", (req) => {
-      calls += 1;
-      // React StrictMode runs effects twice in dev — both initial loads must fail or the second [] wins.
-      if (calls <= 2) {
-        req.reply({ statusCode: 500, body: "" });
-      } else {
-        req.reply([]);
-      }
-    }).as("feed");
-
+    cy.intercept("GET", "**/announcements/feed", { statusCode: 500, body: "" }).as("failure");
     cy.visitHomeAuthenticated();
-    cy.wait(["@feed", "@feed"]);
+    cy.wait("@failure");
     cy.contains("Erro interno do servidor").should("be.visible");
-    cy.contains("button", "Tentar novamente").click({ force: true });
+    cy.intercept("GET", "**/announcements/feed", []).as("feed");
+    cy.contains("button", "Tentar novamente").click();
     cy.wait("@feed");
-    cy.contains("Nenhum aviso no momento.").should("be.visible");
+    cy.contains("Nenhum aviso no momento").should("be.visible");
   });
 
   it("student home shows empty avisos and stubs sidebar API calls", () => {
@@ -104,7 +95,7 @@ describe("Homepage — AVISOS (announcement feed)", () => {
     cy.wait("@feed");
     cy.wait("@materials");
     cy.wait("@activities");
-    cy.contains("Nenhum aviso no momento.").should("be.visible");
+    cy.contains("Nenhum aviso no momento").should("be.visible");
     cy.contains("button", "Criar aviso").should("not.exist");
   });
 });

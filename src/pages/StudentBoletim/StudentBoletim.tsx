@@ -1,15 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BackButton } from "../../components/BackButton/BackButton";
 import {
   DataCard,
   PageHeader,
   StateBlock,
+  Select,
   tableStyles,
 } from "../../components/ui";
 import {
   getMyBoletim,
   type StudentBoletim,
 } from "../../services/boletimService";
+
+import {
+  ACADEMIC_CYCLE_STATUS_LABELS,
+  formatIsoDatePtBr,
+} from "../../utils/brDate";
 
 function fmtScore(score: number | null): string {
   if (score === null || Number.isNaN(score)) return "";
@@ -21,23 +27,30 @@ export function StudentBoletim() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBoletim = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      setBoletim(await getMyBoletim());
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao carregar boletim.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [selectedCycle, setSelectedCycle] = useState<number>();
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    void fetchBoletim();
-  }, [fetchBoletim]);
+    let active = true;
+    setIsLoading(true);
+    setError(null);
+    getMyBoletim(selectedCycle)
+      .then((result) => {
+        if (active) setBoletim(result);
+      })
+      .catch((err) => {
+        if (active)
+          setError(
+            err instanceof Error ? err.message : "Erro ao carregar boletim.",
+          );
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedCycle, retry]);
 
   const maxColumns = useMemo(
     () =>
@@ -54,11 +67,41 @@ export function StudentBoletim() {
 
       <div className="flex-1 p-6">
         <DataCard title="Notas por trimestre">
+          {!!boletim?.availableCycles?.length && (
+            <div className="px-4 pt-4">
+              <label
+                htmlFor="report-cycle"
+                className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]"
+              >
+                Ano letivo
+              </label>
+              <Select
+                id="report-cycle"
+                className="max-w-md"
+                value={selectedCycle ?? boletim.cycleId}
+                onChange={(event) =>
+                  setSelectedCycle(Number(event.target.value))
+                }
+              >
+                {boletim.availableCycles.map((cycle) => (
+                  <option key={cycle.id} value={cycle.id}>
+                    {cycle.yearStartDate && cycle.yearEndDate
+                      ? `${formatIsoDatePtBr(cycle.yearStartDate)} a ${formatIsoDatePtBr(cycle.yearEndDate)}`
+                      : cycle.yearEndDate
+                        ? `Término em ${formatIsoDatePtBr(cycle.yearEndDate)}`
+                        : `Ciclo ${cycle.id}`}
+                    {" · "}
+                    {ACADEMIC_CYCLE_STATUS_LABELS[cycle.status]}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
           <StateBlock
             loading={isLoading}
             loadingText="Carregando boletim..."
             error={error}
-            onRetry={fetchBoletim}
+            onRetry={() => setRetry((n) => n + 1)}
             empty={!!boletim && boletim.trimesters.length === 0}
             emptyText="Ainda não há dados de boletim."
           >
@@ -66,7 +109,7 @@ export function StudentBoletim() {
               <div className="p-4 flex flex-col gap-4">
                 <div className="text-sm text-[var(--color-text-muted)]">
                   <p>
-                    Média mínima fixa:{" "}
+                    Percentual mínimo de aprovação no ano:{" "}
                     <strong>{boletim.fixedApprovalPercentage}%</strong>
                   </p>
                   <p>
@@ -74,13 +117,31 @@ export function StudentBoletim() {
                     <strong>{fmtScore(boletim.totalReleasedScore)}</strong> /{" "}
                     <strong>{fmtScore(boletim.yearMaxPoints)}</strong>
                   </p>
-                  {boletim.eligibleForYearRecovery && (
+                  {!boletim.yearResult && boletim.eligibleForYearRecovery && (
                     <p className="text-[var(--color-warning)] font-medium">
                       Você está elegível para recuperação anual.
                     </p>
                   )}
                 </div>
 
+                {boletim.yearResult && (
+                  <section
+                    aria-label="Resultado anual"
+                    className="rounded-lg border border-[var(--color-border)] p-4 text-sm"
+                  >
+                    <h2 className="mb-2 font-semibold text-[var(--color-text-primary)]">
+                      Resultado anual
+                    </h2>
+                    <p>
+                      {boletim.yearResult.approved ? "Aprovado" : "Reprovado"}
+                      {boletim.yearResult.promoted && " · Promovido"}
+                    </p>
+                    <p>
+                      Pontuação-base: {fmtScore(boletim.yearResult.baseScore)} ·
+                      Pontuação final: {fmtScore(boletim.yearResult.finalScore)}
+                    </p>
+                  </section>
+                )}
                 <div className={tableStyles.wrapper}>
                   <table className={tableStyles.table}>
                     <thead>

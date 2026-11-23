@@ -1,4 +1,4 @@
-import api, { ApiError } from "./api";
+import api, { ApiError, fetchWithAuth } from "./api";
 import type {
   LoginRequest,
   LoginResponse,
@@ -125,12 +125,13 @@ export async function validateToken(): Promise<boolean> {
   }
 
   try {
-    await api.get("/auth/validate");
-    return true;
+    // The Go API returns HTTP 200 with an empty body for a valid session.
+    if ((await fetchWithAuth("/auth/validate")).ok) return true;
   } catch {
-    logout();
-    return false;
+    // A failed request also prevents restoring the session.
   }
+  logout();
+  return false;
 }
 
 export async function register(

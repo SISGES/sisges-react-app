@@ -17,6 +17,9 @@ import {
 } from "../../services/gradingConfigService";
 import { PageHeader, Button, StateBlock } from "../../components/ui";
 
+import { AcademicCyclePanel } from "./AcademicCyclePanel";
+import type { AcademicCycle } from "../../services/academicCycleService";
+
 const YEAR_MIN = 10;
 const YEAR_MAX = 1000;
 const TRIMESTER_POINTS_MAX = 1000;
@@ -79,6 +82,9 @@ const labelCls =
 export function GradingConfig() {
   const { showToast } = useToast();
 
+  const [cycle, setCycle] = useState<AcademicCycle | null>(null);
+  const gradingLocked = cycle?.gradingLocked ?? true;
+
   const [yearMaxStr, setYearMaxStr] = useState("");
   const [yearMinStr, setYearMinStr] = useState("");
   const [t1MaxStr, setT1MaxStr] = useState("");
@@ -99,6 +105,7 @@ export function GradingConfig() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [configDirty, setConfigDirty] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const fetchConfig = useCallback(async () => {
@@ -205,6 +212,7 @@ export function GradingConfig() {
     },
   );
   const canSave =
+    !gradingLocked &&
     yearValid &&
     sumValid &&
     compositionAllValid &&
@@ -298,6 +306,7 @@ export function GradingConfig() {
         trimester3PointsTrabalhos: t3t!,
       };
       await updateGradingConfig(payload);
+      setConfigDirty(false);
       showToast("Configuração de notas salva com sucesso.", "success");
     } catch (err) {
       showToast(
@@ -358,6 +367,12 @@ export function GradingConfig() {
     <div className="flex flex-col flex-1 min-h-0">
       <PageHeader title="Configuração de Notas" back={<BackButton to="/" />} />
       <div className="flex-1 p-4 sm:p-6">
+        <AcademicCyclePanel
+          cycle={cycle}
+          onChange={setCycle}
+          configSaving={isSaving}
+          configReady={!isLoading && !loadError && !configDirty}
+        />
         <StateBlock
           loading={isLoading}
           loadingText="Carregando..."
@@ -366,6 +381,7 @@ export function GradingConfig() {
         >
           <form
             onSubmit={handleSubmit}
+            onChange={() => setConfigDirty(true)}
             className="mx-auto flex w-full max-w-6xl flex-col gap-6"
           >
             <div>
@@ -373,7 +389,9 @@ export function GradingConfig() {
                 Regras de avaliação
               </h2>
               <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                Defina os pontos do ano e distribua entre os três trimestres.
+                {cycle?.gradingLocked
+                  ? "As regras de avaliação estão bloqueadas neste ciclo letivo."
+                  : "Defina os pontos do ano e distribua entre os três trimestres."}
               </p>
             </div>
             <section
@@ -396,7 +414,7 @@ export function GradingConfig() {
                     )
                   }
                   className={`${inputCls} ${yearMaxStr !== "" && !yearValid ? inputErrCls : ""}`}
-                  disabled={isSaving}
+                  disabled={isSaving || gradingLocked}
                   aria-describedby="year-range"
                   aria-invalid={yearMaxStr !== "" && !yearValid}
                 />
@@ -419,7 +437,7 @@ export function GradingConfig() {
                   onChange={(e) => handlePctChange(e, setYearMinStr)}
                   onBlur={() => handlePctBlur(yearMinStr, setYearMinStr)}
                   className={inputCls}
-                  disabled={isSaving}
+                  disabled={isSaving || gradingLocked}
                 />
                 <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
                   Percentual de 0 a 100%.
@@ -477,7 +495,7 @@ export function GradingConfig() {
                             )
                           }
                           className={inputCls}
-                          disabled={isSaving}
+                          disabled={isSaving || gradingLocked}
                         />
                       </div>
                       <div>
@@ -492,7 +510,7 @@ export function GradingConfig() {
                           onChange={(e) => handlePctChange(e, t.setMinStr)}
                           onBlur={() => handlePctBlur(t.minStr, t.setMinStr)}
                           className={inputCls}
-                          disabled={isSaving}
+                          disabled={isSaving || gradingLocked}
                         />
                       </div>
                     </div>
@@ -545,7 +563,7 @@ export function GradingConfig() {
                               )
                             }
                             className={`${inputCls} max-w-24 text-right tabular-nums`}
-                            disabled={isSaving}
+                            disabled={isSaving || gradingLocked}
                             aria-describedby={`composition-${idx}`}
                           />
                         </div>

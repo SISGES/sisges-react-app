@@ -1,6 +1,6 @@
 import { useToast } from "../../contexts/ToastContext";
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { FiEdit2, FiInfo, FiPlus, FiTrash2 } from "react-icons/fi";
 import { BackButton } from "../../components/BackButton/BackButton";
 import {
@@ -13,9 +13,10 @@ import {
   createActivity,
   deleteActivity,
 } from "../../services/activityService";
-import { uploadFile } from "../../services/uploadService";
+import { schoolFileAccept, uploadFile } from "../../services/uploadService";
 import { ProtectedDownloadButton } from "../../components/ProtectedFile/ProtectedFile";
 import type { EvaluativeActivity } from "../../services/activityService";
+import { getAcademicCycle, type AcademicCycle } from "../../services/academicCycleService";
 import { ApiError } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import type { AulaDetailResponse } from "../../types/auth";
@@ -27,6 +28,7 @@ import {
   StateBlock,
   FormField,
   Input,
+  Select,
   Textarea,
   Pagination,
 } from "../../components/ui";
@@ -50,6 +52,10 @@ export function AulaDetail() {
   const [activities, setActivities] = useState<EvaluativeActivity[]>([]);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [activityTitle, setActivityTitle] = useState("");
+  const [activityType, setActivityType] = useState("ATIVIDADE");
+  const [activityCycle, setActivityCycle] = useState<AcademicCycle | null>(null);
+  const cycleInactive =
+    !!activityCycle && activityCycle.status !== "IN_PROGRESS";
   const [activityDesc, setActivityDesc] = useState("");
   const [activityFile, setActivityFile] = useState<File | null>(null);
   const [isSubmittingActivity, setIsSubmittingActivity] = useState(false);
@@ -156,9 +162,24 @@ export function AulaDetail() {
     }
   };
 
-  const handleSubmitActivity = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!showActivityModal) return;
+    let active = true;
+    getAcademicCycle()
+      .then(cycle => {
+        if (active) setActivityCycle(cycle);
+      })
+      .catch(() => {
+        // Sem a consulta de leitura, a API de criação determina o trimestre vigente.
+        if (active) setActivityCycle(null);
+      });
+    return () => { active = false; };
+  }, [showActivityModal]);
+
+  const handleSubmitActivity = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!aulaId || !activityTitle.trim()) return;
+    if (!aulaId || !activityTitle.trim() || cycleInactive) return;
+    const form = new FormData(e.currentTarget);
     setIsSubmittingActivity(true);
 
     try {
@@ -169,6 +190,12 @@ export function AulaDetail() {
       }
       await createActivity({
         classMeetingId: aulaId,
+        maxPoints: Number(form.get("maxPoints")),
+        activityType,
+        trimesterNumber:
+          activityType === "RECUPERACAO_ANUAL"
+            ? undefined
+            : activityCycle?.currentTrimester,
         title: activityTitle.trim(),
         description: activityDesc.trim() || undefined,
         filePath,
@@ -276,10 +303,10 @@ export function AulaDetail() {
                   <span className="text-sm text-[var(--color-text-primary)]">
                     {aula.professor.name}
                   </span>
-                  {isAdmin && (
+                  {isAdmin && !!aula.professor.userId && (
                     <button
                       type="button"
-                      onClick={() => navigate(`/users/${aula.professor.id}`)}
+                      onClick={() => navigate(`/users/${aula.professor.userId}`)}
                       title="Ver detalhes do professor"
                       className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors"
                     >
@@ -320,6 +347,8 @@ export function AulaDetail() {
                       icon={<FiPlus size={13} />}
                       onClick={() => {
                         setActivityTitle("");
+                        setActivityCycle(null);
+                        setActivityType("ATIVIDADE");
                         setActivityDesc("");
                         setActivityFile(null);
 
@@ -342,9 +371,12 @@ export function AulaDetail() {
                             className="flex items-start justify-between gap-4 py-2 border-b border-[var(--color-border)] last:border-0"
                           >
                             <div className="flex flex-col gap-0.5">
-                              <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                              <Link
+                                to={`/atividades/${a.id}/notas`}
+                                className="text-sm font-medium text-[var(--color-primary)] underline"
+                              >
                                 {a.title}
-                              </span>
+                              </Link>
                               {a.description && (
                                 <span className="text-xs text-[var(--color-text-muted)]">
                                   {a.description}
@@ -442,7 +474,7 @@ export function AulaDetail() {
                         {isAdmin && (
                           <button
                             type="button"
-                            onClick={() => navigate(`/users/${s.id}`)}
+                            onClick={() => navigate(`/users/${s.userId}`)}
                             title="Ver detalhes"
                             className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors flex-shrink-0"
                           >
@@ -493,6 +525,7 @@ export function AulaDetail() {
             <Button
               type="submit"
               form="activity-form"
+              disabled={cycleInactive}
               loading={isSubmittingActivity}
             >
               Criar
@@ -514,6 +547,42 @@ export function AulaDetail() {
               disabled={isSubmittingActivity}
             />
           </FormField>
+          <label className="text-sm font-medium">
+            Pontuação máxima
+            <Input
+              name="maxPoints"
+              type="number"
+              min="0.01"
+              step="0.01"
+              required
+              disabled={isSubmittingActivity}
+            />
+          </label>
+          <label className="text-sm font-medium">
+            Tipo de avaliação
+            <Select
+              name="activityType"
+              value={activityType}
+              onChange={(event) => setActivityType(event.target.value)}
+              disabled={isSubmittingActivity}
+            >
+              <option value="ATIVIDADE">Atividade</option>
+              <option value="PROVA">Prova</option>
+              <option value="TRABALHO">Trabalho</option>
+              <option value="RECUPERACAO_TRIMESTRE">Recuperação trimestral</option>
+              <option value="RECUPERACAO_ANUAL">Recuperação anual</option>
+            </Select>
+          </label>
+          {cycleInactive && (
+            <p role="alert">O ano letivo precisa estar em andamento para criar uma atividade.</p>
+          )}
+          {!cycleInactive && activityType !== "RECUPERACAO_ANUAL" && (
+            <p className="text-sm text-[var(--color-text-secondary)]" aria-live="polite">
+              {activityCycle
+                ? `Período: ${activityCycle.currentTrimester}º trimestre`
+                : "Período: trimestre vigente"}
+            </p>
+          )}
           <FormField label="Descrição">
             <Textarea
               value={activityDesc}
@@ -522,10 +591,10 @@ export function AulaDetail() {
               disabled={isSubmittingActivity}
             />
           </FormField>
-          <FormField label="Documento (PDF, TXT, DOCX)">
+          <FormField label="Arquivo (imagem, PDF, TXT ou Office, até 10 MiB)">
             <input
               type="file"
-              accept=".pdf,.txt,.docx,.doc"
+              accept={schoolFileAccept}
               onChange={(e) => setActivityFile(e.target.files?.[0] ?? null)}
               disabled={isSubmittingActivity}
               className="text-sm text-[var(--color-text-primary)] file:mr-3 file:px-3 file:py-1.5 file:text-xs file:font-medium file:rounded-md file:border file:border-[var(--color-border)] file:bg-[var(--color-background)] file:text-[var(--color-text-primary)] file:cursor-pointer hover:file:bg-[var(--color-surface)] file:transition-colors"

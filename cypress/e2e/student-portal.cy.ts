@@ -38,6 +38,9 @@ describe("Portal do aluno", () => {
     visitAsStudent("/minha-turma");
     cy.wait("@turma");
     cy.contains("Turma Cypress E2E").should("be.visible");
+    cy.contains('[role="tab"]', "Colegas").focus();
+    cy.press(Cypress.Keyboard.Keys.RIGHT);
+    cy.contains('[role="tab"]', "Professores").should("have.focus").and("have.attr", "aria-selected", "true");
     cy.contains("Cypress E2E Teacher").should("be.visible");
   });
 

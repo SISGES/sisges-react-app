@@ -33,6 +33,6 @@ describe("Professor — Aulas", () => {
     cy.intercept("POST", "**/class/search", []).as("aulas");
     cy.visit("/aulas");
     cy.wait("@aulas");
-    cy.contains("a, button", "Nova aula").should("be.visible");
+    cy.contains("a, button", "Registrar aula").should("be.visible");
   });
 });

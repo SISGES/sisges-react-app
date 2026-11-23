@@ -8,7 +8,7 @@ import {
   getAulaById,
   updateAula,
   submitAulaFrequency,
-  getTeacherById,
+  getTeacherMe,
   getClassById,
   getDisciplines,
   searchClasses,
@@ -64,7 +64,7 @@ export function EditAula() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [attendance, setAttendance] = useState<Record<string, "P" | "F">>({});
+  const [attendance, setAttendance] = useState<Record<number, "P" | "F">>({});
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
   const [isSubmittingFreq, setIsSubmittingFreq] = useState(false);
 
@@ -89,9 +89,9 @@ export function EditAula() {
       if (data.endTime) setEndTime(data.endTime.slice(0, 5));
       if (data.disciplineId != null) setDisciplineId(data.disciplineId);
       if (data.schoolClassId != null) setSchoolClassId(data.schoolClassId);
-      const initial: Record<string, "P" | "F"> = {};
+      const initial: Record<number, "P" | "F"> = {};
       (data.students ?? []).forEach((s) => {
-        initial[s.name] = "P";
+        initial[s.id] = s.present === false ? "F" : "P";
       });
       setAttendance(initial);
     } catch (err) {
@@ -113,7 +113,7 @@ export function EditAula() {
         setDisciplines(discData.map((d) => ({ id: d.id, name: d.name })));
         setSchoolClasses(classesData.map((c) => ({ id: c.id, name: c.name })));
       } else if (user?.id) {
-        const teacher = await getTeacherById(user.id);
+        const teacher = await getTeacherMe();
         const classIds = teacher.classes?.map((c) => c.id) ?? [];
         const classDetails = await Promise.all(
           classIds.map((cid) => getClassById(cid).catch(() => null)),
@@ -147,7 +147,7 @@ export function EditAula() {
     if (disciplineId === "" || isAdmin) return;
     (async () => {
       try {
-        const teacher = await getTeacherById(user!.id);
+        const teacher = await getTeacherMe();
         const classIds = teacher.classes?.map((c) => c.id) ?? [];
         const classDetails = await Promise.all(
           classIds.map((cid) => getClassById(cid).catch(() => null)),
@@ -244,7 +244,7 @@ export function EditAula() {
       await submitAulaFrequency(aulaId, {
         entries: (aula.students ?? []).map((s) => ({
           studentId: s.id,
-          status: (attendance[s.name] ?? "P") as "P" | "F",
+          status: (attendance[s.id] ?? "P") as "P" | "F",
         })),
       });
       showToast("Frequência salva.", "success");
@@ -431,9 +431,9 @@ export function EditAula() {
                       <input
                         type="radio"
                         name={`freq-${s.id}`}
-                        checked={attendance[s.name] === status}
+                        checked={attendance[s.id] === status}
                         onChange={() =>
-                          setAttendance((p) => ({ ...p, [s.name]: status }))
+                          setAttendance((p) => ({ ...p, [s.id]: status }))
                         }
                         className="accent-[var(--color-primary)]"
                       />

@@ -2,9 +2,22 @@
 
 describe("Autenticação", () => {
   it("redireciona usuário autenticado de /login para /", () => {
+    cy.intercept("GET", "**/announcements/feed", []).as("feed");
     cy.visitHomeAuthenticated();
+    cy.wait("@feed");
     cy.visit("/login");
     cy.location("pathname").should("eq", "/");
+  });
+
+  it("clears a rejected saved session and returns to the login form", () => {
+    cy.intercept("GET", "**/auth/validate", { statusCode: 401 }).as("invalidSession");
+    cy.visitHomeAuthenticated();
+    cy.wait("@invalidSession");
+    cy.location("pathname").should("eq", "/login");
+    cy.window().then(({ localStorage }) => {
+      expect(localStorage.getItem("token")).to.equal(null);
+      expect(localStorage.getItem("user")).to.equal(null);
+    });
   });
 
   it("exibe erro com credenciais inválidas", () => {

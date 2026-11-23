@@ -5,10 +5,12 @@ const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 function buildWsUrl(): string {
-  const base = API_BASE.replace(/\/api\/?$/, "");
-  const protocol = base.startsWith("https") ? "wss" : "ws";
-  const host = base.replace(/^https?:\/\//, "");
-  return `${protocol}://${host}/ws`;
+  const url = new URL(API_BASE, window.location.origin);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  url.pathname = url.pathname.replace(/\/api\/?$/, "") + "/ws";
+  url.search = "";
+  url.hash = "";
+  return url.href;
 }
 
 export function useStompFeed(onFeedEvent: () => void) {

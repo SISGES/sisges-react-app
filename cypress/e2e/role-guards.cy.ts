@@ -53,11 +53,11 @@ describe("Controle de acesso por perfil", () => {
     cy.contains("button", "Criar aviso").should("not.exist");
   });
 
-  it("ADMIN vê item CLASSES na sidebar", () => {
+  it("ADMIN vê item Turmas na sidebar", () => {
     cy.viewport(1280, 800);
     cy.intercept("GET", "**/announcements/feed", []).as("feed");
     visitAs("ADMIN", "admin@test.local");
     cy.wait("@feed");
-    cy.get("nav").contains("CLASSES").should("be.visible");
+    cy.get("nav").contains("Turmas").should("be.visible");
   });
 });

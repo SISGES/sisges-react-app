@@ -115,6 +115,7 @@ export interface User {
 export type LoginCredentials = LoginRequest;
 
 export interface TeacherSearchResponse {
+  userId: number;
   id: number;
   name: string;
   email: string;
@@ -142,6 +143,7 @@ export interface TeacherDetailResponse {
 }
 
 export interface StudentSearchResponse {
+  userId: number;
   id: number;
   name: string;
   email: string;
@@ -267,7 +269,7 @@ export interface AulaDetailResponse {
   name: string;
   academicYear: string;
   students: AulaDetailStudent[];
-  professor: { id: number; name: string; email: string };
+  professor: { userId: number; id: number; name: string; email: string };
   date?: string;
   startTime?: string;
   endTime?: string;

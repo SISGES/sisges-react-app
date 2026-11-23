@@ -3,7 +3,7 @@
 import { createTestJwt } from "../support/testJwt";
 
 describe("Admin — Configuração de notas", () => {
-  beforeEach(() => {
+  function visitConfig() {
     cy.intercept("GET", "**/announcements/feed", []).as("feed");
     cy.visit("/admin/notas", {
       onBeforeLoad(win) {
@@ -20,7 +20,7 @@ describe("Admin — Configuração de notas", () => {
         );
       },
     });
-  });
+  }
 
   it("carrega e exibe configuração de notas", () => {
     cy.intercept("GET", "**/grading-config", {
@@ -46,6 +46,7 @@ describe("Admin — Configuração de notas", () => {
       },
     }).as("config");
 
+    visitConfig();
     cy.wait("@config");
     cy.contains("Configuração de Notas").should("be.visible");
     cy.get("#yearMax").should("have.value", "100");

@@ -4,6 +4,7 @@ import { createTestJwt } from "../support/testJwt";
 
 describe("Próximos eventos", () => {
   it("não mostra eventos passados e usa o controle compacto para criar", () => {
+    cy.intercept("POST", "**/classes/search", []);
     cy.intercept("GET", "**/announcements/feed", []).as("feed");
     cy.intercept("GET", "**/events", [
       {
@@ -16,7 +17,7 @@ describe("Próximos eventos", () => {
       {
         id: 2,
         title: "Feira de ciências",
-        eventAt: "2030-09-24T09:30:00Z",
+        eventAt: new Date(Date.now() + 86400000).toISOString(),
         audience: "ALL",
         createdAt: "2030-09-01T09:30:00Z",
       },

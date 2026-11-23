@@ -34,7 +34,7 @@ import { AnnouncementEditorModal } from "../AnnouncementEditorModal/Announcement
 import { Button } from "../ui/Button";
 import { Spinner } from "../ui/FormField";
 import { Pagination } from "../ui/Pagination";
-import { useProtectedImage } from "../ProtectedFile/ProtectedFile";
+import { useProtectedImage } from "../ProtectedFile/useProtectedImage";
 import { UserAvatar } from "../UserAvatar/UserAvatar";
 import { Modal } from "../ui/Modal";
 import { EventsPanel } from "../EventsPanel/EventsPanel";

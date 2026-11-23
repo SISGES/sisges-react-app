@@ -1,18 +1,9 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
-import ts from "typescript";
+import { loadUtility } from "./loadUtility.mjs";
 
-const source = readFileSync(
-  new URL("../src/utils/eventDateTime.ts", import.meta.url),
-  "utf8",
-);
-const { outputText } = ts.transpileModule(source, {
-  compilerOptions: { module: ts.ModuleKind.ES2020 },
-});
-const { eventDateTimeToIso, validateEventDateTime, eventDateLimits } = await import(
-  `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
-);
+const { eventDateTimeToIso, validateEventDateTime, eventDateLimits } =
+  await loadUtility("eventDateTime");
 
 test("event timestamps preserve local time and include the timezone required by the API", () => {
   const original = process.env.TZ;

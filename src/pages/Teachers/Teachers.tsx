@@ -99,7 +99,7 @@ export function Teachers() {
                       <td className={tableStyles.actionsCell}>
                         <button
                           type="button"
-                          onClick={() => navigate(`/admin/users/${t.id}`)}
+                          onClick={() => navigate(`/admin/users/${t.userId}`)}
                           title="Ver detalhes"
                           aria-label={`Ver detalhes de ${t.name}`}
                           className="flex items-center justify-center w-7 h-7 rounded-md border border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] cursor-pointer transition-colors ml-auto"

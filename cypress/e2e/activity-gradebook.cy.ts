@@ -19,7 +19,10 @@ describe("Teacher activity gradebook", () => {
     }).as("gradebook");
 
     cy.intercept("PUT", "**/activities/99/grades", (req) => {
-      expect(req.body.entries).to.have.length(2);
+      expect(req.body.entries).to.deep.equal([
+        { studentId: 1, score: 9 },
+        { studentId: 2, score: 8.5 },
+      ]);
       req.reply({
         activityId: 99,
         classMeetingId: 10,
@@ -72,7 +75,7 @@ describe("Teacher activity gradebook", () => {
     cy.wait("@saveGrades");
 
     cy.contains("button", "Liberar notas").click();
-    cy.contains("button", "Liberar").click();
+    cy.get('[role="dialog"]').contains("button", /^Liberar$/).click();
     cy.wait("@release");
   });
 });

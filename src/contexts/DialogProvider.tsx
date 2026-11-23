@@ -1,21 +1,9 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useRef,
-  useState,
-} from "react";
-import type { ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
+import { DialogContext } from "./DialogContext";
 
 type DialogState = { title: string; message: string; confirm: boolean } | null;
-type DialogApi = {
-  alert: (message: string, title?: string) => Promise<void>;
-  confirm: (message: string, title?: string) => Promise<boolean>;
-};
-
-const DialogContext = createContext<DialogApi | null>(null);
 
 export function DialogProvider({ children }: { children: ReactNode }) {
   const [dialog, setDialog] = useState<DialogState>(null);
@@ -74,10 +62,4 @@ export function DialogProvider({ children }: { children: ReactNode }) {
       </Modal>
     </DialogContext.Provider>
   );
-}
-
-export function useDialog() {
-  const value = useContext(DialogContext);
-  if (!value) throw new Error("useDialog must be used inside DialogProvider");
-  return value;
 }

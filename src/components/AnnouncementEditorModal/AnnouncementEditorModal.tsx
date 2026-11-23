@@ -133,8 +133,7 @@ export function AnnouncementEditorModal({
           content: content.trim() || undefined,
           type: announcementType,
           imagePath: finalImagePath,
-          hiddenForRoles:
-            hiddenForRoles.length > 0 ? hiddenForRoles : undefined,
+          hiddenForRoles,
         };
         await updateAnnouncement(editingAnnouncement.id, data);
         showToast("Aviso atualizado com sucesso!", "success");

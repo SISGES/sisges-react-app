@@ -10,7 +10,8 @@ export {
   Alert,
   Spinner,
 } from "./FormField";
-export { DataCard, StateBlock, tableStyles } from "./DataCard";
+export { DataCard, StateBlock } from "./DataCard";
+export { tableStyles } from "./tableStyles";
 export { Pagination } from "./Pagination";
 
 export { DatePicker } from "./DatePicker";

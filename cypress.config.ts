@@ -34,6 +34,12 @@ function mergeEnv(projectRoot: string): Record<string, string> {
     ...(process.env.CYPRESS_TEACHER_PASSWORD && {
       teacherPassword: process.env.CYPRESS_TEACHER_PASSWORD,
     }),
+    ...(process.env.CYPRESS_STUDENT_EMAIL && {
+      studentEmail: process.env.CYPRESS_STUDENT_EMAIL,
+    }),
+    ...(process.env.CYPRESS_STUDENT_PASSWORD && {
+      studentPassword: process.env.CYPRESS_STUDENT_PASSWORD,
+    }),
     ...(process.env.CYPRESS_ADMIN_EMAIL && {
       adminEmail: process.env.CYPRESS_ADMIN_EMAIL,
     }),
@@ -44,12 +50,11 @@ function mergeEnv(projectRoot: string): Record<string, string> {
 }
 
 export default defineConfig({
+  allowCypressEnv: false,
   e2e: {
     baseUrl: "http://localhost:3000",
     supportFile: "cypress/support/e2e.ts",
-    ...(process.env.CYPRESS_MOCK_ONLY === "true" && {
-      excludeSpecPattern: "announcement-create-api.cy.ts",
-    }),
+    specPattern: ["cypress/e2e/**/*.cy.ts", "cypress/live/**/*.cy.ts"],
     video: false,
     setupNodeEvents(_on, config) {
       const root = config.projectRoot ?? process.cwd();

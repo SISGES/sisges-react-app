@@ -1,6 +1,7 @@
 import { api } from "./api";
 
 export interface AcademicCycle {
+  id?: number;
   status: "NOT_STARTED" | "IN_PROGRESS" | "FINISHED";
   yearStartDate: string | null;
   yearEndDate: string | null;
@@ -21,16 +22,37 @@ export async function getAcademicCycle(): Promise<AcademicCycle> {
 
 export async function startAcademicYear(
   yearEndDate: string,
+  expectedCycleId?: number,
 ): Promise<AcademicCycle> {
-  return api.post<AcademicCycle>("/academic-cycle/start-year", { yearEndDate });
+  return api.post<AcademicCycle>("/academic-cycle/start-year", {
+    yearEndDate,
+    expectedCycleId,
+  });
 }
 
-export async function endTrimester(password: string): Promise<AcademicCycle> {
-  return api.post<AcademicCycle>("/academic-cycle/end-trimester", { password });
+interface CycleVersion {
+  expectedCycleId?: number;
+  expectedTrimester?: number;
 }
 
-export async function endYear(password: string): Promise<AcademicCycle> {
-  return api.post<AcademicCycle>("/academic-cycle/end-year", { password });
+export async function endTrimester(
+  password: string,
+  version?: CycleVersion,
+): Promise<AcademicCycle> {
+  return api.post<AcademicCycle>("/academic-cycle/end-trimester", {
+    password,
+    ...version,
+  });
+}
+
+export async function endYear(
+  password: string,
+  version?: CycleVersion,
+): Promise<AcademicCycle> {
+  return api.post<AcademicCycle>("/academic-cycle/end-year", {
+    password,
+    ...version,
+  });
 }
 
 export async function getPendingReleases(

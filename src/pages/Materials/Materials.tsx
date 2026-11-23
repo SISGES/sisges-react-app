@@ -8,7 +8,7 @@ import {
   deleteMaterial,
 } from "../../services/materialService";
 import { searchClasses, getDisciplines } from "../../services/userService";
-import { uploadFile } from "../../services/uploadService";
+import { schoolFileAccept, uploadFile } from "../../services/uploadService";
 import { ProtectedDownloadButton } from "../../components/ProtectedFile/ProtectedFile";
 import type {
   DisciplineMaterial,
@@ -347,10 +347,10 @@ export function Materials() {
               disabled={isSubmitting}
             />
           </FormField>
-          <FormField label="Arquivo (PDF, TXT, DOCX)">
+          <FormField label="Arquivo (imagem, PDF, TXT ou Office, até 10 MiB)">
             <input
               type="file"
-              accept=".pdf,.txt,.docx,.doc"
+              accept={schoolFileAccept}
               onChange={(e) => setMaterialFile(e.target.files?.[0] ?? null)}
               disabled={isSubmitting}
               className="text-sm text-[var(--color-text-primary)] file:mr-3 file:px-3 file:py-1.5 file:text-xs file:font-medium file:rounded-md file:border file:border-[var(--color-border)] file:bg-[var(--color-background)] file:text-[var(--color-text-primary)] file:cursor-pointer hover:file:bg-[var(--color-surface)] file:transition-colors"

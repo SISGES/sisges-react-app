@@ -1,4 +1,5 @@
 import { api } from "./api";
+import type { AcademicCycleStatus } from "../utils/brDate";
 
 export interface BoletimActivityCell {
   activityId: number;
@@ -12,6 +13,7 @@ export interface BoletimActivityCell {
 export interface BoletimTrimesterRow {
   trimester: number;
   trimesterMaxPoints: number;
+  minPercentage?: number;
   activities: BoletimActivityCell[];
   totalReleasedScore: number;
   allActivitiesReleased: boolean;
@@ -19,6 +21,19 @@ export interface BoletimTrimesterRow {
 }
 
 export interface StudentBoletim {
+  cycleId?: number;
+  availableCycles?: Array<{
+    id: number;
+    yearStartDate: string | null;
+    yearEndDate: string | null;
+    status: AcademicCycleStatus;
+  }>;
+  yearResult?: {
+    baseScore: number;
+    finalScore: number;
+    approved: boolean;
+    promoted: boolean;
+  } | null;
   fixedApprovalPercentage: number;
   yearMaxPoints: number;
   totalReleasedScore: number;
@@ -30,6 +45,8 @@ export interface StudentBoletim {
   };
 }
 
-export async function getMyBoletim(): Promise<StudentBoletim> {
-  return api.get<StudentBoletim>("/boletim/me");
+export async function getMyBoletim(cycleId?: number): Promise<StudentBoletim> {
+  return api.get<StudentBoletim>(
+    cycleId === undefined ? "/boletim/me" : `/boletim/me?cycleId=${cycleId}`,
+  );
 }
