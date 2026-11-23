@@ -207,6 +207,9 @@ describe("Período das atividades avaliativas", () => {
         else expect(request.body).not.to.have.property("trimesterNumber");
       });
       cy.get("[role=dialog]").should("not.exist");
+      cy.contains('[data-testid="toast"]', "Atividade criada")
+        .find('button[aria-label="Fechar notificação"]')
+        .click();
     }
   });
 });
